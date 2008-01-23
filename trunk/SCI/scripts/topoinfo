@@ -1,0 +1,12 @@
+#! /bin/sh
+
+d=`ls -d $1/*`
+for dd in $d
+do
+  t=`ls -d $dd/*`
+  echo $t:
+  for f in $t
+  do
+      svn info $f | grep URL 
+  done
+done

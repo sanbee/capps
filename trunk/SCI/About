@@ -1,0 +1,3 @@
+Pronounced as "ss ka i"
+
+A simple interface to [http://casa.nrao.edu/ CASA] applications.  These are stand-alone applications that provide the scientific functionality available in [http://casa.nrao.edu/ CASA] core and synthesis libraries.  The applications contain an embedded interactive and non-interactive user interface.  The latter can be used to run the applications from scripts.
