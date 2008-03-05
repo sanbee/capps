@@ -1,0 +1,2 @@
+egrep -v "#|^[a-zA-Z]|Restart" tstlog.0|awk -v N=$1 '{if (($1==0) &&
+(t!=$2)) I=I+1;if (($4==N) && (t!=$2)) {print I,(sqrt(1)/$8);t=$2;}}' -
