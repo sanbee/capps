@@ -5,19 +5,19 @@
 # only a hope. :-)
 #
 ARCH         = linux_gnu
-CASAHOME     = /home/rishi/sanjay
-CLHOME       = /home/rishi/sanjay/Projects/parafeed/linux_amd64
-SCIHOME      = /home/rishi/sanjay/SCI
-CASADISTRO   = casa_rnd64
-SYNTHESISPKG = casa_rnd64
-COREPKG      = casa_rnd64
-DISPLAYPKG   = casa_rnd64
+CASAHOME     = /export/home/langur/sbhatnag
+CLHOME       = /export/home/langur/sbhatnag/SCI/linux_gnu
+SCIHOME      = /export/home/langur/sbhatnag/SCI
+CASADISTRO   = casa_daily
+SYNTHESISPKG = casa_daily
+COREPKG      = casa_daily
+DISPLAYPKG   = casa_daily
 
 C++          = /usr/bin/g++
-DEFS64       = -DAIPS_64B
-OPT64        = -m64
-USRLIB       = /usr/lib64
-X11LIB       = /usr/X11R6/lib64
+#DEFS64       = -DAIPS_64B
+#OPT64        = -m64
+USRLIB       = /usr/lib
+X11LIB       = /usr/X11R6/lib
 OPT          = -g $(OPT64)
 
 SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)
@@ -26,7 +26,7 @@ DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)
 
 CASAROOT     = $(CASAHOME)/$(CASADISTRO)
 #QT4HOME      = /usr/local/Trolltech/Qt-4.1.3
-#QT4HOME      = /usr/local/lib64
-QT4HOME      = /usr/lib64/qt4
-QT4LIBD      = $(QT4HOME)/lib64
+#QT4HOME      = /usr/local/lib
+QT4HOME      = /usr/
+QT4LIBD      = $(QT4HOME)/lib
 SCIBIN       = $(SCIHOME)/$(ARCH)/bin
