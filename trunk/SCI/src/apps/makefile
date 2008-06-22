@@ -21,25 +21,26 @@ CPPFLAGS = $(OPT) -Wno-deprecated                           \
 
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
-	  -DPYTHONVER=\"2.5\"                                             \
+	  -DPYTHONVER=\"2.5\"                                               \
 	  -DPYTHONLIB=\"/export/home/langur/sbhatnag/casa_rnd/linux_gnu/lib:/export/home/langur/sbhatnag/casa_rnd/linux_gnu/libexec/python\"
 
 PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/lib/python2.5/site-packages/numpy/core/include
 
 PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -lpython2.5  -L$(USRLIB)/casapy/lib -lCCM_Python -lWX_Utils_error -lWX_Utils_code -lWX_Utils_types
 
-INCL = -I.                                                  \
-       -I$(CLHOME)/include                \
-       -I/export/home/langur/sbhatnag/CASADEVL/rnd/code/include \
-       -I$(CASAROOT)/code/include                           \
-       -I$(CASAROOT)/code/casa                              \
-       -I/usr/include/cfitsio                               \
-       -I$(QT4HOME)/include                                 \
-       -I$(QT4HOME)/include/QtCore                          \
-       -I$(QT4HOME)/include/QtGui                           \
-       -I$(QT4HOME)/include/QtXml
+INCL = -I.                                                      \
+       -I$(CLHOME)/include                                      \
+       -I$(CASAROOT)/code/include                               \
+       -I$(CASAROOT)/code/casa                                  \
+       -I/usr/include/cfitsio                                   \
+       -I$(QT4HOME)/include                                     \
+       -I$(QT4HOME)/include/QtCore                              \
+       -I$(QT4HOME)/include/QtGui                               \
+       -I$(QT4HOME)/include/QtXml                               \
+       -I$(QT4HOME)/include/qwt
 
 DISPLAYLIBS = $(DISPLAYROOT)/$(ARCH)/lib/libdisplay.a       \
+	  $(DISPLAYROOT)/$(ARCH)/lib/libcasaqt.a            \
 	  $(DISPLAYROOT)/$(ARCH)/lib/libgraphics.a         
 
 SYNTHESISLIBS = $(SYNTHROOT)/$(ARCH)/lib/libsynthesis.a     \
@@ -62,7 +63,7 @@ CORELIBS   = $(COREROOT)/$(ARCH)/lib/libmsfits.a        \
 	  $(COREROOT)/$(ARCH)/lib/libcasa.a 
 
 
-CASALIBS = $(DISPLAYLIBS) $(SYNTHESISLIBS) $(CORELIBS)
+CASALIBS = $(SYNTHESISLIBS) $(DISPLAYLIBS) $(CORELIBS)
 
 UILIBS = $(CLHOME)/lib/libshccl.a                 \
          $(CLHOME)/lib/libsh.a                    \
@@ -78,14 +79,14 @@ LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 
 LIBOPTS = -L$(CASAROOT)/$(ARCH)/lib                     \
 	  -L$(USRLIB)                                   \
-	  -L$(QT4LIBD) -lmir     \
+	  -L$(QT4LIBD) -lmir                            \
 	  -lcfitsio -llapack -lblas                     \
 	  -lg2c -L/usr/local/lib -lcpgplot -lpgplot     \
-	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext      \
+	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext           \
 	  $(CASAROOT)/$(ARCH)/lib/libwcs.a              \
-	  -lQtCore -lQtGui -lQtXml 
+	  -lQtCore -lQtGui -lQtXml -lqwt
 #
-#	  /usr/lib64/libcfitsio.so.0 -llapack -lblas                     \
+#	  /usr/lib64/libcfitsio.so.0 -llapack -lblas    \
 #	  -lcfitsio -llapack -lblas                     \
 #-------------------------------------------------------------------------------------------------
 # Variables that control the generic targets below
