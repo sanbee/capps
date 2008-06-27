@@ -74,10 +74,12 @@ int main(int argc, char **argv)
   try
     {
       //      Table table(MSNBuf,Table::Update);
-      Table table(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
-      TableInfo& info = table.tableInfo();
-      String type=info.type();
-      
+      String type;
+      {
+	Table table(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
+	TableInfo& info = table.tableInfo();
+	type=info.type();
+      }
       ofstream ofs(OutBuf.c_str());
       
       ostringstream os;
@@ -91,7 +93,8 @@ int main(int argc, char **argv)
       //
       if (type=="Measurement Set")
 	{
-	  MS ms(MSNBuf,Table::Update);
+	  //	  MS ms(MSNBuf,Table::Update);
+	  MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
 	  
 	  MSSummary mss(ms);
 	  
