@@ -1,7 +1,7 @@
 if [ $# -lt 1 ];
 then
   tt=`basename $0`;
-  echo "Usage: "$tt" <MSName> [1|0]"
+  echo "Usage: "$tt" <ImageName> [1|0]"
   exit;
 fi;
 if [ $# -gt 1 ];
