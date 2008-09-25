@@ -17,7 +17,7 @@ using namespace casa;
 //
 void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, string& MINBuf,
 	string& OutCTNBuf, string& OutDCBuf, string& fieldStr, string& timeStr, string& spwStr, string& antStr,
-	string& uvrangeStr, string& jonesType, Float &Gain, Int &niter, Float &tol, Float &integ, Float &paInc,
+	string& uvrangeStr, string& jonesType, Float &Gain, Int &niter, Float &tol, string& integStr, /*Float &integ, */ Float &paInc,
 	Int &wplanes, Int& nchan, Int& start, Int& step)
 {
   if (!restart)
@@ -40,7 +40,8 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, str
 	i=1;clgetSValp("model",MINBuf,i);  
 	i=1;clgetSValp("incal",CTNBuf,i);  
 	i=1;clgetSValp("outcal",OutCTNBuf,i);  
-	i=1;clgetFValp("integ",integ,i);  
+	//	i=1;clgetFValp("integ",integ,i);  
+	i=1;clgetSValp("integ",integStr,i);  
 
 	i=1;clgetIValp("nchan",nchan,i);
 	i=1;clgetIValp("start",start,i);
@@ -85,8 +86,9 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   string MSNBuf, MINBuf, CTNBuf, OutCTNBuf,
-    OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType;
+    OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, integStr;
   Float Gain=0.1, Tolerance=1E-7, Integ=0,paInc=1.0;
+
   Int Niter=100, wPlanes=1, nchan=1, start=0, step=1;
   Bool restartUI=False;;
   MSSelection msSelection;
@@ -100,7 +102,7 @@ int main(int argc, char **argv)
 
   UI(restartUI,argc, argv, MSNBuf,CTNBuf,MINBuf, OutCTNBuf, OutDC, 
      fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, Gain, Niter, 
-     Tolerance, Integ, paInc, wPlanes, nchan,start,step);
+     Tolerance, integStr, paInc, wPlanes, nchan,start,step);
   restartUI = False;
   //
   //---------------------------------------------------
@@ -161,15 +163,18 @@ int main(int argc, char **argv)
 		       False,        //calwt
 		       spwmap,
 		       0.0);         //opacity
-      calib.setsolve(jonesType,       // Type
-		     Integ,           // Solution interval
-		     Integ,           // Data integratin (before solver)
-		     False,           // Phase only?
-		     -1,              // Reference antenna 
-		     OutCalTableName, // Output cal. table name
-		     False,           // Append to the cal. table?
-		     diskCacheDir,    // Name of the CF disk cache
-		     paInc);          // PA increment (in deg).
+      calib.setsolve(jonesType, integStr, OutCalTableName, False, Integ, "", "", False, 1.0, "", 
+		     diskCacheDir, paInc);
+
+//       calib.setsolve(jonesType,       // Type
+// 		     Integ,           // Solution interval
+// 		     Integ,           // Data integratin (before solver)
+// 		     False,           // Phase only?
+// 		     -1,              // Reference antenna 
+// 		     OutCalTableName, // Output cal. table name
+// 		     False,           // Append to the cal. table?
+// 		     diskCacheDir,    // Name of the CF disk cache
+// 		     paInc);          // PA increment (in deg).
       calib.setmodel(ModImgName);
       calib.solve();
       return 0;
