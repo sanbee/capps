@@ -3,6 +3,8 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
+#include <msvis/MSVis/VisSet.h>
+#include <msvis/MSVis/VisSetUtil.h>
 //#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MeasurementComponents/Utils.h>
@@ -38,11 +40,10 @@ void toCASASVector(std::vector<string>& stdv, Vector<String>& tmp)
 
 void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, string& spwStr, 
 	string& antStr, string& fieldStr, string& uvDistStr, float& paInc, string& cfcache, 
-	string& pointingTable,
-	float& cellx, float& celly, string& stokes,string& mode, string& ftmac,string& wtType,
-	string& rmode,double &robust,Int &niter, Int &wplanes, Int& nx, Int& ny, 
-	Vector<Int>& datanchan, Vector<Int>& datastart,	Vector<Int>& datastep,Int &imnchan,
-	Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
+	string& pointingTable, float& cellx, float& celly, string& stokes,string& mode, 
+	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
+	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
+	Int &imnchan, Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
@@ -106,7 +107,11 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetIValp("facets",facets,i);
 	i=1;clgetIValp("wplanes",wplanes,i);  
 	
-	i=1;clgetIValp("applyoffsets",applyOffsets,i);  
+// 	CleaMap(watchPoints);
+// 	watchedKeys.resize(1);
+// 	watchedKeys[0]="pointingtable";
+// 	watchPoints["1"]=watchedKeys;
+	i=1;clgetIValp("applyoffsets",applyOffsets,i);
 	i=1;clgetIValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("pointingtable",pointingTable,i);  
 	i=1;clgetSValp("cfcache",cfcache,i);  
@@ -234,6 +239,45 @@ bool mdFromString(casa::MDirection &theDir, const casa::String &in)
 //
 //-------------------------------------------------------------------------
 //
+void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
+{
+  Block<int> sort(0);
+  sort.resize(5);
+  sort[0] = MS::FIELD_ID;
+  sort[1] = MS::FEED1;
+  sort[2] = MS::ARRAY_ID;
+  sort[3] = MS::DATA_DESC_ID;
+  sort[4] = MS::TIME;
+  Matrix<Int> noselection;
+
+  VisSet vs_p(theMS, sort, noselection);
+  VisIter& vi = vs_p.iter();
+  VisBuffer vb(vi);
+  vi.origin();
+  vi.originChunks();
+
+  for (vi.originChunks();vi.moreChunks();vi.nextChunk())
+    {
+      for (vi.origin(); vi.more(); vi++) 
+	{
+	  if (incremental) 
+	    {
+	      vi.setVis( (vb.modelVisCube() + vb.visCube()),
+			 VisibilityIterator::Corrected);
+	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
+	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+	    } 
+	  else 
+	    {
+	      vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
+	      vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+	    }
+	}
+    }
+};
+//
+//-------------------------------------------------------------------------
+//
 int main(int argc, char **argv)
 {
   //
@@ -351,7 +395,7 @@ int main(int argc, char **argv)
 
       Int field0=getPhaseCenter(selectedMS,mphaseCenter);
       cerr << "####Putting phase center on field no. " << field0 << endl;
-      mdFromString(mphaseCenter, phasecenter);
+      //      mdFromString(mphaseCenter, phasecenter);
       doshift=True;
 
       if (mode=="continuum") {imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
@@ -464,7 +508,11 @@ int main(int argc, char **argv)
 		       );
 	}
       else if (operation=="predict")
-	imager.ft(models,complist,False);
+	{
+	  imager.ft(models,complist,False);
+	  cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
+	  copyMData2Data(selectedMS);
+	}
       else if (operation=="dirty")
 	imager.makeimage("model",models[0]);
       else
