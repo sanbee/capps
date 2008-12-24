@@ -257,23 +257,19 @@ void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
   vi.originChunks();
 
   for (vi.originChunks();vi.moreChunks();vi.nextChunk())
-    {
-      for (vi.origin(); vi.more(); vi++) 
+    for (vi.origin(); vi.more(); vi++) 
+      if (incremental) 
 	{
-	  if (incremental) 
-	    {
-	      vi.setVis( (vb.modelVisCube() + vb.visCube()),
-			 VisibilityIterator::Corrected);
-	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
-	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
-	    } 
-	  else 
-	    {
-	      vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
-	      vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
-	    }
+	  vi.setVis( (vb.modelVisCube() + vb.visCube()),
+		     VisibilityIterator::Corrected);
+	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
+	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+	} 
+      else 
+	{
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
+	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
 	}
-    }
 };
 //
 //-------------------------------------------------------------------------
@@ -288,7 +284,8 @@ int main(int argc, char **argv)
   Float padding=1.0, pblimit, paInc,cellx,celly;
   Long cache=2*1024*1024*1024;
   Double robust=0.0;
-  Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, applyOffsets=0,dopbcorr=1;
+  Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, 
+    applyOffsets=0,dopbcorr=1;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
