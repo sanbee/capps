@@ -8,7 +8,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageSummary.h>
-#include <images/Images/ImageSummary.cc>
+//#include <images/Images/ImageSummary.cc>
 #include <lattices/Lattices/PagedArray.h>
 #include <fstream>
 //
