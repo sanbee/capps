@@ -163,8 +163,10 @@ int main(int argc, char **argv)
 		       False,        //calwt
 		       spwmap,
 		       0.0);         //opacity
-      calib.setsolve(jonesType, integStr, OutCalTableName, False, Integ, "", "", False, 1.0, "", 
-		     diskCacheDir, paInc);
+      calib.setsolve(String(jonesType), String(integStr), String(OutCalTableName), 
+		     False, (Double)Integ, String(""), String(""), 
+		     False, (Double)1.0, String(""), 0,
+		     String(diskCacheDir), (Double)paInc);
 
 //       calib.setsolve(jonesType,       // Type
 // 		     Integ,           // Solution interval
