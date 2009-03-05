@@ -51,6 +51,39 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, i
 //
 //-------------------------------------------------------------------------
 //
+void printBaselineList(Matrix<Int> list,ostream& os)
+{
+  os << "Baselines = ";
+  IPosition shp=list.shape();
+  for(Int j=0;j<shp(1);j++)
+    {
+      for(Int i=0;i<shp(0);i++)
+	os << list(i,j) << " ";
+      os << endl << "            " ;
+    }
+  os << endl;
+}
+//
+//-------------------------------------------------------------------------
+//
+void printInfo(MSSelection& msSelection)
+{
+  cout << "Ant1 = "         << msSelection.getAntenna1List() << endl
+       << "Ant2 = "         << msSelection.getAntenna2List() << endl
+    //       << "Baselines = "    << msSelection.getBaselineList() << endl
+       << "Field= "         << msSelection.getFieldList()    << endl
+       << "SPW  = "         << msSelection.getSpwList()      << endl
+       << "Chan = "         << msSelection.getChanList()     << endl
+       << "Scan = "         << msSelection.getScanList()     << endl
+       << "Array = "        << msSelection.getSubArrayList() << endl
+       << "Time = "         << msSelection.getTimeList()     << endl
+       << "UVRange = "      << msSelection.getUVList()       << endl
+       << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
+  printBaselineList(msSelection.getBaselineList(),cout);
+}
+//
+//-------------------------------------------------------------------------
+//
 int main(int argc, char **argv)
 {
   //
@@ -81,16 +114,8 @@ int main(int argc, char **argv)
       MSSelection msSelection(ms,MSSelection::PARSE_NOW,
 			      timeStr,baselineStr,fieldStr,spwStr,
 			      uvdistStr,taqlStr,corrStr,scanStr,arrayStr);
-      cout << "Ant1 = "         << msSelection.getAntenna1List() << endl
-	   << "Ant2 = "         << msSelection.getAntenna2List() << endl
-	   << "Field= "         << msSelection.getFieldList()    << endl
-	   << "SPW  = "         << msSelection.getSpwList()      << endl
-	   << "Chan = "         << msSelection.getChanList()     << endl
-	   << "Scan = "         << msSelection.getScanList()     << endl
-	   << "Array = "        << msSelection.getSubArrayList() << endl
-	   << "Time = "         << msSelection.getTimeList()     << endl
-	   << "UVRange = "      << msSelection.getUVList()       << endl
-	   << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
+
+      printInfo(msSelection);
 
       if (!msSelection.getSelectedMS(selectedMS))
 	{

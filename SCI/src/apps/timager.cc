@@ -306,7 +306,7 @@ int main(int argc, char **argv)
   pblimit=0.05;
   stokes="I"; ftmac="ft"; algo="cs"; operation="clean";
   wtType="uniform"; rmode="none"; mode="continuum";
-  casaMode="channel";
+  casaMode="none";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
   //
@@ -342,7 +342,7 @@ int main(int argc, char **argv)
       msSelection.setFieldExpr(fieldStr);
       msSelection.setUvDistExpr(uvDistStr);
       MS ms(AMSName,Table::Update),selectedMS(ms);
-      Vector<int> spwid, fieldid;
+      Vector<int> spwid, fieldid, antNdx;
       TableExprNode exprNode=msSelection.toTableExprNode(&ms);
       if (!exprNode.isNull())
 	{
@@ -381,14 +381,21 @@ int main(int argc, char **argv)
 		     casa::Quantity(1,"km/s"),//mstep
 		     spwid,    //vector<int>
 		     fieldid,  //<vector<int>
-		     String(taql)//msselect
+		     String(taql));
+      /*,//msselect
+		     String(timeStr), 
+		     String(fieldStr), antNdx,
+		     String(antStr), 
+		     String(spwStr), 
+		     String(uvDistStr)
 		     );
+      */
       Bool doshift=False;
       MDirection mphaseCenter;
       String phasecenter("18h00m00.00 -23d00m00.000 J2000");
       mdFromString(mphaseCenter, phasecenter);
       
-      //      Int field0=getPhaseCenter(selectedMS,mphaseCenter,6);
+      //Int field0=getPhaseCenter(selectedMS,mphaseCenter,6);
 
       Int field0=getPhaseCenter(selectedMS,mphaseCenter);
       cerr << "####Putting phase center on field no. " << field0 << endl;
@@ -399,6 +406,9 @@ int main(int argc, char **argv)
       else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
       else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
+      casaMode="channel";
+      cout << datastart << " " << datanchan << endl;
+      cout << imnchan << " " << imstart << " " << imstep << endl;
       imager.setimage(nx,ny,
 		      casa::Quantity((Double)cellx,"arcsec"),
 		      casa::Quantity((Double)celly,"arcsec"),
