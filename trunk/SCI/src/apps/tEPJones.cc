@@ -3,6 +3,7 @@
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <synthesis/MeasurementComponents/Calibrater.h>
+#include "./casaChecks.h"
 #include <cl.h>
 #include <clinteract.h>
 #include <xmlcasa/Quantity.h>
@@ -109,9 +110,11 @@ int main(int argc, char **argv)
   //
   try
     {
-      if (!getenv("AIPSPATH"))
-	throw(AipsError("Environment variable AIPSPATH not found.  "
-			"Perhaps you forgot to source casainit.sh/csh?"));
+//       if (!getenv("AIPSPATH"))
+// 	throw(AipsError("Environment variable AIPSPATH not found.  "
+// 			"Perhaps you forgot to source casainit.sh/csh?"));
+
+      checkCASAEnv();
 
       Calibrater calib;
       String MSName(MSNBuf),CalTableName(CTNBuf),ModImgName(MINBuf),
