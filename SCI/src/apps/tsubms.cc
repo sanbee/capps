@@ -34,7 +34,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf,
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
       clgetFullValp("whichcol",WhichColStr);
-      i=1;clgetIValp("deepcopy",deepCopy,i);
+      //      i=1;clgetIValp("deepcopy",deepCopy,i);
       clgetFullValp("field",fieldStr);
       clgetFullValp("time",timeStr);  
       i=1;clgetFValp("integ",integ,i);
@@ -86,6 +86,9 @@ int main(int argc, char **argv)
   //
   try
     {
+      if (OutMSBuf == "")
+	throw(clError("Need an output MS name", "###UserError"));
+
       MS ms(MSNBuf,Table::Update),selectedMS(ms);
       //
       // Setup the MSSelection thingi
