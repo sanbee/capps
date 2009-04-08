@@ -30,7 +30,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf,
   try
     {
       int i;
-      MSNBuf=OutMSBuf=WhichColStr=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=scanStr=arrayStr="";
+      MSNBuf=OutMSBuf=timeStr=baselineStr=uvdistStr=scanStr=arrayStr="";
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
       clgetFullValp("whichcol",WhichColStr);
@@ -61,14 +61,15 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   //  MSSelection msSelection;
-  string MSNBuf,OutMSBuf,WhichColStr,fieldStr,timeStr,spwStr,baselineStr,uvdistStr,
-    taqlStr,scanStr,arrayStr, corrStr;
+  string MSNBuf,OutMSBuf,WhichColStr="data",fieldStr="*",timeStr,spwStr="*",
+    baselineStr,uvdistStr, taqlStr,scanStr,arrayStr,corrStr;
   Int deepCopy=0;
   Bool restartUI=False;;
   Float integ=-1;
  RENTER:// UI re-entry point.
   MSNBuf=OutMSBuf=WhichColStr=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=
     taqlStr=scanStr=corrStr=arrayStr="";
+  WhichColStr="data"; fieldStr="*"; spwStr="*";
   deepCopy=0;
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, WhichColStr, deepCopy,
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,integ);
