@@ -44,6 +44,12 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf,
       clgetFullValp("array",arrayStr);  
       clgetFullValp("uvdist",uvdistStr);  
       dbgclgetFullValp("taql",taqlStr);  
+      VString options;
+      options.resize(5);
+      options[0]="data, "; options[1]="model, "; options[2]="corrected, ";
+      options[3]="all, or "; options[4]="a list of columns names";
+      clSetOptions("whichcol", options);
+
       EndCL();
     }
   catch (clError x)
