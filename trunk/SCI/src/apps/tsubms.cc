@@ -46,8 +46,8 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf,
       dbgclgetFullValp("taql",taqlStr);  
       VString options;
       options.resize(5);
-      options[0]="data"; options[1]="model"; options[2]="corrected";
-      options[3]="all"; options[4]="a list of columns names";
+      options[0]="data, "; options[1]="model, "; options[2]="corrected, ";
+      options[3]="all, or "; options[4]="a list of columns names";
       clSetOptions("whichcol", options);
 
       EndCL();
@@ -90,33 +90,6 @@ int main(int argc, char **argv)
 	throw(clError("Need an output MS name", "###UserError"));
 
       MS ms(MSNBuf,Table::Update),selectedMS(ms);
-      //
-      // Setup the MSSelection thingi
-      //
-      String corrStr;corrStr.resize(0);
-      MSSelection msSelection(ms,MSSelection::PARSE_NOW,
-			      timeStr,baselineStr,fieldStr,spwStr,
-			      uvdistStr,taqlStr,corrStr,scanStr,arrayStr);
-      cout << "Ant1 = "         << msSelection.getAntenna1List() << endl
-	   << "Ant2 = "         << msSelection.getAntenna2List() << endl
-	   << "Field= "         << msSelection.getFieldList()    << endl
-	   << "SPW  = "         << msSelection.getSpwList()      << endl
-	   << "Chan = "         << msSelection.getChanList()     << endl
-	   << "Scan = "         << msSelection.getScanList()     << endl
-	   << "Array = "        << msSelection.getSubArrayList() << endl
-	   << "Time = "         << msSelection.getTimeList()     << endl
-	   << "UVRange = "      << msSelection.getUVList()       << endl
-	   << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
-
-      if (!msSelection.getSelectedMS(selectedMS))
-	{
-	  cerr << "###Informational:  Nothing selected.  ";
-	  if (OutMSBuf != "")
-	    cout << "New MS not written." << endl;
-	  else
-	    cout << endl;
-	}
-      else
 	if (OutMSBuf != "")
 	  {
 	    //
@@ -125,7 +98,7 @@ int main(int argc, char **argv)
 	    String OutMSName(OutMSBuf), WhichCol(WhichColStr);
 	    //	    SubMS splitter(selectedMS);
 	    //
-	    // SubMS class is not msselection compliant (it's a stange
+	    // SubMS class is not msselection compliant (it's a strange
 	    // mix of msselection and selection-by-hand)!
 	    //
 	    SubMS splitter(ms);
@@ -138,9 +111,7 @@ int main(int argc, char **argv)
 	    splitter.selectTime(integ,CtimeStr);
 	    splitter.makeSubMS(OutMSName, WhichCol);
 	  }
-// 	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
-// 	  else          selectedMS.rename(OutMSBuf,Table::New);
-      cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
+	//      cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
     }
   catch (clError& x)
     {
