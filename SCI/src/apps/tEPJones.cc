@@ -88,7 +88,7 @@ int main(int argc, char **argv)
   //
   string MSNBuf, MINBuf, CTNBuf, OutCTNBuf,
     OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, integStr;
-  Float Gain=0.1, Tolerance=1E-7, Integ=0,paInc=1.0;
+  Float Gain=0.1, Tolerance=1E-15, Integ=0,paInc=1.0;
 
   Int Niter=100, wPlanes=1, nchan=1, start=0, step=1;
   Bool restartUI=False;;
@@ -150,11 +150,12 @@ int main(int argc, char **argv)
 // 		    Vector<Double>(1,0),
 // 		    "");
       Vector<Double> uvrange(1,0);
-      calib.setdata("channel",  // Mode
-		    nchan,       // NChan
-		    start,       // Start
-		    step       // Step
-		    );  
+//       calib.setdata("channel",  // Mode
+// 		    nchan,       // NChan
+// 		    start,       // Start
+// 		    step       // Step
+// 		    );  
+      calib.selectvis("","","","","","","channel",nchan,start,step);
       calib.reset(True,True);
       Vector<Int> spwmap(1,-1);
       if (CTNBuf != "")
@@ -166,20 +167,22 @@ int main(int argc, char **argv)
 		       False,        //calwt
 		       spwmap,
 		       0.0);         //opacity
-      calib.setsolve(String(jonesType), String(integStr), String(OutCalTableName), 
-		     False, (Double)Integ, String(""), String(""), 
-		     False, (Double)1.0, String(""), 0,
-		     String(diskCacheDir), (Double)paInc);
+//       calib.setsolve(String(jonesType), String(integStr), String(OutCalTableName), 
+// 		     False, (Double)Integ, String(""), String(""), 
+// 		     False, (Double)1.0, String(""), 0,
+// 		     String(diskCacheDir), (Double)paInc);
+      
+      ostringstream IntegStr;
+      //      IntegStr << Integ << "s";
 
-//       calib.setsolve(jonesType,       // Type
-// 		     Integ,           // Solution interval
-// 		     Integ,           // Data integratin (before solver)
-// 		     False,           // Phase only?
-// 		     -1,              // Reference antenna 
-// 		     OutCalTableName, // Output cal. table name
-// 		     False,           // Append to the cal. table?
-// 		     diskCacheDir,    // Name of the CF disk cache
-// 		     paInc);          // PA increment (in deg).
+      calib.setsolve(jonesType,       // Type
+		     integStr,           // Solution interval
+		     OutCalTableName,
+		     False,           // Append to the cal. table?
+		     Integ,           // Data integratin (before solver)
+		     "AP",4,"",False,0.0f,"",0,
+		     diskCacheDir,    // Name of the CF disk cache
+		     paInc);          // PA increment (in deg).
       calib.setmodel(ModImgName);
       calib.solve();
       return 0;

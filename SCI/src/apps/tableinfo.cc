@@ -100,6 +100,7 @@ int main(int argc, char **argv)
 	  
 	  mss.list(logio, verbose!=0);
 	  ofs << (os.str().c_str()) << endl;
+	  exit(0);
 	}
       else if (type=="Image")
 	{
@@ -126,6 +127,7 @@ int main(int argc, char **argv)
 	    }
 	  else
 	    logio << "Unrecognized image data type." << LogIO::EXCEPTION;
+	  exit(0);
 	}
       else 
 	{
