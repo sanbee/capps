@@ -44,7 +44,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
 	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
 	Int &imnchan, Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
-	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
+	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, Vector<String>& psfs,
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
 	Int& interactive,Long& cache)
@@ -66,7 +66,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
  	SMap watchPoints; vector<string> watchedKeys;
 	vector<int> imsize(2,0);
 	vector<float> cell(2,0);
-	vector<string> tmods, trest, tresid,tmasks, tms;
+	vector<string> tmods, trest, tresid,tmasks, tms, tpsfs;
 
 	i=1;clgetSValp("ms", MSName,i);  
 	//	toCASAVector(tms, MSName);
@@ -82,10 +82,12 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=0;clgetNSValp("model",tmods,i);
 	i=0;clgetNSValp("restored",trest,i);
 	i=0;clgetNSValp("residual",tresid,i);
+	i=0;clgetNSValp("psf",tpsfs,i);
 	i=0;clgetNSValp("mask",tmasks,i);
 	toCASASVector(tmods,models);
 	toCASASVector(trest,restoredImgs);
 	toCASASVector(tresid,residuals);
+	toCASASVector(tpsfs,psfs);
 	toCASASVector(tmasks,masks);
 
 	i=1;clgetSValp("complist",complist,i);
@@ -290,7 +292,7 @@ int main(int argc, char **argv)
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
   Float gain,threshold;
-  Vector<String> models, restoredImgs, residuals,masks;
+  Vector<String> models, restoredImgs, residuals,masks,psfs;
   String complist,operation;
   MSSelection msSelection;
 
@@ -315,7 +317,7 @@ int main(int argc, char **argv)
   UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, paInc, 
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
-     facets,gain,threshold,models,restoredImgs,residuals,masks,complist,algo,taql,
+     facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache);
 
   if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
@@ -327,6 +329,8 @@ int main(int argc, char **argv)
       if (!(getenv("AIPSPATH") || getenv("CASAPATH")))
 	throw(AipsError("Neither AIPSPATH nor CASAPATH environment variable found.  "
 			"Perhaps you forgot to source casainit.sh/csh?"));
+      if (cfcache=="") 
+	throw(AipsError("CF cache directory name is blank!"));
 
       Imager imager;
       String AMSName(MSName),diskCacheDir(cfcache);
@@ -350,7 +354,9 @@ int main(int argc, char **argv)
 	  spwid=msSelection.getSpwList();
 	  fieldid=msSelection.getFieldList();
 	}
-      cout << "Field IDs = " << fieldid << endl;
+      cerr << "Field ID list: " << fieldid << endl;
+      //cout << "Field IDs = " << fieldid << endl;
+      //cout << "Spw IDs = " << spwid << endl;
       //
       // Imager requires the list of spectral window IDs and field IDs
       // present in the MS that is supplied to it.  This sort of
@@ -358,7 +364,7 @@ int main(int argc, char **argv)
       //
       if (spwid.nelements()   == 0) {spwid.resize(1);   spwid(0)=0;}
       if (fieldid.nelements() == 0) {fieldid.resize(1); fieldid(0)=0;}
-      fieldid.resize();
+      //      fieldid.resize();
       //      indgen(spwid);indgen(fieldid);
       //
       // Set up the imager
@@ -387,13 +393,13 @@ int main(int argc, char **argv)
 		     );
       Bool doshift=False;
       MDirection mphaseCenter;
-      String phasecenter("18h00m00.00 -23d00m00.000 J2000");
+      String phasecenter("18h00m02.978 -23d00m01.411 J2000");
       mdFromString(mphaseCenter, phasecenter);
       
       //      Int field0=getPhaseCenter(selectedMS,mphaseCenter,6);
 
       Int field0=getPhaseCenter(selectedMS,mphaseCenter);
-      cerr << "####Putting phase center on field no. " << field0 << endl;
+      //      cerr << "####Putting phase center on field no. " << field0 << endl;
       //      mdFromString(mphaseCenter, phasecenter);
       doshift=True;
 
@@ -462,6 +468,7 @@ int main(int argc, char **argv)
       MPosition mlocation;
       //mpFromString(mlocation, location);
       if (cache <= 0) cache=nx*ny*2;
+      /*
       imager.setoptions(ftmac,            //Def="ft"
 			cache,            // Def=4194304
 			16,               // tile Def=16
@@ -470,6 +477,22 @@ int main(int argc, char **argv)
 			padding,          // Def=1.0
 			usemodelcol,
 			wPlanes,
+			pointingTable,    //epjTableName
+			applyPointingOffsets,//Def=True
+			applyPointingCorrections,//Def=true
+			cfcache,          //Def=""
+			paInc,            // Def=4.0
+			pblimit           // Def=0.05
+			);
+      */
+      imager.setoptions(ftmac,            //Def="ft"
+			cache,            // Def=4194304
+			16,               // tile Def=16
+			"sf",             // gridfunction Def="sf"
+			mlocation,        // Def=""
+			padding,          // Def=1.0
+			wPlanes,
+			//			usemodelcol,
 			pointingTable,    //epjTableName
 			applyPointingOffsets,//Def=True
 			applyPointingCorrections,//Def=true
@@ -523,7 +546,8 @@ int main(int argc, char **argv)
 		       complist,              //String
 		       masks,                 //Vector<String>
 		       restoredImgs,          //Vector<String>
-		       residuals              //Vector<String>
+		       residuals,             //Vector<String>
+		       psfs
 		       );
 	}
       else if (operation=="predict")
