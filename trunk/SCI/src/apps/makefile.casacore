@@ -1,15 +1,14 @@
-include makefile.inc
+# -*- makefile -*-
+include makefile.casacore.inc
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
            $(DEFS64)                                        \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
-           -DCASACORE_NEEDS_RETHROW                             \
            -DAIPS_LINUX                                     \
            -DAIPS_LITTLE_ENDIAN                             \
            -DAIPS_STDLIB                                    \
            -DAIPS_NO_LEA_MALLOC                             \
-           -DAIPS_NO_LEAMALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
 	   -DAIPS_DEBUG                                     \
@@ -19,7 +18,7 @@ CPPFLAGS = $(OPT) -Wno-deprecated                           \
 	   -Wall -pipe -Wno-non-template-friend             \
 	   -Woverloaded-virtual -Wcast-align                \
 	   -Wno-comment -D_FILE_OFFSET_BITS=64              \
-	   -D_LARGEFILE_SOURCE  -fPIC
+	   -D_LARGEFILE_SOURCE  
 
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
@@ -34,7 +33,8 @@ PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
 INCL = -I.                                                      \
        -I$(CLHOME)/include                                      \
-       -I$(COREROOT)/include/casacore                               \
+       -I$(COREROOT)/include/$(CASACORENAME)                               \
+       -I$(CASAROOT)/include/$(CASACORENAME)                               \
        -I$(COREROOT)/include                               \
        -I$(CASAROOT)/code/include                                  \
        -I/usr/include/cfitsio                                   \
@@ -47,12 +47,13 @@ INCL = -I.                                                      \
 DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a       \
 	  $(DISPLAYROOT)/lib/libcasaqt.a            \
 	  $(DISPLAYROOT)/lib/libgraphics.a \
-	  $(CASAROOT)/$(ARCH)/lib/libwcs.a              \
-	  $(CASAROOT)/$(ARCH)/lib/libpgsbox.a              
+	  $(WCSPKG)/libwcs.a              \
+	  $(PGPLOTPKG)/libpgsbox.so              
 
 
 SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a     \
-	  $(SYNTHROOT)/lib/libcalibration.a      
+	  $(SYNTHROOT)/lib/libcalibration.a         \
+	  -laatm
 #	  $(SYNTHROOT)/lib/libgraphics.a         
 
 CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so        \
@@ -75,17 +76,11 @@ CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images\
             -lcasa_fits -lcasa_measures -lcasa_measures_f\
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f \
             -lcasa_casa -lflagging -lcasaqt
-         
 
-#
-# The following order of libraries gives an error on 64-bit when the
-#application exits
-#
-#CASALIBS = $(SYNTHESISLIBS) $(DISPLAYLIBS) $(CORELIBS1)
-#
-# Following order eliminates the error!
-#
 CASALIBS = $(CORELIBS1) $(SYNTHESISLIBS) $(DISPLAYLIBS)
+
+CASAAPPSLIBS = casaChecks.o
+#CASAAPPSLIBS = 
 
 UILIBS = $(CLHOME)/lib/libshccl.a                 \
          $(CLHOME)/lib/libsh.a                    \
@@ -106,9 +101,9 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib                     \
 	  -lcfitsio -llapack -lblas                     \
 	  -L/usr/local/lib -lcpgplot -lpgplot     \
 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext           \
-	  $(CASAROOT)/$(ARCH)/lib/libwcs.a              \
-	  $(CASAROOT)/$(ARCH)/lib/libpgsbox.a              \
-	  -lQtCore -lQtGui -lQtXml -lqwt
+	  $(WCSPKG)/libwcs.a              \
+	  $(PGPLOTPKG)/libpgsbox.so  \
+	  -lQtCore -lQtGui -lQtXml -lqwt -lgomp
 
 #	  -lg2c -L/usr/local/lib -lcpgplot -lpgplot     \
 #
@@ -143,8 +138,9 @@ install: all
 $(OBJECTS): %.o: %.cc 
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
-$(APPS): % : %.o 
-	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) $(CASALIBS) $(PYLIBS) $(UILIBS) -o $@
+$(APPS): % : %.o $(CASAAPPSLIBS)
+	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) $(CASALIBS) $(PYLIBS) $(UILIBS) \
+	 $(CASAAPPSLIBS) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 #
 #-------------------------------------------------------------------------------------------------
