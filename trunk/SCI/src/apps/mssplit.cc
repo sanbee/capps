@@ -16,7 +16,7 @@ using namespace casa;
 //
 void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, int& deepCopy,
 	string& fieldStr, string& timeStr, string& spwStr, string& baselineStr,
-	string& scanStr, string& arrayStr, string& uvdistStr,string& taqlStr)
+	string& scanStr, string& arrayStr, string& uvdistStr,string& taqlStr, string& polnStr)
 {
   if (!restart)
     {
@@ -28,13 +28,14 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, i
   try
     {
       int i;
-      MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=scanStr=arrayStr="";
+      MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr="";
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
       i=1;clgetIValp("deepcopy",deepCopy,i);
       clgetFullValp("field",fieldStr);
       clgetFullValp("time",timeStr);  
       clgetFullValp("spw",spwStr);  
+      clgetFullValp("poln", polnStr);
       clgetFullValp("baseline",baselineStr);  
       clgetFullValp("scan",scanStr);  
       clgetFullValp("array",arrayStr);  
@@ -68,18 +69,21 @@ void printBaselineList(Matrix<Int> list,ostream& os)
 //
 void printInfo(MSSelection& msSelection)
 {
-  cout << "Ant1 = "         << msSelection.getAntenna1List() << endl
-       << "Ant2 = "         << msSelection.getAntenna2List() << endl
+  cout << "Ant1         = " << msSelection.getAntenna1List() << endl
+       << "Ant2         = " << msSelection.getAntenna2List() << endl
     //       << "Baselines = "    << msSelection.getBaselineList() << endl
-       << "Field= "         << msSelection.getFieldList()    << endl
-       << "SPW  = "         << msSelection.getSpwList()      << endl
-       << "Chan = "         << msSelection.getChanList()     << endl
-       << "Scan = "         << msSelection.getScanList()     << endl
-       << "Array = "        << msSelection.getSubArrayList() << endl
-       << "Time = "         << msSelection.getTimeList()     << endl
-       << "UVRange = "      << msSelection.getUVList()       << endl
-       << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
-  printBaselineList(msSelection.getBaselineList(),cout);
+       << "Field        = " << msSelection.getFieldList()    << endl
+       << "SPW          = " << msSelection.getSpwList()      << endl
+       << "Chan         = " << msSelection.getChanList()     << endl
+       << "Scan         = " << msSelection.getScanList()     << endl
+       << "Array        = " << msSelection.getSubArrayList() << endl
+       << "Time         = " << msSelection.getTimeList()     << endl
+       << "UVRange      = " << msSelection.getUVList()       << endl
+       << "UV in meters = " << msSelection.getUVUnitsList()  << endl
+       << "DDIDs        = " << msSelection.getDDIDList()     << endl
+       << "PolMap       = " << msSelection.getPolMap()       << endl
+       << "CorrMap      = " << msSelection.getCorrMap( )     << endl;
+  //  printBaselineList(msSelection.getBaselineList(),cout);
 }
 //
 //-------------------------------------------------------------------------
@@ -90,15 +94,15 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   //  MSSelection msSelection;
-  string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,uvdistStr,taqlStr,scanStr,arrayStr, corrStr;
+  string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,uvdistStr,taqlStr,scanStr,arrayStr, corrStr, polnStr;
   Int deepCopy=0;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
-  MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=taqlStr=scanStr=corrStr=arrayStr="";
+  MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=taqlStr=scanStr=corrStr=arrayStr=polnStr="";
   deepCopy=0;
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, deepCopy,
-     fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr);
+     fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,polnStr);
   restartUI = False;
   corrStr.resize(0);
   //
@@ -113,7 +117,7 @@ int main(int argc, char **argv)
       String corrStr;corrStr.resize(0);
       MSSelection msSelection(ms,MSSelection::PARSE_NOW,
 			      timeStr,baselineStr,fieldStr,spwStr,
-			      uvdistStr,taqlStr,corrStr,scanStr,arrayStr);
+			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr);
 
       printInfo(msSelection);
 
