@@ -1,3 +1,4 @@
+# -*- makefile -*-
 #
 # Most of the user defined variables are here.  More complicated
 # compiler and linker variables are in the makefile.  It is hoped that

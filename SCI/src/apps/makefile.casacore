@@ -44,9 +44,16 @@ INCL = -I.                                                      \
        -I$(QT4HOME)/include/QtXml                               \
        -I$(QT4HOME)/include/qwt
 
+#DISPLAYLIBS = -lefence $(DISPLAYROOT)/lib/libdisplay.a       \
+#	  $(DISPLAYROOT)/lib/libcasaqt.a            \
+#	  $(DISPLAYROOT)/lib/libgraphics.a \
+#	  $(WCSPKG)/libwcs.a              \
+#	  $(PGPLOTPKG)/libpgsbox.so              
+#
+# Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
+#
 DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a       \
 	  $(DISPLAYROOT)/lib/libcasaqt.a            \
-	  $(DISPLAYROOT)/lib/libgraphics.a \
 	  $(WCSPKG)/libwcs.a              \
 	  $(PGPLOTPKG)/libpgsbox.so              
 

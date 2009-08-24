@@ -28,7 +28,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, i
   try
     {
       int i;
-      MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr="";
+      MSNBuf=OutMSBuf=timeStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr="";
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
       i=1;clgetIValp("deepcopy",deepCopy,i);
@@ -101,6 +101,7 @@ int main(int argc, char **argv)
  RENTER:// UI re-entry point.
   MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=taqlStr=scanStr=corrStr=arrayStr=polnStr="";
   deepCopy=0;
+  fieldStr=spwStr="*";
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, deepCopy,
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,polnStr);
   restartUI = False;

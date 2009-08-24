@@ -46,7 +46,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Int &imnchan, Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, Vector<String>& psfs,
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
-	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
+	float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
 	Int& interactive,Long& cache)
 {
   if (!restart)
@@ -109,12 +109,14 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetIValp("facets",facets,i);
 	i=1;clgetIValp("wplanes",wplanes,i);  
 	
-// 	CleaMap(watchPoints);
-// 	watchedKeys.resize(1);
-// 	watchedKeys[0]="pointingtable";
-// 	watchPoints["1"]=watchedKeys;
-	i=1;clgetIValp("applyoffsets",applyOffsets,i);
-	i=1;clgetIValp("dopbcorr",dopbcorr,i);  
+	// Nothing other than clgetSValp can handle watchPoints.  Yuks!
+	//
+	ClearMap(watchPoints);
+	watchedKeys.resize(1);
+	watchedKeys[0]="pointingtable";
+	watchPoints["1"]=watchedKeys;
+	i=1;clgetBValp("applyoffsets",applyOffsets,i,watchPoints);
+	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("pointingtable",pointingTable,i);  
 	i=1;clgetSValp("cfcache",cfcache,i);  
 	i=1;clgetFValp("painc",paInc,i);  
@@ -286,8 +288,8 @@ int main(int argc, char **argv)
   Float padding=1.0, pblimit, paInc,cellx,celly;
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
-  Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, 
-    applyOffsets=0,dopbcorr=1;
+  Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1;
+  bool applyOffsets=false,dopbcorr=true;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
@@ -320,8 +322,10 @@ int main(int argc, char **argv)
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache);
 
-  if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
-  if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
+  // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
+  // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
+  applyPointingOffsets=applyOffsets;
+  applyPointingCorrections=dopbcorr;
   restartUI = False;
   //---------------------------------------------------
   try
@@ -403,10 +407,11 @@ int main(int argc, char **argv)
       //      mdFromString(mphaseCenter, phasecenter);
       doshift=True;
 
-      if (mode=="continuum") {imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
+      if (mode=="continuum") {casaMode="mfs";imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
       else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
-      else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
+      else throw(AipsError("Incorrect setting for keyword \"mode\".  "
+			   "Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
       imager.defineImage(nx,ny,
