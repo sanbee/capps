@@ -15,7 +15,7 @@ using namespace casa;
 //
 #define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
 void UI(Bool restart, int argc, char **argv, string& fitsFileNameBuf, string& msFileNameBuf, 
-	Int& newNameStyle)
+	bool& newNameStyle)
 {
   if (!restart)
     {
@@ -33,7 +33,7 @@ void UI(Bool restart, int argc, char **argv, string& fitsFileNameBuf, string& ms
       {
 	i=1;clgetSValp("fitsfile", fitsFileNameBuf,i);
 	i=1;clgetSValp("msfile",msFileNameBuf,i);
-	i=1;clgetIValp("newnames",newNameStyle,i);
+	i=1;clgetBValp("newnames",newNameStyle,i);
       }
       EndCL();
     }
@@ -47,7 +47,7 @@ void UI(Bool restart, int argc, char **argv, string& fitsFileNameBuf, string& ms
 int main(int argc, char **argv)
 {
   string msFileNameBuf, fitsFileNameBuf;
-  Int newNameStyle=1;
+  Bool newNameStyle=1;
   Bool restartUI=False;
 
  RENTER:// UI re-entry point.
@@ -55,12 +55,12 @@ int main(int argc, char **argv)
   UI(restartUI,argc, argv, fitsFileNameBuf, msFileNameBuf, newNameStyle);
   restartUI = False;
 
-  Bool newNameStyleBool=(newNameStyle >= 1);
+  //Bool newNameStyleBool=(newNameStyle >= 1);
   try
     {
-      if (msFileNameBuf=="") throw(AipsError("Output file name is blank"));
       if (fitsFileNameBuf=="") throw(AipsError("Input file name is blank"));
-      MSFitsInput uvfits2MS(msFileNameBuf, fitsFileNameBuf, newNameStyleBool);
+      if (msFileNameBuf=="") throw(AipsError("Output file name is blank"));
+      MSFitsInput uvfits2MS(msFileNameBuf, fitsFileNameBuf, newNameStyle);
       uvfits2MS.readFitsFile();
     }
     catch (clError& x)
