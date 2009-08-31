@@ -63,7 +63,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
     {
       int i;
       {
- 	SMap watchPoints; vector<string> watchedKeys;
+ 	SMap watchPoints; vector<string> exposedKeys;
 	vector<int> imsize(2,0);
 	vector<float> cell(2,0);
 	vector<string> tmods, trest, tresid,tmasks, tms, tpsfs;
@@ -93,17 +93,17 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetSValp("complist",complist,i);
 	
 	ClearMap(watchPoints);
-	watchedKeys.resize(2);
-	watchedKeys[0]="facets";  watchedKeys[1]="wplanes";
-	watchPoints["wproject"]=watchedKeys;
+	exposedKeys.resize(2);
+	exposedKeys[0]="facets";  exposedKeys[1]="wplanes";
+	watchPoints["wproject"]=exposedKeys;
 
-	watchedKeys.resize(7);
-	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
-	watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
-	watchedKeys[4]="pointingtable"; watchedKeys[5]="applyoffsets";
-	watchedKeys[6]="dopbcorr";
-	watchPoints["pbwproject"]=watchedKeys;	
-	watchPoints["pbmosaic"]=watchedKeys;	
+	exposedKeys.resize(7);
+	exposedKeys[0]="facets";        exposedKeys[1]="wplanes";
+	exposedKeys[2]="cfcache";       exposedKeys[3]="painc";
+	exposedKeys[4]="pointingtable"; exposedKeys[5]="applyoffsets";
+	exposedKeys[6]="dopbcorr";
+	watchPoints["pbwproject"]=exposedKeys;	
+	watchPoints["pbmosaic"]=exposedKeys;	
 
 	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
 	i=1;clgetIValp("facets",facets,i);
@@ -112,9 +112,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	// Nothing other than clgetSValp can handle watchPoints.  Yuks!
 	//
 	ClearMap(watchPoints);
-	watchedKeys.resize(1);
-	watchedKeys[0]="pointingtable";
-	watchPoints["1"]=watchedKeys;
+	exposedKeys.resize(1);
+	exposedKeys[0]="pointingtable";
+	watchPoints["1"]=exposedKeys;
 	i=1;clgetBValp("applyoffsets",applyOffsets,i,watchPoints);
 	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("pointingtable",pointingTable,i);  
@@ -126,9 +126,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetSValp("stokes",stokes,i);
 
 	ClearMap(watchPoints);
- 	watchedKeys.resize(2);
-	watchedKeys[0]="rmode";watchedKeys[1]="robust";
- 	watchPoints["briggs"]=watchedKeys;
+ 	exposedKeys.resize(2);
+	exposedKeys[0]="rmode";exposedKeys[1]="robust";
+ 	watchPoints["briggs"]=exposedKeys;
 	i=1;clgetSValp("weighting",wtType,i,watchPoints);
 
 	i=1;clgetSValp("rmode",rmode,i);
@@ -143,10 +143,10 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFullValp("uvrange",uvDistStr);  
 
 	ClearMap(watchPoints);
-	watchedKeys.resize(3);
-	watchedKeys[0]="imnchan";  watchedKeys[1]="imstart";
-	watchedKeys[2]="imstep";   
-	watchPoints["pseudo"]=watchedKeys;
+	exposedKeys.resize(3);
+	exposedKeys[0]="imnchan";  exposedKeys[1]="imstart";
+	exposedKeys[2]="imstep";   
+	watchPoints["pseudo"]=exposedKeys;
 
 	i=1;clgetSValp("mode",mode,i, watchPoints);
 	vector<int> dnc(1,1),dstrt(1,0),dstp(1,1);
@@ -162,10 +162,10 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetIValp("imstep",imstep,i);
 
 	ClearMap(watchPoints);
-	watchedKeys.resize(4);
-	watchedKeys[0]="gain";      watchedKeys[1]="niter";
-	watchedKeys[2]="threshold"; watchedKeys[3]="interactive";
-	watchPoints["clean"]=watchedKeys;
+	exposedKeys.resize(4);
+	exposedKeys[0]="gain";      exposedKeys[1]="niter";
+	exposedKeys[2]="threshold"; exposedKeys[3]="interactive";
+	watchPoints["clean"]=exposedKeys;
 	i=1;clgetSValp("operation",operation,i,watchPoints);
 
 	i=1;clgetFValp("gain",gain,i);
