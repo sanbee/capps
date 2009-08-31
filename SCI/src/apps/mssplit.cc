@@ -135,8 +135,6 @@ int main(int argc, char **argv)
 	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
 	  else          selectedMS.rename(OutMSBuf,Table::New);
       cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
-      cerr << "Waiting for input...";
-      cin >> polnStr;
     }
   catch (clError& x)
     {
