@@ -26,7 +26,7 @@ using namespace casa;
 //
 void UI(Bool restart, int argc, char **argv, 
 	string& MSNBuf, string& OutBuf,
-	int& verbose)
+	bool& verbose)
 {
   if (!restart)
     {
@@ -42,7 +42,7 @@ void UI(Bool restart, int argc, char **argv,
       MSNBuf=OutBuf="";
       i=1;clgetSValp("table", MSNBuf,i);  
       i=1;clgetSValp("outfile",OutBuf,i);  
-      i=1;clgetIValp("verbose",verbose,i);  
+      i=1;clgetBValp("verbose",verbose,i);  
       EndCL();
     }
   catch (clError x)
@@ -61,8 +61,7 @@ int main(int argc, char **argv)
   //
   //  MSSelection msSelection;
   string MSNBuf,OutBuf;
-  Int verbose=0;
-  Bool restartUI=False;;
+  Bool verbose=0, restartUI=False;;
 
  RENTER:// UI re-entry point.
   MSNBuf=OutBuf="";
@@ -149,6 +148,7 @@ int main(int argc, char **argv)
     {
       cerr << "###AipsError: " << x.getMesg() << endl;
       restartUI=True;
+      exit(0);
     }
   if (restartUI) RestartUI(RENTER);
 }

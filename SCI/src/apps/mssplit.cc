@@ -14,7 +14,7 @@ using namespace casa;
 #define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
 //#define RestartUI(Label)  {if(clIsInteractive()) {clRetry();goto Label;}}
 //
-void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, int& deepCopy,
+void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, bool& deepCopy,
 	string& fieldStr, string& timeStr, string& spwStr, string& baselineStr,
 	string& scanStr, string& arrayStr, string& uvdistStr,string& taqlStr, string& polnStr)
 {
@@ -31,11 +31,11 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, i
       MSNBuf=OutMSBuf=timeStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr="";
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
-      i=1;clgetIValp("deepcopy",deepCopy,i);
+      i=1;clgetBValp("deepcopy",deepCopy,i);
       clgetFullValp("field",fieldStr);
       clgetFullValp("time",timeStr);  
       clgetFullValp("spw",spwStr);  
-      clgetFullValp("poln", polnStr);
+      clgetFullValp("poln",polnStr);  
       clgetFullValp("baseline",baselineStr);  
       clgetFullValp("scan",scanStr);  
       clgetFullValp("array",arrayStr);  
@@ -94,18 +94,19 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   //  MSSelection msSelection;
-  string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,uvdistStr,taqlStr,scanStr,arrayStr, corrStr, polnStr;
-  Int deepCopy=0;
+  string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,
+    uvdistStr,taqlStr,scanStr,arrayStr, polnStr;
+  Bool deepCopy=0;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
-  MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=uvdistStr=taqlStr=scanStr=corrStr=arrayStr=polnStr="";
+  MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=
+    uvdistStr=taqlStr=scanStr=arrayStr=polnStr="";
   deepCopy=0;
   fieldStr=spwStr="*";
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, deepCopy,
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,polnStr);
   restartUI = False;
-  corrStr.resize(0);
   //
   //---------------------------------------------------
   //
@@ -115,7 +116,6 @@ int main(int argc, char **argv)
       //
       // Setup the MSSelection thingi
       //
-      String corrStr;corrStr.resize(0);
       MSSelection msSelection(ms,MSSelection::PARSE_NOW,
 			      timeStr,baselineStr,fieldStr,spwStr,
 			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr);
@@ -135,6 +135,8 @@ int main(int argc, char **argv)
 	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
 	  else          selectedMS.rename(OutMSBuf,Table::New);
       cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
+      cerr << "Waiting for input...";
+      cin >> polnStr;
     }
   catch (clError& x)
     {
