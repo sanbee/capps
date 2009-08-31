@@ -6,13 +6,17 @@
 # only a hope. :-)
 #
 ARCH         = linux_64b
-CASAHOME     = /home/rishi/sanjay/
-CLHOME       = /home/rishi/sanjay/Projects/parafeed/linux_gnu
-SCIHOME      = /home/rishi/sanjay/SCI
-CASADISTRO   = casa_cc_devel
-SYNTHESISPKG = casa_cc_devel
-COREPKG      = casa_cc_devel
-DISPLAYPKG   = casa_cc_devel
+CASAHOME     = /export/home/langur/sbhatnag
+CLHOME       = /export/home/langur/sbhatnag/SCI/linux_gnu
+SCIHOME      = /export/home/langur/sbhatnag/SCI
+SCISRC       = /export/home/langur/sbhatnag/Projects/GoogleCode/capps/SCI
+SCILIBDIR    = $(SCISRC)/src/lib
+SCIINCLDIR   = $(SCISRC)/src/include
+CASADISTRO   = casa_ccore/
+SYNTHESISPKG = casa_ccore/
+COREPKG      = casa_ccore/
+DISPLAYPKG   = casa_ccore/
+
 CASACORENAME = casacore
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
