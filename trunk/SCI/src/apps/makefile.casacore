@@ -1,5 +1,11 @@
 # -*- makefile -*-
-include makefile.casacore.inc
+# ifeq (0,${MAKELEVEL})
+# whoami    := $(shell whoami)
+# host-type := $(shell arch)
+# HOST := $(shell hostname)
+# endif
+HOST := $(shell hostname)
+include makefile.casacore.inc.$(HOST)
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
            $(DEFS64)                                        \
