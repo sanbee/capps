@@ -1,4 +1,5 @@
 #include <casa/aips.h>
+#include <casa/System/Aipsrc.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -88,12 +89,15 @@ int main(int argc, char **argv)
   //
   string MSNBuf, MINBuf, CTNBuf, OutCTNBuf,
     OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, integStr;
-  Float Gain=0.1, Tolerance=1E-15, Integ=0,paInc=1.0;
+  Float Gain=0.1, Tolerance=1E-7, Integ=0,paInc=360.0;
 
   Int Niter=100, wPlanes=1, nchan=1, start=0, step=1;
   Bool restartUI=False;;
   MSSelection msSelection;
-  
+  static uInt cairc = Aipsrc::registerRC("calibrater.activity.interval", "3600.0");
+  String cai_str = Aipsrc::get(cairc);
+  Float cai; std::sscanf(std::string(cai_str).c_str(), "%f", &cai);
+
  RENTER:// UI re-entry point.
   MSNBuf = MINBuf = CTNBuf = OutCTNBuf = OutDC = timeStr = antStr ="";
   //

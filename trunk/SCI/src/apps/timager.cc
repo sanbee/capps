@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <casa/aips.h>
+#include <casa/System/Aipsrc.h>
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -174,7 +175,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;dbgclgetFValp("cyclefactor",cycleFactor,i);  
 	i=1;dbgclgetFValp("pblimit",pblimit,i);  
 	i=1;dbgclgetFullValp("taql",taql);
-	Float fcache=1024*1024*1024*2; 
+	Float fcache=1024*1024*1024*2.0; 
 	i=1;dbgclgetFValp("cache",fcache,i); cache=(Long)fcache;
 	//
 	// Do some user support!;-) Set the possible options for various keywords.
@@ -282,7 +283,7 @@ int main(int argc, char **argv)
   string MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, cfcache,pointingTable;
   string stokes,mode, casaMode, ftmac,wtType, rmode, algo, taql;
   Float padding=1.0, pblimit, paInc,cellx,celly;
-  Long cache=2*1024*1024*1024;
+  Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, 
     applyOffsets=0,dopbcorr=1;
@@ -324,8 +325,8 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   try
     {
-      if (!getenv("AIPSPATH"))
-	throw(AipsError("Environment variable AIPSPATH not found.  "
+      if (!(getenv("AIPSPATH") || getenv("CASAPATH")))
+	throw(AipsError("Neither AIPSPATH nor CASAPATH environment variable found.  "
 			"Perhaps you forgot to source casainit.sh/csh?"));
 
       Imager imager;
@@ -350,6 +351,7 @@ int main(int argc, char **argv)
 	  spwid=msSelection.getSpwList();
 	  fieldid=msSelection.getFieldList();
 	}
+      cout << "Field IDs = " << fieldid << endl;
       //
       // Imager requires the list of spectral window IDs and field IDs
       // present in the MS that is supplied to it.  This sort of
@@ -357,6 +359,7 @@ int main(int argc, char **argv)
       //
       if (spwid.nelements()   == 0) {spwid.resize(1);   spwid(0)=0;}
       if (fieldid.nelements() == 0) {fieldid.resize(1); fieldid(0)=0;}
+      fieldid.resize();
       //      indgen(spwid);indgen(fieldid);
       //
       // Set up the imager
@@ -406,6 +409,24 @@ int main(int argc, char **argv)
       else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
       else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
+      Int centerFieldId=-1;
+      String casaStokes(stokes), casaModeStr(casaMode);
+      imager.defineImage(nx,ny,
+			 casa::Quantity((Double)cellx,"arcsec"),
+			 casa::Quantity((Double)celly,"arcsec"),
+			 stokes,
+			 mphaseCenter,
+			 centerFieldId,
+			 casaMode,
+			 imnchan,imstart,imstep,
+			 casa::Quantity(0,"Km/s"),    //mstart, // Def=0 km/s
+			 casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
+			 casa::Quantity(0,"km/s"),
+			 spwid,
+			 casa::Quantity(0,"Hz"),
+			 facets,
+			 casa::Quantity(0,"m"));
+      /*
       casaMode="channel";
       cout << datastart << " " << datanchan << endl;
       cout << imnchan << " " << imstart << " " << imstep << endl;
@@ -424,10 +445,12 @@ int main(int argc, char **argv)
 		      casa::Quantity(0,"km/s"),    //mstart, // Def=0 km/s
 		      casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
 		      spwid,                       // Def=Vector<Int>(1,0)
-		      fieldid[0],                  // Def=0
+		      //		      fieldid[0],                  // Def=0
+		      0,
 		      facets,                      // Def=1
 		      casa::Quantity(0,"m")        //distance // Def=0m
 		      );
+      */
       if (operation != "predict")
 	imager.weight(wtType,                        // Def="natural"
 		      rmode,                         // Def="none"
@@ -449,7 +472,7 @@ int main(int argc, char **argv)
 			  fluxScale);
       MPosition mlocation;
       //mpFromString(mlocation, location);
-      if (cache <= 0) cache=nx*ny*5;
+      if (cache <= 0) cache=nx*ny*2;
       imager.setoptions(ftmac,            //Def="ft"
 			cache,            // Def=4194304
 			16,               // tile Def=16
