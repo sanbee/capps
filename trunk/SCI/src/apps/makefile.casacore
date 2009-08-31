@@ -32,6 +32,7 @@ PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/include/boost_
 PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
 INCL = -I.                                                      \
+       -I$(SCIINCLDIR) \
        -I$(CLHOME)/include                                      \
        -I$(COREROOT)/include/$(CASACORENAME)                               \
        -I$(CASAROOT)/include/$(CASACORENAME)                               \
@@ -86,7 +87,8 @@ CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images\
 
 CASALIBS = $(CORELIBS1) $(SYNTHESISLIBS) $(DISPLAYLIBS)
 
-CASAAPPSLIBS = casaChecks.o
+CAAPSLIBOBJS = casaChecks.o
+CAAPSLIB = $(SCILIBDIR)/libcaaps.a
 #CASAAPPSLIBS = 
 
 UILIBS = $(CLHOME)/lib/libshccl.a                 \
@@ -124,6 +126,7 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib                     \
 #
 SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc
 SOURCE  = $(wildcard *.cc)
+CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
 #
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
@@ -132,6 +135,7 @@ APPS    = $(patsubst %.cc,%,$(SOURCE))
 # The list object files derived from the list of application in $(APPS)
 #
 OBJECTS = $(patsubst %,%.o,$(APPS))
+CAAPSLIBOBJS = $(patsubst %.cc, %.o, $(CAAPSLIBSRC))
 #
 #-------------------------------------------------------------------------------------------------
 #
@@ -142,12 +146,19 @@ all: $(APPS)
 install: all
 	strip $(APPS); cp $(APPS) $(SCIBIN)
 
+$(CAAPSLIB): $(CAAPSLIBOBJS) 
+	echo $(CAAPSLIBOBJS) $(CAAPSLIBSRC)
+	ar r $(CAAPSLIB) $(CAAPSLIBOBJS)
+
+$(CAAPSLIBOBJS): %.o: %.cc
+	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
+
 $(OBJECTS): %.o: %.cc 
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
-$(APPS): % : %.o $(CASAAPPSLIBS)
+$(APPS): % : %.o $(CAAPSLIB)
 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) $(CASALIBS) $(PYLIBS) $(UILIBS) \
-	 $(CASAAPPSLIBS) -o $@
+	 $(CAAPSLIB) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 #
 #-------------------------------------------------------------------------------------------------
@@ -159,6 +170,6 @@ depend:
 
 clean: 
 	\rm -rf *.o
-
+	cd $(SCILIBDIR); \rm -rf *.{o,a}
 allclean: clean
 	\rm -f $(APPS)
