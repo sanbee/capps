@@ -94,13 +94,17 @@ CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images\
 CASALIBS = $(CORELIBS1) $(SYNTHESISLIBS) $(DISPLAYLIBS)
 
 CAAPSLIBOBJS = casaChecks.o
+ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIB = $(SCILIBDIR)/libcaaps.a
+endif
 #CASAAPPSLIBS = 
 
+ifneq ($(strip $(CLHOME)),)
 UILIBS = $(CLHOME)/lib/libshccl.a                 \
          $(CLHOME)/lib/libsh.a                    \
 	 $(CLHOME)/lib/libcalc.a                  \
 	 -lreadline -lhistory -ltermcap -lm -lfl -lc
+endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
@@ -132,7 +136,9 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib                     \
 #
 SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc
 SOURCE  = $(wildcard *.cc)
+ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
+endif
 #
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
@@ -141,7 +147,9 @@ APPS    = $(patsubst %.cc,%,$(SOURCE))
 # The list object files derived from the list of application in $(APPS)
 #
 OBJECTS = $(patsubst %,%.o,$(APPS))
+ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBOBJS = $(patsubst %.cc, %.o, $(CAAPSLIBSRC))
+endif
 #
 #-------------------------------------------------------------------------------------------------
 #
@@ -153,9 +161,9 @@ install: all
 	strip $(APPS); cp $(APPS) $(SCIBIN)
 
 $(CAAPSLIB): $(CAAPSLIBOBJS) 
-	echo $(CAAPSLIBOBJS) $(CAAPSLIBSRC)
+ifneq ($(strip $(SCILIBDIR)),)
 	ar r $(CAAPSLIB) $(CAAPSLIBOBJS)
-
+endif
 $(CAAPSLIBOBJS): %.o: %.cc
 	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
