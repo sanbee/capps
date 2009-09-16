@@ -4,7 +4,11 @@
 # host-type := $(shell arch)
 # HOST := $(shell hostname)
 # endif
-HOST := $(shell hostname)
+#
+# HOSTNAME is defined by make with the OS command as the value, which
+# when executed, returns the name of the host.
+#
+HOST := $(shell $(HOSTNAME))
 include makefile.casacore.inc.$(HOST)
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
@@ -37,18 +41,18 @@ PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/include/boost_
 #PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -lpython2.5  -L$(USRLIB)/casapy/lib -lCCM_Python -lWX_Utils_error -lWX_Utils_code -lWX_Utils_types
 PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
-INCL = -I.                                                      \
-       -I$(SCIINCLDIR) \
-       -I$(CLHOME)/include                                      \
-       -I$(COREROOT)/include/$(CASACORENAME)                               \
-       -I$(CASAROOT)/include/$(CASACORENAME)                               \
-       -I$(COREROOT)/include                               \
-       -I$(CASAROOT)/code/include                                  \
-       -I/usr/include/cfitsio                                   \
-       -I$(QT4HOME)/include                                     \
-       -I$(QT4HOME)/include/QtCore                              \
-       -I$(QT4HOME)/include/QtGui                               \
-       -I$(QT4HOME)/include/QtXml                               \
+INCL = -I.                                   \
+       -I$(SCIINCLDIR)                       \
+       -I$(CLHOME)/include                   \
+       -I$(COREROOT)/include/$(CASACORENAME) \
+       -I$(CASAROOT)/include/$(CASACORENAME) \
+       -I$(COREROOT)/include                 \
+       -I$(CASAROOT)/code/include            \
+       -I/usr/include/cfitsio                \
+       -I$(QT4HOME)/include                  \
+       -I$(QT4HOME)/include/QtCore           \
+       -I$(QT4HOME)/include/QtGui            \
+       -I$(QT4HOME)/include/QtXml            \
        -I$(QT4HOME)/include/qwt
 
 #DISPLAYLIBS = -lefence $(DISPLAYROOT)/lib/libdisplay.a       \
@@ -59,36 +63,36 @@ INCL = -I.                                                      \
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
-DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a       \
-	  $(DISPLAYROOT)/lib/libcasaqt.a            \
-	  $(WCSPKG)/libwcs.a              \
+DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a  \
+	  $(DISPLAYROOT)/lib/libcasaqt.a       \
+	  $(WCSPKG)/libwcs.a                   \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a     \
-	  $(SYNTHROOT)/lib/libcalibration.a         \
+SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
+	  $(SYNTHROOT)/lib/libcalibration.a     \
 	  -laatm
 #	  $(SYNTHROOT)/lib/libgraphics.a         
 
-CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so        \
+CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so   \
 	  $(COREROOT)/lib/libmsvis.so            \
-	  $(COREROOT)/lib/libcasa_ms.so               \
-	  $(COREROOT)/lib/libcasa_images.so           \
-	  $(COREROOT)/lib/libcasa_components.so       \
-	  $(COREROOT)/lib/libcasa_coordinates.so      \
-	  $(COREROOT)/lib/libcasa_lattices.so         \
-	  $(COREROOT)/lib/libcasa_fits.so             \
-	  $(COREROOT)/lib/libcasa_measures.so         \
-	  $(COREROOT)/lib/libcasa_measures_f.so       \
-	  $(COREROOT)/lib/libcasa_tables.so           \
-	  $(COREROOT)/lib/libcasa_scimath.so          \
-	  $(COREROOT)/lib/libcasa_scimath_f.so        \
+	  $(COREROOT)/lib/libcasa_ms.so          \
+	  $(COREROOT)/lib/libcasa_images.so      \
+	  $(COREROOT)/lib/libcasa_components.so  \
+	  $(COREROOT)/lib/libcasa_coordinates.so \
+	  $(COREROOT)/lib/libcasa_lattices.so    \
+	  $(COREROOT)/lib/libcasa_fits.so        \
+	  $(COREROOT)/lib/libcasa_measures.so    \
+	  $(COREROOT)/lib/libcasa_measures_f.so  \
+	  $(COREROOT)/lib/libcasa_tables.so      \
+	  $(COREROOT)/lib/libcasa_scimath.so     \
+	  $(COREROOT)/lib/libcasa_scimath_f.so   \
 	  $(COREROOT)/lib/libcasa_casa.so 
 
-CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images\
+CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
             -lcasa_components -lcasa_coordinates -lcasa_lattices \
-            -lcasa_fits -lcasa_measures -lcasa_measures_f\
-	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f \
+            -lcasa_fits -lcasa_measures -lcasa_measures_f        \
+	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
             -lcasa_casa -lflagging -lcasaqt
 
 CASALIBS = $(CORELIBS1) $(SYNTHESISLIBS) $(DISPLAYLIBS)
@@ -114,14 +118,14 @@ LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 #	     -Xlinker -rpath -Xlinker                       \
 #	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
 
-LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib                     \
-	  -L$(USRLIB)                                   \
+LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib      \
+	  -L$(USRLIB)                              \
 	  -L$(QT4LIBD)                             \
-	  -lcfitsio -llapack -lblas                     \
-	  -L/usr/local/lib -lcpgplot -lpgplot     \
-	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext           \
-	  $(WCSPKG)/libwcs.a              \
-	  $(PGPLOTPKG)/libpgsbox.so  \
+	  -lcfitsio -llapack -lblas                \
+	  -L/usr/local/lib -lcpgplot -lpgplot      \
+	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext      \
+	  $(WCSPKG)/libwcs.a                       \
+	  $(PGPLOTPKG)/libpgsbox.so                \
 	  -lQtCore -lQtGui -lQtXml -lqwt -lgomp
 
 #	  -lg2c -L/usr/local/lib -lcpgplot -lpgplot     \
@@ -171,8 +175,8 @@ $(OBJECTS): %.o: %.cc
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
 $(APPS): % : %.o $(CAAPSLIB)
-	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) $(CASALIBS) $(PYLIBS) $(UILIBS) \
-	 $(CAAPSLIB) -o $@
+	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 #
 #-------------------------------------------------------------------------------------------------
@@ -185,5 +189,6 @@ depend:
 clean: 
 	\rm -rf *.o
 	cd $(SCILIBDIR); \rm -rf *.{o,a}
+
 allclean: clean
 	\rm -f $(APPS)

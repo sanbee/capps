@@ -373,8 +373,9 @@ int main(int argc, char **argv)
       //
       // Set up the imager
       //
-      Bool compress=False;
-      imager.open(selectedMS,compress);
+      Bool compress=False, useScratchColumns=False;
+      if (operation == "predict") useScratchColumns=True;
+      imager.open(selectedMS,compress,useScratchColumns);
       vector<double> pa(1);pa[0]=paInc;
 
       imager.setvp(False,       //dovp
@@ -385,6 +386,7 @@ int main(int argc, char **argv)
 		   casa::Quantity(180,"deg"), //skyposthreshold
 		   ""           //telescope
 		   );
+      Vector<Int> antIndex;
       imager.setdata(casaMode,
 		     datanchan,    //vector<int>
 		     datastart,    //vector<int>
@@ -394,6 +396,7 @@ int main(int argc, char **argv)
 		     spwid,    //vector<int>
 		     fieldid,  //<vector<int>
 		     String(taql)//msselect
+		     //		     "","",antIndex,"","","","",useScratchColumns
 		     );
       Bool doshift=False;
       MDirection mphaseCenter;
@@ -423,12 +426,13 @@ int main(int argc, char **argv)
 			 casaMode,
 			 imnchan,imstart,imstep,
 			 casa::Quantity(0,"Hz"),    //mstart, // Def=0 km/s
-			 casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
+			 casa::Quantity(1,"km/s"),  //mstep, // Def=1 km/s
 			 casa::Quantity(0,"km/s"),
 			 spwid,
-			 casa::Quantity(0,"Hz"),
-			 facets,
-			 casa::Quantity(0,"m"));
+			 casa::Quantity(0,"Hz"),   // Rest frequency (we don't care yet)
+			 casa::MFrequency::LSRK,   // Rest freq. frame
+			 facets, 
+			 casa::Quantity(0,"m"));   // Distance (==> not in the near field)
       /*
       imager.setimage(nx,ny,
 		      casa::Quantity((Double)cellx,"arcsec"),
