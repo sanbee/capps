@@ -47,7 +47,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, Vector<String>& psfs,
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
-	Int& interactive,Long& cache)
+	Int& interactive,Long& cache, bool& copytocdata )
 {
   if (!restart)
     {
@@ -166,7 +166,11 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	exposedKeys[0]="gain";      exposedKeys[1]="niter";
 	exposedKeys[2]="threshold"; exposedKeys[3]="interactive";
 	watchPoints["clean"]=exposedKeys;
+	exposedKeys.resize(1);
+	exposedKeys[0] = "copytocdata";
+	watchPoints["predict"]=exposedKeys;
 	i=1;clgetSValp("operation",operation,i,watchPoints);
+	i=1;clgetBValp("copytocdata",copytocdata,i);
 
 	i=1;clgetFValp("gain",gain,i);
 	i=1;clgetIValp("niter",niter,i);
@@ -243,7 +247,7 @@ bool mdFromString(casa::MDirection &theDir, const casa::String &in)
 //
 //-------------------------------------------------------------------------
 //
-void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
+void copyMData2Data(MeasurementSet& theMS, Bool both=False, Bool incremental=False)
 {
   Block<int> sort(0);
   sort.resize(5);
@@ -266,13 +270,16 @@ void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
 	{
 	  vi.setVis( (vb.modelVisCube() + vb.visCube()),
 		     VisibilityIterator::Corrected);
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+	  if (both)
+	    {
+	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
+	      //	      vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+	    }
 	} 
       else 
 	{
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+	  if (both) vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
 	}
 };
 //
@@ -289,7 +296,7 @@ int main(int argc, char **argv)
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1;
-  bool applyOffsets=false,dopbcorr=true;
+  bool applyOffsets=false,dopbcorr=true, copytocdata=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
@@ -320,7 +327,7 @@ int main(int argc, char **argv)
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
-     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache);
+     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copytocdata);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -429,9 +436,9 @@ int main(int argc, char **argv)
 			 casa::Quantity(1,"km/s"),  //mstep, // Def=1 km/s
 			 casa::Quantity(0,"km/s"),
 			 spwid,
+			 facets, 
 			 casa::Quantity(0,"Hz"),   // Rest frequency (we don't care yet)
 			 casa::MFrequency::LSRK,   // Rest freq. frame
-			 facets, 
 			 casa::Quantity(0,"m"));   // Distance (==> not in the near field)
       /*
       imager.setimage(nx,ny,
@@ -562,8 +569,11 @@ int main(int argc, char **argv)
       else if (operation=="predict")
 	{
 	  imager.ft(models,complist,False);
-	  cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
-	  copyMData2Data(selectedMS);
+	  if (copytocdata)
+	    {
+	      cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
+	      copyMData2Data(selectedMS,False);
+	    }
 	}
       else if (operation=="dirty")
 	imager.makeimage("model",models[0]);
