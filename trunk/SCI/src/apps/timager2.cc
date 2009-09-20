@@ -44,10 +44,10 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
 	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
 	Int &imnchan, Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
-	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, Vector<String>& psfs,
-	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
-	float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
-	Int& interactive,Long& cache, bool& copytocdata )
+	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
+	Vector<String>& psfs, Vector<String>& masks,string& complist,string&algo,string& taql,
+	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
+	bool& interactive,Long& cache, bool& copytocdata)
 {
   if (!restart)
     {
@@ -175,7 +175,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFValp("gain",gain,i);
 	i=1;clgetIValp("niter",niter,i);
 	i=1;clgetFValp("threshold",threshold,i);
-	i=1;clgetIValp("interactive",interactive,i);
+	i=1;clgetBValp("interactive",interactive,i);
 	//
 	// Hidder stuff for the brave
 	//
@@ -296,7 +296,7 @@ int main(int argc, char **argv)
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1;
-  bool applyOffsets=false,dopbcorr=true, copytocdata=false;
+  bool applyOffsets=false,dopbcorr=true, copytocdata=false, interactive=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
@@ -306,7 +306,7 @@ int main(int argc, char **argv)
   MSSelection msSelection;
 
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
-  Int stopLargeNegatives=2, stopPointMode = -1, interactive=0;
+  Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
  RENTER:// UI re-entry point.
