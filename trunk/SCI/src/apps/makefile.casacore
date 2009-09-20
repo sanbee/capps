@@ -63,9 +63,9 @@ INCL = -I.                                   \
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
-DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a  \
-	  $(DISPLAYROOT)/lib/libcasaqt.a       \
-	  $(WCSPKG)/libwcs.a                   \
+DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
+	  $(DISPLAYROOT)/lib/libcasaqt.a      \
+	  $(WCSPKG)/libwcs.a                  \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
@@ -118,14 +118,14 @@ LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 #	     -Xlinker -rpath -Xlinker                       \
 #	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
 
-LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib      \
-	  -L$(USRLIB)                              \
-	  -L$(QT4LIBD)                             \
-	  -lcfitsio -llapack -lblas                \
-	  -L/usr/local/lib -lcpgplot -lpgplot      \
-	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext      \
-	  $(WCSPKG)/libwcs.a                       \
-	  $(PGPLOTPKG)/libpgsbox.so                \
+LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+	  -L$(USRLIB)                            \
+	  -L$(QT4LIBD)                           \
+	  -lcfitsio -llapack -lblas              \
+	  -L/usr/local/lib -lcpgplot -lpgplot    \
+	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
+	  $(WCSPKG)/libwcs.a                     \
+	  $(PGPLOTPKG)/libpgsbox.so              \
 	  -lQtCore -lQtGui -lQtXml -lqwt -lgomp
 
 #	  -lg2c -L/usr/local/lib -lcpgplot -lpgplot     \
