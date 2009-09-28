@@ -74,7 +74,7 @@ void printInfo(MSSelection& msSelection)
     //       << "Baselines = "    << msSelection.getBaselineList() << endl
        << "Field        = " << msSelection.getFieldList()    << endl
        << "SPW          = " << msSelection.getSpwList()      << endl
-       << "Chan         = " << msSelection.getChanList()     << endl
+       << "Chan         = " << msSelection.getChanList(NULL,3)     << endl
        << "Scan         = " << msSelection.getScanList()     << endl
        << "Array        = " << msSelection.getSubArrayList() << endl
        << "Time         = " << msSelection.getTimeList()     << endl
@@ -112,7 +112,8 @@ int main(int argc, char **argv)
   //
   try
     {
-      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+      //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
       //
       // Setup the MSSelection thingi
       //

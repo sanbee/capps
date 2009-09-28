@@ -340,8 +340,8 @@ int main(int argc, char **argv)
       if (!(getenv("AIPSPATH") || getenv("CASAPATH")))
 	throw(AipsError("Neither AIPSPATH nor CASAPATH environment variable found.  "
 			"Perhaps you forgot to source casainit.sh/csh?"));
-      if (cfcache=="") 
-	throw(AipsError("CF cache directory name is blank!"));
+      // if (cfcache=="") 
+      // 	throw(AipsError("CF cache directory name is blank!"));
 
       Imager imager;
       String AMSName(MSName),diskCacheDir(cfcache);
