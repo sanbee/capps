@@ -89,7 +89,9 @@ int main(int argc, char **argv)
       if (OutMSBuf == "")
 	throw(clError("Need an output MS name", "###UserError"));
 
-      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+      //MS ms(MSNBuf,Table::Update),selectedMS(ms);
+      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
+
 	if (OutMSBuf != "")
 	  {
 	    //
@@ -106,7 +108,7 @@ int main(int argc, char **argv)
 	    String CspwStr(spwStr), CfieldStr(fieldStr), CbaselineStr(baselineStr),
 	      CscanStr(scanStr), CuvdistStr(uvdistStr), CtaqlStr(taqlStr), CtimeStr(timeStr);
 	    splitter.setmsselect(CspwStr, CfieldStr, CbaselineStr, CscanStr, CuvdistStr,
-				 CtaqlStr, nchan,start, step);
+				 CtaqlStr);//, nchan,start, step);
 
 	    splitter.selectTime(integ,CtimeStr);
 	    splitter.makeSubMS(OutMSName, WhichCol);
