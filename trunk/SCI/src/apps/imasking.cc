@@ -3,7 +3,9 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/BasicSL/String.h>
-#include <display/QtViewer/QtClean.qo.h>
+//#include <display/QtViewer/QtClean.qo.h>
+#include <display/QtViewer/QtCleanPanelGui.qo.h>
+#include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <display/Display/StandAloneDisplayApp.h>
 #include <tables/Tables/Table.h>
 #include <iostream>
@@ -48,18 +50,22 @@ int main(int argc, char **argv)
 	 }
     //we should regrid here is image and mask do not match
      }
-   else
-     {
-       clone(image, mask);
-     }
-   QtApp::init();
-   QtClean vwrCln(image, mask); 
-   //  if(!vwrCln.loadImage(image, mask)){
-   if(!vwrCln.imageLoaded())
-     {
-       cerr << "Failed to load image and mask in viewer" << endl;
-	 //	  << LogIO::SEVERE << LogIO::POST;
-       return -1;
-     }
-   return vwrCln.go();
+   Imager imager;
+   String threshold("0mJy");
+   Int niter=0, ncycle=0;
+   imager.interactivemask(image,mask,niter,ncycle,threshold);
+   // else
+   //   {
+   //     clone(image, mask);
+   //   }
+   // QtApp::init();
+   // QtClean vwrCln(image, mask); 
+   // //  if(!vwrCln.loadImage(image, mask)){
+   // if(!vwrCln.imageLoaded())
+   //   {
+   //     cerr << "Failed to load image and mask in viewer" << endl;
+   // 	 //	  << LogIO::SEVERE << LogIO::POST;
+   //     return -1;
+   //   }
+   // return vwrCln.go();
 }
