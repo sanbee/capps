@@ -47,7 +47,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& psfs, Vector<String>& masks,string& complist,string&algo,string& taql,
 	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
-	bool& interactive,Long& cache, bool& copytocdata)
+	bool& interactive,Long& cache, bool& copydata, bool& copyboth)
 {
   if (!restart)
     {
@@ -166,11 +166,15 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	exposedKeys[0]="gain";      exposedKeys[1]="niter";
 	exposedKeys[2]="threshold"; exposedKeys[3]="interactive";
 	watchPoints["clean"]=exposedKeys;
-	exposedKeys.resize(1);
-	exposedKeys[0] = "copytocdata";
-	watchPoints["predict"]=exposedKeys;
 	i=1;clgetSValp("operation",operation,i,watchPoints);
-	i=1;clgetBValp("copytocdata",copytocdata,i);
+
+	ClearMap(watchPoints);
+	exposedKeys.resize(1);
+	exposedKeys[0]="copyboth";
+	watchPoints["1"]=exposedKeys;
+	i=1;clgetBValp("copydata",copydata,i,watchPoints);
+	i=1;clgetBValp("copyboth",copyboth,i);
+	
 
 	i=1;clgetFValp("gain",gain,i);
 	i=1;clgetIValp("niter",niter,i);
@@ -296,7 +300,7 @@ int main(int argc, char **argv)
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1;
-  bool applyOffsets=false,dopbcorr=true, copytocdata=false, interactive=false;
+  bool applyOffsets=false,dopbcorr=true, copydata=false, copyboth=false, interactive=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
@@ -327,7 +331,7 @@ int main(int argc, char **argv)
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
-     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copytocdata);
+     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -569,10 +573,14 @@ int main(int argc, char **argv)
       else if (operation=="predict")
 	{
 	  imager.ft(models,complist,False);
-	  if (copytocdata)
+	  if (copydata)
 	    {
-	      cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
-	      copyMData2Data(selectedMS,False);
+	      if (copyboth)
+		cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
+	      else
+		cerr << "###Info: Copying MODEL_DATA to CORRECTED_DATA columns." << endl;
+		
+	      copyMData2Data(selectedMS,copyboth);
 	    }
 	}
       else if (operation=="dirty")
