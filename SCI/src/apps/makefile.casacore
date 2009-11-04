@@ -72,6 +72,7 @@ DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
 SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
 	  $(SYNTHROOT)/lib/libcasadbus.a     \
 	  $(SYNTHROOT)/lib/libcalibration.a     \
+	  $(SYNTHROOT)/lib/libcasadbus.a \
 	  -laatm
 #	  $(SYNTHROOT)/lib/libgraphics.a         
 
