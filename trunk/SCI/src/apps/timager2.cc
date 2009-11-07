@@ -166,6 +166,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	exposedKeys[0]="gain";      exposedKeys[1]="niter";
 	exposedKeys[2]="threshold"; exposedKeys[3]="interactive";
 	watchPoints["clean"]=exposedKeys;
+	exposedKeys.resize(1);
+	exposedKeys[0] = "copydata";
+	watchPoints["predict"]=exposedKeys;
 	i=1;clgetSValp("operation",operation,i,watchPoints);
 
 	ClearMap(watchPoints);
