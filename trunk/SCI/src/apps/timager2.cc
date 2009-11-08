@@ -323,7 +323,7 @@ int main(int argc, char **argv)
   //
   pblimit=0.05;
   stokes="I"; ftmac="ft"; algo="cs"; operation="clean";
-  wtType="uniform"; rmode="none"; mode="continuum";
+  wtType="natural"; rmode="none"; mode="continuum";
   casaMode="channel";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
