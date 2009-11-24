@@ -546,17 +546,22 @@ int main(int argc, char **argv)
 		if (!file.exists())
 		  imager.makeimage("corrected",skyImage);
 	      }
-		  
 	      cmd = cmd + skyImage;
 	      if ((masks.nelements() == 0) || (masks[0]==""))
 		{
 		  masks.resize(1);
 		  masks[0]=skyImage+".mask";
 		}
-	      //		cmd = cmd + " " + skyImage + ".mask";
+	      String threshold("0.0Jy");
+	      Int nPerCycle=10;
+	      imager.interactivemask(skyImage, masks[0], 
+				     Niter, nPerCycle, threshold);
+		  
+	      /*
 	      //	      else
 	      cmd = cmd + " " + string(masks[0]);
 	      system(cmd.c_str());
+	      */
 	    }
 
 	  imager.clean(algo,
