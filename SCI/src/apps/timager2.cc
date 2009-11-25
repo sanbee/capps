@@ -526,6 +526,9 @@ int main(int argc, char **argv)
       Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
       if (operation=="clean")
 	{
+	  String thresholdStr("0.0mJy");
+	  Int nPerCycle=100,status;
+	  Int interactiveNiter=(Int)(Niter/nPerCycle + 0.5);
 	  if (restoredImgs.nelements() == 0) restoredImgs.resize(1);
 	  if (restoredImgs[0] == "") restoredImgs[0] = models[0] + ".clean";
 	  if (residuals.nelements() == 0) residuals.resize(1);
@@ -533,50 +536,60 @@ int main(int argc, char **argv)
 
 	  if (interactive)
 	    {
-	      string cmd="imasking ";
-	      string skyImage;
-	      if ((residuals.nelements() > 0) && (residuals[0] != "")) skyImage=string(residuals[0]);
-	      else
+	      if ((residuals.nelements() <= 0) || (residuals[0] == ""))
 		{
 		  throw(AipsError("No residual image name given.  "
 				  "Need residual image for setting up interactive masks."));
 		}
-	      {
-		File file(skyImage);
-		if (!file.exists())
-		  imager.makeimage("corrected",skyImage);
-	      }
-	      cmd = cmd + skyImage;
+	      
+	      File file(residuals[0]);
+	      if (!file.exists()) imager.makeimage("corrected",residuals[0]);
+
+
 	      if ((masks.nelements() == 0) || (masks[0]==""))
 		{
 		  masks.resize(1);
-		  masks[0]=skyImage+".mask";
+		  masks[0]=residuals[0]+".mask";
 		}
-	      String threshold("0.0Jy");
-	      Int nPerCycle=10;
-	      imager.interactivemask(skyImage, masks[0], 
-				     Niter, nPerCycle, threshold);
-		  
-	      /*
-	      //	      else
-	      cmd = cmd + " " + string(masks[0]);
-	      system(cmd.c_str());
-	      */
+	      for (Int initer=interactiveNiter;initer>0; initer--)
+		{
+		  status=imager.interactivemask(residuals[0], masks[0], 
+						nPerCycle,initer,
+						thresholdStr);
+		  //		  if (status==0); // Continue
+		  if (status==1)  // No more interaction required
+		    {
+		      nPerCycle=Niter-initer*nPerCycle;
+		      initer=0;
+		      nPerCycle=nPerCycle > 0 ? nPerCycle : 0;
+		    }
+		  else if (status==2) // Stop
+		    {
+		      nPerCycle = 0;
+		      initer=0;
+		    }
+		  else
+		    interactiveNiter=(Int)(Niter/nPerCycle + 0.5);
+		  imager.clean(algo,nPerCycle,gain,
+			       casa::Quantity(threshold,"mJy"),
+			       False,models,fixed,complist,masks, 
+			       restoredImgs,residuals,psfs);
+		}
 	    }
-
-	  imager.clean(algo,
-		       Niter,
-		       gain,
-		       casa::Quantity(threshold,"mJy"),
-		       False,                 //displayProgress
-		       models,                //Vector<String>
-		       fixed,                 //Vector<Bool>
-		       complist,              //String
-		       masks,                 //Vector<String>
-		       restoredImgs,          //Vector<String>
-		       residuals,             //Vector<String>
-		       psfs
-		       );
+	  else
+	    imager.clean(algo,
+			 Niter,
+			 gain,
+			 casa::Quantity(threshold,"mJy"),
+			 False,                 //displayProgress
+			 models,                //Vector<String>
+			 fixed,                 //Vector<Bool>
+			 complist,              //String
+			 masks,                 //Vector<String>
+			 restoredImgs,          //Vector<String>
+			 residuals,             //Vector<String>
+			 psfs
+			 );
 	}
       else if (operation=="predict")
 	{
