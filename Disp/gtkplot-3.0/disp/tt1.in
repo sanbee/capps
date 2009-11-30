@@ -1,0 +1,10 @@
+npanels=2
+npoints=100
+columns=3
+psize=300,100
+map=-1,0,0,0,1,0
+scroll=0
+ascii=0
+init
+data
+plot

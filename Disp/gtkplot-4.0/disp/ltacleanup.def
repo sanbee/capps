@@ -1,0 +1,3 @@
+in         = /data2/data1/GMRT_LTA/LEAK/L/3c147_1280.lta
+out        = /dev/null
+scans      = 1

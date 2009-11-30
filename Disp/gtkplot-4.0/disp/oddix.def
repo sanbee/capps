@@ -1,0 +1,9 @@
+in         = </astro/ifrsoft/bin/IRIX/shmdata
+out        = *|/astro/ifrsoft/bin/IRIX/nmpscroll localhost 200 - 50 -
+fmt        = ist;base{chan{a;p}};\\n
+scans      = 
+object     = .
+timestamps = 
+baselines  = C06-USB-130
+channels   = 40
+normalize  = 1
