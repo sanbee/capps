@@ -1,0 +1,23 @@
+  pixmap_path "/usr/share/themes/Cheese/gtk"
+  style "main_button" = "button"
+   {
+     font = "-adobe-helvetica-medium-r-normal--*-50-*-*-*-*-*-*"
+     bg[PRELIGHT] = { 1.0, 1.0, 1.0 }
+     bg_pixmap[ACTIVE] = "cheese-dark.xpm"
+     bg[NORMAL] = { 1.0, 1.0, 1.0 }
+     bg[ACTIVE] = { 1.0, 1.0, 1.0 }
+   }
+
+   style "window"
+    {
+      #This sets the padding around the window to the pixmap specified.
+      #bg_pixmap[<STATE>] = "<pixmap filename>"
+#      bg_pixmap[NORMAL] = "cheese-dark.xpm"
+    bg[NORMAL] = { 0.75, 0.25, 0.0 }
+    }
+
+   widget "GtkWindow" style "window"
+#   widget "*plot1*" style "window"
+   widget "main window*canvas*" style "main_button"
+#   widget "*main window*" style "window"
+   widget "main window.*GtkButton*" style "main_button"

@@ -1,0 +1,79 @@
+GtkPlot-3.0
+===========
+
+- New Font policy. 
+  Fonts are identified by a user_name and/or the standard PostScript name.
+  The 35 names are listed in gtkplotfont.h
+  All function requiring font settings need the font name and
+  font height instead of a GdkFont.
+  You can add your own user fonts using gtk_plot_font_add(...) declaring
+  both names and two possible Xfonts used to display them on the X window.
+
+- PostScript Driver.
+  Completely separated from the widget main code in gtkplotps.
+  Exporting functions:
+     * gtk_plot_export_ps
+     * gtk_plot_layout_export_ps
+  (It would probably need some fixes, I'll be waiting for your reports).
+  The demo program generates plotdemo.ps as example.
+
+- Some internal changes (bugfixes and enhancements).
+
+Thanks to Alexander Larsson and Arjan Molenaar, authors of DiaCanvas and
+Dia, for allowing me to borrow some ideas from his code for the 
+PostScript driver and fonts handling.
+
+Special thanks to Roberto Alameda <ral1@ibm.net>, author of FontViewer 
+http://www.geocities.com/SiliconValley/Foothills/1458/
+for his illuminating ideas and helpful tips about fonts.
+
+GtkPlot-2.0
+===========
+
+Sorry for not being very explicit, but I'll describe only an outline of 
+the latest changes because is difficult to keep track of all of them.
+To move from 1.x to 2.x you'll have to change some few function calls
+concerning to the attributes settings. It's easy to realize the changes
+during compilation time, just take a look at the headers when you get an error.
+
+- New GtkPlotCanvas widget which allows DnD. See demo.
+
+- Lots of changes in internal routines for optimization and versatility. 
+
+- Changed some function calls.
+  Sometimes you'll need to give a GdkColor * value. If you set NULL,
+  means using defaults: black for foregrounds and transparent for backgrounds.
+  If you set gc == NULL, means using default gc. 
+
+- New functions added.
+  gtk_plot_refresh,
+  gtk_plot_show_labels,
+  gtk_plot_layout_put_text,
+  etc, etc.
+
+- typedef GtkPlotFunc for drawing functions.
+
+- New signals: plot->moved, plot->resized.
+  Your signals handlers must return TRUE if you want the changes 
+  to be accepted. Same is valid for GtkPlotCanvas signals.
+
+- Some minor bugfixes.
+  gtk_plot_put_text. (I recommend gtk_plot_layout_put_text, instead).
+  Fixed rounding errors in axis, ticks marks, and grids drawing routines.
+
+- New demo program.
+
+
+GtkPlot-1.1
+===========
+
+- You can change background color for gtkplot and gtkplotlayout using
+
+  gtk_plot_layout_set_background(GtkPlotLayout *layout, GdkColor color);
+  gtk_plot_set_background(GtkPlot *plot, GdkColor color);
+
+- Many functions modified to set foreground and background colors for
+  labels and titles.
+
+- Fixes in the GtkPlotLayout scrolling.
+

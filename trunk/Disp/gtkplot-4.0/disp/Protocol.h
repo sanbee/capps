@@ -1,0 +1,6 @@
+#define   GREETINGS                     "Hi there!"
+#define   BYE                           "bye"
+#define   SURE                          "sure"
+#define   DONE                          "done"
+#define   DOCK_FOR_CMD_ON               "cmdport"
+#define   DOCK_FOR_DATA_ON              "dataport"

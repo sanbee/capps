@@ -1,0 +1,10 @@
+sleep=1
+npoints=200
+columns=4
+psize=600,200
+map=-1,0,0,0,1,0,2,0,3,0
+ascii=0
+init
+setscroll=1
+ylabel=Y Axis
+start
