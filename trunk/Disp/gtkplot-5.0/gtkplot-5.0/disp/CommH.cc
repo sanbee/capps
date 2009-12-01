@@ -2,7 +2,7 @@
 #include <SockIO.h>
 #include <Protocol.h>
 #include <MultiPanel.h>
-#include <vector.h>
+#include <vector>
 #include <exception>
 #include <ErrorObj.h>
 #include <fcntl.h>

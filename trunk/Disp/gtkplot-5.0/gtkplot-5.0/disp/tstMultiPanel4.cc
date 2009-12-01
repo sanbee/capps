@@ -11,7 +11,7 @@
 #include <cl.h>
 #include <clinteract.h>
 #include <readline/readline.h>
-using namespace std;
+#include <namespace.h>
 int NPoints=100;
 void
 gtk_color_selection_hsv_to_rgb (double  h, double  s, double  v,
