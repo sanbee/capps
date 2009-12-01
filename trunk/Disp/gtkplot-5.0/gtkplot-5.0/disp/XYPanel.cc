@@ -82,8 +82,8 @@ GtkWidget* XYPanel::Make(GtkWidget *Kanwas, gint CW, gint CH,
  Canvas = Kanwas;
  CHART = gtk_plot_new_with_size(NULL, Width/ModifiedCW, Height/ModifiedCH);
  
- cerr << "Add at " << Width << " " << ModifiedCW << " " << Height << " " << ModifiedCH << endl;
- cerr << GTK_LAYOUT(Canvas)->width << " " << GTK_LAYOUT(Canvas)->height << endl;
+ // cerr << "Add at " << Width << " " << ModifiedCW << " " << Height << " " << ModifiedCH << endl;
+ // cerr << GTK_LAYOUT(Canvas)->width << " " << GTK_LAYOUT(Canvas)->height << endl;
 
  sprintf(name,"MPChart%3.3d",(int)Chosen);
 
@@ -300,29 +300,28 @@ int XYPanel::SetRange(float Range[2], int Axis)
     case 1:      RangingMode=YAutoRanging; if (!YAutoRanging) return 0;break;
     };
 
-  if (Range[0] == Range[1])    GetRange(Range,Axis);
 
   if (Axis==0) 
     {
+      if (Range[0] == Range[1])    GetRange(Range,Axis);
       gtk_plot_set_range(GTK_PLOT(CHART),
 			 (gdouble)Range[0],(gdouble)Range[1],
 			 YMin, YMax);
       XMin = Range[0]; XMax = Range[1];
       AutoSetTicks(XMin,XMax,GTK_ORIENTATION_HORIZONTAL);
     }
-  else 
+  else if (Axis==1)
     {
+      if (Range[0] == Range[1])    GetRange(Range,Axis);
       gtk_plot_set_range(GTK_PLOT(CHART), XMin, XMax,
 			 (double)Range[0],(double)Range[1]);
 	  
       YMin = Range[0]; YMax = Range[1];
       AutoSetTicks(YMin,YMax,GTK_ORIENTATION_VERTICAL);
-      
       YMin_Adj->upper = YMax;
       YMin_Adj->lower = YMin;
       YMax_Adj->upper = YMax;
       YMax_Adj->lower = YMin;
-	  
 
       YMin_Adj->step_increment =  (YMax-YMin)*0.001;
       YMax_Adj->step_increment =  (YMax-YMin)*0.001;
@@ -330,12 +329,42 @@ int XYPanel::SetRange(float Range[2], int Axis)
       YMax_Adj->page_increment =  (YMax-YMin)*0.001;
       YMin_Adj->page_size      =  (YMax-YMin)*0.005;
       YMax_Adj->page_size      =  (YMax-YMin)*0.001;
-
+      
       gtk_adjustment_set_value(YMax_Adj,YMax);
       gtk_adjustment_set_value(YMin_Adj,YMin);
+      YAutoRanging=RangingMode;
+    }
+  else
+    {
+      gfloat XRange[2],YRange[2];
+      if (Range[0] == Range[1]) 
+	{
+	  GetRange(XRange,0);
+	  GetRange(YRange,1);
+	}
+      gtk_plot_set_range(GTK_PLOT(CHART), 
+			 (double)XRange[0], (double)XRange[1],
+			 (double)Range[0],(double)Range[1]);
+      XMin = XRange[0]; XMax = XRange[1];
+      YMin = YRange[0]; YMax = YRange[1];
 
-      //      gtk_signal_emit_by_name (GTK_OBJECT (YMax_Adj), "changed");
-      //      gtk_signal_emit_by_name (GTK_OBJECT (YMin_Adj), "changed");
+      AutoSetTicks(YMin,YMax,GTK_ORIENTATION_VERTICAL);
+      AutoSetTicks(XMin,XMax,GTK_ORIENTATION_HORIZONTAL);
+
+      YMin_Adj->upper = YMax;
+      YMin_Adj->lower = YMin;
+      YMax_Adj->upper = YMax;
+      YMax_Adj->lower = YMin;
+
+      YMin_Adj->step_increment =  (YMax-YMin)*0.001;
+      YMax_Adj->step_increment =  (YMax-YMin)*0.001;
+      YMin_Adj->page_increment =  (YMax-YMin)*0.001;
+      YMax_Adj->page_increment =  (YMax-YMin)*0.001;
+      YMin_Adj->page_size      =  (YMax-YMin)*0.005;
+      YMax_Adj->page_size      =  (YMax-YMin)*0.001;
+      
+      gtk_adjustment_set_value(YMax_Adj,YMax);
+      gtk_adjustment_set_value(YMin_Adj,YMin);
       YAutoRanging=RangingMode;
     }
   return 1;

@@ -35,7 +35,7 @@ extern "C" {
 			   gdouble x1, gdouble y1,
 			   gdouble x2, gdouble y2,
 			   gpointer data) ;
-
+  gint progress_timeout( gpointer data );
   //  int MinSliderMove(GtkWidget *ob, float fac);
   //  int MinSliderMove(GtkWidget *ob, float fac);
   PACKER_CALLBACK DefaultPacker;
@@ -61,6 +61,10 @@ public:
 			int Disp=1, char *Title="Plot Tool",
 			int makeYScrollBars=1);
 
+  GtkWidget* MakePanels(unsigned int NP, 
+			gfloat X0, gfloat Y0,
+			gfloat W0, gfloat H0,
+			int makeYScrollBars=1);
   GtkWidget *MakeCtrlPanel(gint X0, gint Y0,
 			 gint W0,  gint H0,
 			 char *Title);
@@ -114,6 +118,11 @@ public:
   int MinSliderMove(GtkWidget *ob, float fac);
 		  
   int MapPointerToPanel(int& X, int& Y);
+  void DisableProgressMeter();
+  void EnableProgressMeter() ;
+  void IterMainLoop() {while (g_main_iteration(TRUE));};
+  void FreezeDisplay() {Hide(Canvas);};
+  void UnFreezeDisplay() {Show(NULL,Canvas);};
   void prtdata()
     {
       int i;
@@ -148,6 +157,7 @@ private:
   PACKER_CALLBACK_PTR   Packer;
   BitField              ChosenOnes;
   unsigned short        NewPlot;
+  int Timer;
 };
 
 #endif

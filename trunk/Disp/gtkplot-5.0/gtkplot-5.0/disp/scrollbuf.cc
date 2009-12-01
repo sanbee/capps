@@ -1,8 +1,8 @@
 #include <scrollbuf.h>
 #include <math.h>
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
-
+#include <namespace.h>
 void ScrollBuf::reset(int N, int L)
 {
   Clear();
