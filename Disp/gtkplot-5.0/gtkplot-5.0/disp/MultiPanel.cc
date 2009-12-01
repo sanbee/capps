@@ -3,7 +3,7 @@
 #include <ErrorObj.h>
 #include "./WidgetLib.h"
 #include <XYPanel.h>
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -11,6 +11,9 @@
 #include "./interface.h"
 #include <gdk/gdk.h>
 #include <gtk/gtk.h>
+#include <glib.h>
+#include <namespace.h>
+
 char *ThisPointer;
 static GtkItemFactoryEntry menu_items[] = {
   { "/_File",         NULL,         NULL, 0, "<Branch>" },
@@ -20,7 +23,7 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/File/Quit",     "<control>Q",  (GtkSignalFunc) mp_done_callback, 
     0, NULL },
   { "/_Help",         NULL,         NULL, 0, "<Branch>" },
-  { "/_Help/About",   NULL,         NULL, 0, NULL }
+  { "/_Help/About",   NULL,         NULL, 0, "<LastBranch>"}
   //  ,{ "/X",             NULL,         NULL, 0, "<LastBranch>" },
 };
 
@@ -104,7 +107,6 @@ void MultiPanel::SetUp(int argc, char **argv, char *Title,
 		       int N, int NPoints)
 {
   HANDLE_EXCEPTIONS(
-		    GtkWidget *app1;
 		    gtk_rc_add_default_file("tst.rc");
 
 		    gtk_init(&argc, &argv);
@@ -123,25 +125,6 @@ void MultiPanel::SetUp(int argc, char **argv, char *Title,
 //
 void MultiPanel::Init(int N,int NPoints, PACKER_CALLBACK_PTR DefaultP)
 {
-  /*
-  if (Canvas) 
-    {
-      Hide(Canvas);
-      for (int i=0;i<NPanels();i++) 
-	Panels[i].FreeChart();
-      //      fl_delete_formbrowser(BrowserObj,Canvas);
-      //      fl_free_form(Canvas);
-      //      Canvas=NULL;
-    }
-  if (TopLevelWin) 
-    {
-      //      Hide(TopLevelWin);
-      //      fl_delete_object(BrowserObj);
-      //      fl_free_object(BrowserObj);
-      //      fl_free_form(FormBrowser);
-      //      FormBrowser=NULL;
-    }
-  */
   CtrlPanel=NULL;
   NewPlot=1;
   Panels.resize(N);
@@ -316,21 +299,13 @@ void MultiPanel::Redraw(int AutoScale, int WhichPanel,int WhichOverlay)
   float Range[2];
   int Width, Height;
   gtk_widget_get_size(GTK_WIDGET(Layout),&Width, &Height);
-  cout << "Window size = " << Width << " " << Height << endl;
-  //  gtk_window_get_size(GTK_WINDOW(TopLevelWin),&Width, &Height);
-  //  gdk_window_get_size(gdk_widget_get_root_window(GTK_WINDOW(TopLevelWin)),&Width,&Height);
+  //  cout << "Window size = " << Width << " " << Height << endl;
 
   for (int i=0;i<NPanels();i++) Panels[i].freeze();
   if (WhichPanel==ALLPANELS) 
     for(int i=0;i<NPanels();i++)
       {
-	gfloat new_val = gtk_progress_get_value( GTK_PROGRESS(ProgressBar) ) + 1;
-	gtk_progress_configure(GTK_PROGRESS(ProgressBar),
-			       (gfloat)(i),
-			       0.0,
-			       (float)(NPanels()));
-	//	gtk_progress_set_value( GTK_PROGRESS(ProgressBar),new_val);
-	cerr << "New val = " << new_val << endl;
+	IterMainLoop();
 	//
 	// Set the ranges
 	//
@@ -363,6 +338,117 @@ void MultiPanel::Redraw(int AutoScale, int WhichPanel,int WhichOverlay)
 //
 //---------------------------------------------------------------------
 //
+GtkWidget* MultiPanel::MakePanels(unsigned int NP, 
+				  gfloat X0, gfloat Y0,
+				  gfloat W0, gfloat H0,
+				  int makeYScrollBars)
+{
+  gint Height, Width;
+  gfloat X,Y,W,H;
+  gfloat CW,CH;
+
+  Width = (int)W0;
+  Height= (int)H0*NP;
+  //
+  // Make the graph form
+  //
+  X=X0; Y=Y0;
+  W=W0; H=H0;
+  CW = Width;
+  CH = Height;
+
+  // Show("Progress", ProgressBar);
+  // Timer = gtk_timeout_add (100, progress_timeout, ProgressBar);
+
+  gtk_widget_set_usize(TopLevelWin,Width,Height>500?500:Height);
+  Scroll1=gtk_scrolled_window_new(NULL,NULL);
+  gtk_widget_set_name (Scroll1, "Surface");
+  
+  gtk_container_border_width(GTK_CONTAINER(Scroll1),0);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(Scroll1),
+				 GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
+  gtk_box_pack_start(GTK_BOX(TopLevelVBox),Scroll1, TRUE, TRUE,0);
+  gtk_widget_set_name (TopLevelVBox, "VBox");
+  //----------------------Non GTKPLOT CALLS (PURE GTK CALLS)-------------------
+  //
+  // Make the canvas
+  //
+  Canvas = gtk_plot_canvas_new(Width, Height);
+  gtk_widget_set_name (Canvas, "Canvas");
+  //
+  // Capture the signal for DnD on data points (basically take 
+  // control of data doctoring!).
+  //
+  // gtk_signal_connect(GTK_OBJECT(Canvas),
+  // 		     "click_on_point",
+  // 		     GTK_SIGNAL_FUNC(ClickOnPlot_handler),
+  // 		     (gpointer)this);
+
+  gtk_signal_connect(GTK_OBJECT(TopLevelWin), "key_press_event",
+		     GTK_SIGNAL_FUNC(mp_key_press_handler),
+		     (gpointer)this);
+  gtk_signal_connect(GTK_OBJECT(Canvas), "select_region",
+                     GTK_SIGNAL_FUNC(SelectRegion_handler), 
+		     (gpointer)this);
+  
+  gtk_widget_add_events(GTK_WIDGET(TopLevelWin), GDK_CONFIGURE);
+  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_DND_FLAGS);
+  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_ALLOCATE_TITLES);
+  //
+  // DND on points and plots is fun, but irritating.  Disable those.
+  // Retain DND of text, legends and labels.
+  //
+  GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_DND_POINT);
+  GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_MOVE_PLOT);
+  GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_RESIZE_PLOT);
+
+  Layout = Canvas;
+  gtk_container_add(GTK_CONTAINER(Scroll1),Layout);
+
+  gtk_layout_set_size(GTK_LAYOUT(Layout), Width, Height);
+
+  // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
+  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_WIDGET(Canvas)));
+  gtk_widget_set_usize(GTK_WIDGET(Canvas),Width,Height);
+  
+  // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
+  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_LAYOUT(Layout)));
+
+
+  
+  GTK_LAYOUT(Layout)->hadjustment->step_increment = 5;
+  GTK_LAYOUT(Layout)->vadjustment->step_increment = 5;
+  Show(NULL,Layout);
+  Show(NULL,Canvas);
+
+  //
+  // Make the multipanel form
+  //
+  //  if (Which == (unsigned int)ALLPANELS)
+  {
+    unsigned int i;
+    for (i=0;i<NP;i++)
+      {
+	//	while (g_main_context_iteration(NULL, FALSE));
+	//	while (g_main_iteration(TRUE));
+	IterMainLoop();
+	float CW_M=CW-15, CH_M=CH-50;
+	X=X0; Y=Y0;
+	W=W0; H=H0;
+	Packer(i,NP,&CW_M, &CH_M, &W, &H, &X, &Y);
+	Panels[i].Make(Layout,(gint)CW,(gint)CH,(gint)(X+10),(gint)(Y+5),(gint)(W),(gint)H,
+		       makeYScrollBars);
+      }
+  }
+  Show(NULL,Scroll1);
+  // else
+  //   Panels[Which].Make(Layout,(gint)(CW-5),(gint)(CH-50),(gint)X0,(gint)Y0,Width,Height,
+  // 		       makeYScrollBars);
+  return Canvas;
+}
+//
+//---------------------------------------------------------------------
+//
 GtkWidget *MultiPanel::MakeWindow(unsigned int Which,
 				  gfloat X0, float Y0,
 				  gfloat W0, gfloat H0,
@@ -373,7 +459,7 @@ GtkWidget *MultiPanel::MakeWindow(unsigned int Which,
   gfloat X,Y,W,H;
   gfloat CW,CH;
   int NP;
-  gdouble w,h;
+
   NP=NPanels();
 
   Width = (int)W0;
@@ -400,8 +486,8 @@ GtkWidget *MultiPanel::MakeWindow(unsigned int Which,
   gtk_widget_set_name (TopLevelWin, "MP RootWin");
 
   gtk_window_set_title(GTK_WINDOW(TopLevelWin), Title);
-  gtk_widget_set_usize(TopLevelWin,Width,Height>500?500:Height);
-  //  gtk_widget_set_usize(TopLevelWin,Width,(int)(Height*1.05));
+  //  gtk_widget_set_usize(TopLevelWin,Width,Height>500?500:Height);
+  //  gtk_widget_set_usize(TopLevelWin,Width,500);
 
   gtk_container_border_width(GTK_CONTAINER(TopLevelWin),0);
   Show(NULL,TopLevelWin,0);
@@ -434,133 +520,13 @@ GtkWidget *MultiPanel::MakeWindow(unsigned int Which,
   Show(Title,TopLevelVBox);
   Show(Title, HBox);
   Show(Title,menubar);
-  Show(Title, ProgressBar);
+  //  Show(Title, ProgressBar);
   Show(Title,TopLevelWin);
   //  Show(Title,TopLevelMenuBox);
   //
-  // Make control buttons
-  //
-  /*
-  QuitButton = gtk_toggle_button_new_with_label("Done");
-  gtk_widget_set_usize(QuitButton, 40,20);
-  gtk_signal_connect(GTK_OBJECT(QuitButton), "toggled",
-	     (GtkSignalFunc) mp_done_callback, this);
-  gtk_box_pack_end(GTK_BOX(TopLevelMenuBox),QuitButton, FALSE, TRUE,0);
-
-  CtrlButton = gtk_button_new_with_label("CtrlPanel");
-  gtk_widget_set_usize(CtrlButton, 60,20);
-  gtk_signal_connect(GTK_OBJECT(CtrlButton), "pressed",
-		     (GtkSignalFunc) mp_ctrlpanel_callback, 
-		     (gpointer)this);
-  gtk_box_pack_start(GTK_BOX(TopLevelMenuBox),CtrlButton, FALSE, FALSE,0);
-
-  RescaleButton = gtk_button_new_with_label("RescalePanel");
-  gtk_widget_set_usize(CtrlButton, 60,20);
-  gtk_signal_connect(GTK_OBJECT(RescaleButton), "clicked",
-		     (GtkSignalFunc) mp_rescale_callback, 
-		     (gpointer)this);
-  gtk_box_pack_start(GTK_BOX(TopLevelMenuBox),RescaleButton, FALSE, FALSE,0);
-  Show(NULL,QuitButton);
-  Show(NULL,CtrlButton);
-  Show(NULL,RescaleButton);
-  */
-  //
-  // Make the scroll bars
-  //
-  Scroll1=gtk_scrolled_window_new(NULL,NULL);
-  gtk_widget_set_name (Scroll1, "Surface");
-  
-  gtk_container_border_width(GTK_CONTAINER(Scroll1),0);
-  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(Scroll1),
-				 GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC);
-  gtk_box_pack_start(GTK_BOX(TopLevelVBox),Scroll1, TRUE, TRUE,0);
-  gtk_widget_set_name (TopLevelVBox, "VBox");
-  //----------------------Non GTKPLOT CALLS (PURE GTK CALLS)-------------------
-  //
-  // Make the canvas
-  //
-  Canvas = gtk_plot_canvas_new(Width, Height);
-  gtk_widget_set_name (Canvas, "Canvas");
-  //
-  // Capture the signal for DnD on data points (basically take 
-  // control of data doctoring!).
-  //
-  gtk_signal_connect(GTK_OBJECT(Canvas),
-		     "click_on_point",
-		     GTK_SIGNAL_FUNC(ClickOnPlot_handler),
-		     (gpointer)this);
-
-  gtk_signal_connect(GTK_OBJECT(Canvas),
-		     "click_on_point",
-		     GTK_SIGNAL_FUNC(ClickOnPlot_handler),
-		     (gpointer)this);
-
-  gtk_signal_connect(GTK_OBJECT(TopLevelWin),
-		     "key_press_event",
-		     GTK_SIGNAL_FUNC(mp_key_press_handler),
-		     (gpointer)this);
-  gtk_signal_connect(GTK_OBJECT(Canvas), "select_region",
-                     GTK_SIGNAL_FUNC(SelectRegion_handler), (gpointer)this);
-  
-
-  gtk_widget_add_events(GTK_WIDGET(TopLevelWin), GDK_CONFIGURE);
-
-
-
-  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), 
-			    GTK_PLOT_CANVAS_DND_FLAGS);
-  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), 
-			    GTK_PLOT_CANVAS_ALLOCATE_TITLES);
-  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), 
-			    GTK_PLOT_CANVAS_RESIZE_PLOT);
-  Layout = Canvas;
-  gtk_container_add(GTK_CONTAINER(Scroll1),Layout);
-
-  gtk_layout_set_size(GTK_LAYOUT(Layout), Width, Height);
-
-  // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
-  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_WIDGET(Canvas)));
-  gtk_widget_set_usize(GTK_WIDGET(Canvas),Width,Height);
-  
-  // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
-  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_LAYOUT(Layout)));
-
-
-  
-  GTK_LAYOUT(Layout)->hadjustment->step_increment = 5;
-  GTK_LAYOUT(Layout)->vadjustment->step_increment = 5;
-  Show(Title,Layout);
-  Show(Title,Canvas);
-
-  //
-  // Make the multipanel form
-  //
-  if (Which == (unsigned int)ALLPANELS)
-    {
-      int i;
-      for (i=0;i<NP;i++)
-	{
-	  float CW_M=CW-15, CH_M=CH-50;
-	  X=X0; Y=Y0;
-	  W=W0; H=H0;
-	  Packer(i,NP,&CW_M, &CH_M, &W, &H, &X, &Y);
-	  Panels[i].Make(Layout,(gint)CW,(gint)CH,(gint)(X+10),(gint)(Y+5),(gint)(W),(gint)H,
-			 makeYScrollBars);
-	}
-    }
-  else
-    {
-//      assert(Which < (unsigned int)NPanels());
-      Panels[Which].Make(Layout,(gint)(CW-5),(gint)(CH-50),(gint)X0,(gint)Y0,Width,Height,
-			 makeYScrollBars);
-    }
-  //
-  // Display the browser form (which carries with it the
-  // graph form)
-  //
   if (Disp) 
     {
-      Show(Title,Scroll1);
+      //      Show(Title,Scroll1);
       //      Show(NULL,QuitButton);
       //      Show(NULL,CtrlButton);
     }
@@ -822,12 +788,13 @@ int MultiPanel::CtrlPanelCallback(GtkWidget *Ob, gpointer data)
 //
 int MultiPanel::RescaleAllPanelCallback(GtkWidget *Ob, gpointer data)
 {
+  gfloat R[2]={0,0};
   for (int i=0;i<NPanels();i++)
     {
-      gfloat R[2]={0,0};
-      Panels[i].SetYRangingMode(1);
-      Panels[i].SetRange(R,1);
-      Panels[i].SetYRangingMode(0);
+      Panels[i].SetYRangingMode(1); Panels[i].SetXRangingMode(1);
+      Panels[i].GetRange(R,0);      Panels[i].SetRange(R,0);
+      Panels[i].GetRange(R,1);      Panels[i].SetRange(R,1);
+      Panels[i].SetYRangingMode(0); Panels[i].SetXRangingMode(0);
     }
 
   return TRUE;
@@ -850,6 +817,25 @@ void MultiPanel::GetRange(float R[2], int Axis, int Which)
     for(int i=0;i<NPanels();i++) operator[](i).GetRange(R,Axis);
   else                           operator[](Which).GetRange(R,Axis);
 }
+//
+//----------------------------------------------------------------
+//
+void MultiPanel::EnableProgressMeter() 
+{
+  Timer = gtk_timeout_add (100, progress_timeout, ProgressBar);
+  Show("Progress",GTK_WIDGET(ProgressBar));
+}
+//
+//----------------------------------------------------------------
+//
+void MultiPanel::DisableProgressMeter() 
+{ 
+  gtk_timeout_remove(Timer);
+  GtkAdjustment *adj;
+  adj = GTK_PROGRESS (ProgressBar)->adjustment;
+  gtk_progress_set_value (GTK_PROGRESS (ProgressBar), 0.0);
+  Hide(GTK_WIDGET(ProgressBar));
+};
 //
 //---------------------------------------------------------------------
 // C callbacks which in turn call the C++ object callback.  The
@@ -916,15 +902,51 @@ extern "C"
     //    gtk_plot_resize(gtk_plot_canvas_get_active_plot(GTK_PLOT_CANVAS((GtkWidget *)(data))),w,h);
     ((MultiPanel *)ThisPointer)->Redraw();
     cerr << "X , Y = " << x << " " << y << " " << w << " " << h << endl;
+    return TRUE;
   }
 
   int SelectRegion_handler(GtkPlotCanvas *canvas,
-			   gdouble x1, gdouble y1,
-			   gdouble x2, gdouble y2,
+			   gdouble x1, gdouble x2,
+			   gdouble y2, gdouble y1,
 			   gpointer data) 
   {
     cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+    gfloat Range[2];
+    ((MultiPanel*)data)->operator[](0).SetXRangingMode(1); 
+    ((MultiPanel*)data)->operator[](0).SetYRangingMode(1);
+    Range[0]=x1;Range[1]=x2;    ((MultiPanel *)data)->SetRange(Range,0);
+    Range[0]=y1;Range[1]=y2;    ((MultiPanel *)data)->SetRange(Range,1);
+    ((MultiPanel*)data)->operator[](0).SetXRangingMode(0); 
+    ((MultiPanel*)data)->operator[](0).SetYRangingMode(0);
+    //cout << "TLC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x1,y1) << endl;
+    //cout << "BRC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x2,y2) << endl;
+    return TRUE;
   }
+  // Update the value of the progress bar so that we get
+  // some movement 
+
+  gint progress_timeout( gpointer data )
+  {
+    gfloat new_val;
+    GtkAdjustment *adj;
+
+    /* Calculate the value of the progress bar using the
+     * value range set in the adjustment object */
+
+    new_val = gtk_progress_get_value( GTK_PROGRESS(data) ) + 1;
+
+    adj = GTK_PROGRESS (data)->adjustment;
+    if (new_val > adj->upper)
+      new_val = adj->lower;
+
+    /* Set the new value */
+    gtk_progress_set_value (GTK_PROGRESS (data), new_val);
+
+    /* As this is a timeout function, return TRUE so that it
+     * continues to get called */
+    return(TRUE);
+  } 
+  
   /*
   void mp_xmax_callback(GtkWidget *Ob, gpointer data)
     {
