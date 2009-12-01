@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <iostream.h>
-#include <fstream.h>
-#include <vector.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
 #include <string>
 #include <namespace.h>
 

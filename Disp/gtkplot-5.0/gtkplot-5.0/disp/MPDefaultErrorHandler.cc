@@ -1,7 +1,7 @@
 /* $Id: ltaDefaultErrorHandler.cc,v 1.2 1999/03/23 05:46:19 sanjay Exp $ */
 #include <stdio.h>
 #ifdef __cplusplus
-#include <iostream.h>
+#include <iostream>
 #include <stdlib.h>
 #include <ErrorObj.h>
 #include <ExitObj.h>

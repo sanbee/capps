@@ -84,7 +84,7 @@ int Hub::CmdProcessor(int fd, void *data)
 	  if (Val) v=strtok(Val,",");
 	  if (v) sscanf(v,"%d",&scale);
 	  if ((v=strtok(NULL,","))) sscanf(v,"%lf",&base);
-	  Doer->SetAttribute(XYPanel::XSCALE,scale,base);
+	  Doer->SetAttribute(XYPanel::XSCALE,scale,(int)base);
 	}
 //---------------------------------------------------------------------
       else if (!strcmp(KeyWord,              "yscale"))
@@ -94,7 +94,7 @@ int Hub::CmdProcessor(int fd, void *data)
 	  if (Val) v=strtok(Val,",");
 	  if (v) sscanf(v,"%d",&scale);
 	  if ((v=strtok(NULL,","))) sscanf(v,"%lf",&base);
-	  Doer->SetAttribute(XYPanel::YSCALE,scale,base);
+	  Doer->SetAttribute(XYPanel::YSCALE,scale,(int)base);
 	}
 //---------------------------------------------------------------------
       else if (!strcmp(KeyWord,              "xtics"))
@@ -380,7 +380,6 @@ int Hub::CmdProcessor(int fd, void *data)
       else if (!strcmp(KeyWord,              "init"))
 	{
 	  vector<char *> ColorList;
-	  const char *s;
 	  int n,j=0;
 
 	  n=MakeColorList(ColorList);
