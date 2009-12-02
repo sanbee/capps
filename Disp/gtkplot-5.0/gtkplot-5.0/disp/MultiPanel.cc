@@ -387,17 +387,17 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   gtk_signal_connect(GTK_OBJECT(TopLevelWin), "key_press_event",
 		     GTK_SIGNAL_FUNC(mp_key_press_handler),
 		     (gpointer)this);
-  gtk_signal_connect(GTK_OBJECT(Canvas), "select_region",
+  gtk_signal_connect(GTK_OBJECT(Canvas), "select_region_pixel",
                      GTK_SIGNAL_FUNC(SelectRegion_handler), 
 		     (gpointer)this);
   
   gtk_widget_add_events(GTK_WIDGET(TopLevelWin), GDK_CONFIGURE);
-  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_DND_FLAGS);
-  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_ALLOCATE_TITLES);
   //
   // DND on points and plots is fun, but irritating.  Disable those.
   // Retain DND of text, legends and labels.
   //
+  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_DND_FLAGS);
+  GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_ALLOCATE_TITLES);
   GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_DND_POINT);
   GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_MOVE_PLOT);
   GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_RESIZE_PLOT);
@@ -784,18 +784,23 @@ int MultiPanel::CtrlPanelCallback(GtkWidget *Ob, gpointer data)
   return TRUE;
 }
 //
-//----------------------------------------------------------------
+//----------------------------------------------------------------------
 //
 int MultiPanel::RescaleAllPanelCallback(GtkWidget *Ob, gpointer data)
 {
   gfloat R[2]={0,0};
+  //  EnableProgressMeter();
+  FreezeDisplay();
   for (int i=0;i<NPanels();i++)
     {
+      //      IterMainLoop();
       Panels[i].SetYRangingMode(1); Panels[i].SetXRangingMode(1);
       Panels[i].GetRange(R,0);      Panels[i].SetRange(R,0);
       Panels[i].GetRange(R,1);      Panels[i].SetRange(R,1);
       Panels[i].SetYRangingMode(0); Panels[i].SetXRangingMode(0);
     }
+  UnFreezeDisplay();
+  //  DisableProgressMeter();
 
   return TRUE;
 }
@@ -906,11 +911,19 @@ extern "C"
   }
 
   int SelectRegion_handler(GtkPlotCanvas *canvas,
+			   gint cxoff, gint cyoff,
+			   gint panelx0, gint panely0,
+			   gint panelx1, gint panely1,
 			   gdouble x1, gdouble x2,
 			   gdouble y2, gdouble y1,
 			   gpointer data) 
   {
     cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+    // cout << "Canvas offset = " << GTK_LAYOUT(canvas)->xoffset 
+    // 	 << " " << GTK_LAYOUT(canvas)->yoffset << endl;
+    cout << "Panel pixel = " << panelx0 << " " << panely0 << endl;
+    cout << "Panel pixel = " << panelx1 << " " << panely1 << endl;
+    cout << "Canvas offset = " << cxoff << " " << cyoff << endl;
     gfloat Range[2];
     ((MultiPanel*)data)->operator[](0).SetXRangingMode(1); 
     ((MultiPanel*)data)->operator[](0).SetYRangingMode(1);
