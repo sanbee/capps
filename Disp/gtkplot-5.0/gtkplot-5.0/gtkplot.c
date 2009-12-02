@@ -2361,8 +2361,6 @@ gtk_plot_pixel_get_real_point(GtkPlot *plot,
 
     *px = inverse_x(plot, xx);
     *py = inverse_y(plot, yy);
-
-    printf("#######%d %d %f %f\n",x,y,*px,*py);
 }
 
 void
