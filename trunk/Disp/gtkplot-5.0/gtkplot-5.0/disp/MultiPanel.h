@@ -32,6 +32,9 @@ extern "C" {
   int mp_key_press_handler(GtkWidget *,GdkEventKey *event, gpointer data);
   int configure_handler(GtkWidget *,GdkEvent *event, gpointer data);
   int SelectRegion_handler(GtkPlotCanvas *canvas,
+			   gint cxoff, gint cyoff,
+			   gint panelx0, gint panely0,
+			   gint panelx1, gint panely1,
 			   gdouble x1, gdouble y1,
 			   gdouble x2, gdouble y2,
 			   gpointer data) ;

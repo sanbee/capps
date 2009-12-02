@@ -61,6 +61,7 @@ enum {
         CLICK_AXIS,
 	CLICK_LEGENDS,
         SELECT_REGION,
+	SELECT_REGION_PIXEL,
         LAST_SIGNAL
 };
 
@@ -80,6 +81,19 @@ typedef gboolean (*GtkPlotCanvasSignal3) (GtkObject *object,
                                           gdouble arg4, 
                                     	  gpointer user_data);
 
+typedef gboolean (*GtkPlotCanvasSignal4) (GtkObject *object,
+                                          gint arg1, 
+                                          gint arg2, 
+                                          gint arg3, 
+                                          gint arg4, 
+                                          gint arg5, 
+                                          gint arg6, 
+                                          gdouble arg7, 
+                                          gdouble arg8, 
+                                          gdouble arg9, 
+                                          gdouble arg10, 
+                                    	  gpointer user_data);
+
 static void
 gtk_plot_canvas_marshal_BOOL__POINTER           (GtkObject *object,
                                                  GtkSignalFunc func,
@@ -94,6 +108,12 @@ gtk_plot_canvas_marshal_BOOL__POINTER_POINTER   (GtkObject *object,
 
 static void
 gtk_plot_canvas_marshal_select		        (GtkObject *object,
+                                                 GtkSignalFunc func,
+                                                 gpointer func_data,
+                                                 GtkArg * args);
+
+static void
+gtk_plot_canvas_marshal_select_pixel	        (GtkObject *object,
                                                  GtkSignalFunc func,
                                                  gpointer func_data,
                                                  GtkArg * args);
@@ -194,6 +214,19 @@ gtk_plot_canvas_class_init (GtkPlotCanvasClass *class)
                     GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE,
                     GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE);
 
+  canvas_signals[SELECT_REGION_PIXEL] =
+    gtk_signal_new ("select_region_pixel",
+                    GTK_RUN_LAST,
+                    object_class->type,
+                    GTK_SIGNAL_OFFSET (GtkPlotCanvasClass, click_on_axis),
+                    gtk_plot_canvas_marshal_select_pixel,
+                    GTK_TYPE_NONE, 10, 
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+                    GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE,
+                    GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE);
+
   gtk_object_class_add_signals (object_class, canvas_signals, LAST_SIGNAL);
 
 
@@ -261,6 +294,30 @@ gtk_plot_canvas_marshal_select			      (GtkObject *object,
             GTK_VALUE_DOUBLE (args[1]),
             GTK_VALUE_DOUBLE (args[2]),
             GTK_VALUE_DOUBLE (args[3]),
+            func_data);
+}
+
+static void
+gtk_plot_canvas_marshal_select_pixel		      (GtkObject *object,
+                                                       GtkSignalFunc func,
+                                                       gpointer func_data,
+                                                       GtkArg * args)
+{
+  GtkPlotCanvasSignal4 rfunc;
+
+  rfunc = (GtkPlotCanvasSignal4) func;
+
+  (*rfunc) (object, 
+            GTK_VALUE_INT (args[0]),
+            GTK_VALUE_INT (args[1]),
+            GTK_VALUE_INT (args[2]),
+            GTK_VALUE_INT (args[3]),
+            GTK_VALUE_INT (args[4]),
+            GTK_VALUE_INT (args[5]),
+            GTK_VALUE_DOUBLE (args[6]),
+            GTK_VALUE_DOUBLE (args[7]),
+            GTK_VALUE_DOUBLE (args[8]),
+            GTK_VALUE_DOUBLE (args[9]),
             func_data);
 }
 
@@ -480,8 +537,8 @@ gtk_plot_canvas_motion (GtkWidget *widget, GdkEventMotion *event)
          canvas->pointer_y = y;
  	 break;
     case GTK_PLOT_CANVAS_DND_POINT:
-         if(active_dataset == NULL) break; 
-         if(active_point == -1) break; 
+         if(active_dataset == NULL) break;
+         if(active_point == -1) break;
 
          gdk_gc_set_foreground(xor_gc, &widget->style->white);
 
@@ -1047,8 +1104,13 @@ gtk_plot_canvas_button_release(GtkWidget *widget, GdkEventButton *event)
 
          new_width = abs(canvas->pointer_x - canvas->drag_x);
          new_height = abs(canvas->pointer_y - canvas->drag_y);
-         gtk_signal_emit(GTK_OBJECT(canvas), canvas_signals[SELECT_REGION],
-                         xmin, xmax, ymin, ymax);
+         gtk_signal_emit(GTK_OBJECT(canvas), canvas_signals[SELECT_REGION_PIXEL],
+                         GTK_LAYOUT(canvas)->xoffset,GTK_LAYOUT(canvas)->yoffset,
+			 MIN(canvas->drag_x, canvas->pointer_x),
+			 MIN(canvas->drag_y, canvas->pointer_y),
+			 MAX(canvas->drag_x, canvas->pointer_x),
+			 MAX(canvas->drag_y, canvas->pointer_y),
+			 xmin, xmax, ymin, ymax);
          break;
     case GTK_PLOT_CANVAS_INACTIVE:
          return TRUE;
