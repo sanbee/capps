@@ -120,7 +120,7 @@ public:
   int MaxSliderMove(GtkWidget *ob, float fac);
   int MinSliderMove(GtkWidget *ob, float fac);
 		  
-  int MapPointerToPanel(int& X, int& Y);
+  int MapPointerToPanel(int X, int Y, bool isWindowPixelLocation=TRUE);
   void DisableProgressMeter();
   void EnableProgressMeter() ;
   void IterMainLoop() {while (g_main_iteration(TRUE));};
