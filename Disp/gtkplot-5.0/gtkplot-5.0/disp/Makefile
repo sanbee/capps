@@ -32,9 +32,7 @@ LIBOBJS          = scrollbuf.o MultiPanel.o XYPanel.o SockIO.o nHub.o Dock.o \
 LIBOBJS_C        = clstring.o mach.o hvs.o
 #	           GnomeWin.o callback.o
 
-UILIBS           = $(CLHOME)/lib/libshccl.a                 \
-                   $(CLHOME)/lib/libsh.a                    \
-                   $(CLHOME)/lib/libcalc.a                  \
+UILIBS           = -L$(CLHOME)/lib -lshccl -lsh -lcalc                 \
                    -lreadline -lhistory -ltermcap -lm -lfl -lc
 UIINCL           = -I$(CLHOME)/include
 SYSLIBS          = $(UILIBS) $(READLINELIB) -lX11 -ltermcap -lm -lfl
@@ -56,7 +54,7 @@ $(LIBOBJS): %.o: %.cc
 	$(C++) -c $< -o $@
 
 $(LIBOBJS_C): %.o: %.c
-	$(C++) -c $(NEWFLAGS) $< -o $@
+	$(C++) -c $< -o $@
 
 $(ERROBJS): %.o: %.cc
 	$(C++) -c $< -o $@

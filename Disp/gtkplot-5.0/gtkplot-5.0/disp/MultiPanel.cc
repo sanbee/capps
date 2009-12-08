@@ -644,7 +644,7 @@ GtkWidget *MultiPanel::MakeCtrlPanel(gint X0, gint Y0,
 // This routine should talk to the Packer to do correct mapping.
 // Currently it assumes that the Packer used is a simple vertical
 // stack packer.
-int MultiPanel::MapPointerToPanel(int& X, int& Y)
+int MultiPanel::MapPointerToPanel(int X, int Y, bool isWindowPixelLocation)
 {
   double fy;
   //  gint CanOff=26;
@@ -669,7 +669,7 @@ int MultiPanel::MapPointerToPanel(int& X, int& Y)
 
   
   //  fy = (Y-CanOff)/(GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height);
-
+  if (!isWindowPixelLocation) Y+=menubar->allocation.height;
   fy=((Y-((menubar->allocation.height)+ 
        Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y)) /
       (GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height));
@@ -918,19 +918,20 @@ extern "C"
 			   gdouble y2, gdouble y1,
 			   gpointer data) 
   {
+    int cx0=panelx0+cxoff, cy0=panely0+cyoff,cx1=panelx1+cxoff,cy1=panely1+cyoff;
+    int PanelNumber0 = ((MultiPanel*)data)->MapPointerToPanel(cx0,cy0,FALSE),
+      PanelNumber1 = ((MultiPanel*)data)->MapPointerToPanel(cx1,cy1,FALSE);
     cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
-    // cout << "Canvas offset = " << GTK_LAYOUT(canvas)->xoffset 
-    // 	 << " " << GTK_LAYOUT(canvas)->yoffset << endl;
-    cout << "Panel pixel = " << panelx0 << " " << panely0 << endl;
-    cout << "Panel pixel = " << panelx1 << " " << panely1 << endl;
-    cout << "Canvas offset = " << cxoff << " " << cyoff << endl;
+    // cout << "Panel pixel = " << panelx0 << " " << panely0 << endl;
+    // cout << "Panel pixel = " << panelx1 << " " << panely1 << endl;
+    cout << "Panels = " << PanelNumber0 << " " << PanelNumber1 << endl;
     gfloat Range[2];
-    ((MultiPanel*)data)->operator[](0).SetXRangingMode(1); 
-    ((MultiPanel*)data)->operator[](0).SetYRangingMode(1);
-    Range[0]=x1;Range[1]=x2;    ((MultiPanel *)data)->SetRange(Range,0);
-    Range[0]=y1;Range[1]=y2;    ((MultiPanel *)data)->SetRange(Range,1);
-    ((MultiPanel*)data)->operator[](0).SetXRangingMode(0); 
-    ((MultiPanel*)data)->operator[](0).SetYRangingMode(0);
+    ((MultiPanel*)data)->operator[](PanelNumber0).SetXRangingMode(1); 
+    ((MultiPanel*)data)->operator[](PanelNumber0).SetYRangingMode(1);
+    Range[0]=x1;Range[1]=x2;    ((MultiPanel *)data)->operator[](PanelNumber0).SetRange(Range,0);
+    Range[0]=y1;Range[1]=y2;    ((MultiPanel *)data)->operator[](PanelNumber0).SetRange(Range,1);
+    ((MultiPanel*)data)->operator[](PanelNumber0).SetXRangingMode(0); 
+    ((MultiPanel*)data)->operator[](PanelNumber0).SetYRangingMode(0);
     //cout << "TLC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x1,y1) << endl;
     //cout << "BRC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x2,y2) << endl;
     return TRUE;
