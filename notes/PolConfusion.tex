@@ -23,27 +23,27 @@
 \begin{document}
 \title{Documenting the PolConfusion in AIPS++ Synthesis Library}
 \author{S. Bhatnagar}
-\date{June 23, 2006}
+\date{June 23, 2006\\\small{Updated: Dec. 8, 2009}}
 \maketitle
 
 \normalsize
 
 %%%%%%%%%%%%%%%%%%%%%%%
 \begin{abstract}
-%%%%%%%%%%%%%%%%%%%%%%%
-  This document documents the amusing (irritating for some) comedy of
-  indices and complex conjugation that has to be handled when gridding
-  and de-gridding visibilities using the {\tt pbwproject} FTMachine in
-  AIPS++.  This FTMachine corrects for three terms of the Measurement
-  Equation: (1) rotation of the polarized Primary Beams, (2) the
-  w-term, and (3) antenna pointing errors.  These terms need to be
-  complex conjugated differently for gridding the visibilities onto a
-  regular grid, for predicting the visibilities from a regular grid
-  and depends on the sign of the $w$ co-ordinate, leading to the
-  {\it PolConfusion} described below.  Enjoy.
+%%%%%%%%%%%%%%%%%%%%%%% This document documents the amusing
+  (irritating for some) comedy of indices and complex conjugation that
+  has to be handled when gridding and de-gridding visibilities using
+  the {\tt pbwproject/pbmosaic} FTMachine in AIPS++.  This FTMachine
+  corrects for three terms of the Measurement Equation: (1) rotation
+  of the polarized Primary Beams, (2) the w-term, and (3) antenna
+  pointing errors.  These terms need to be complex conjugated
+  differently for gridding the visibilities onto a regular grid, for
+  predicting the visibilities from a regular grid and depends on the
+  sign of the $w$ co-ordinate, leading to the {\it PolConfusion}
+  described below.  Enjoy.
 \end{abstract}
 
-\section{The {\tt pbwproject} FT Machine}
+\section{The {\tt pbwproject/pbmosaic} FT Machine}
 
 The {\tt pbwprojec} FT Machine in AIPS++ corrects for 
 \begin{enumerate}
@@ -85,12 +85,33 @@ above case is {\tt PolMap = [1,0]} - i.e. the $i^{th}$ polarization
 plane of the MS ({\tt MS[i]}) maps to the {\tt PolMap[i]} plane of the
 image ($MS[i] \rightarrow I[PolMap[i]]$).
 
+\section{Prediction (De-Gridding)}
+
+\subsection{Mathematical requirement}
+
+Mathematically speaking (though the following involves the sign
+convention for $FFT$ and $FFT^{-1}$), the following is what is
+required:
+
+\begin{eqnarray}
+ConvFunc_{RR} &=& W \star E_{RR}~for~w > 0 \nonumber \\
+ConvFunc_{RR} &=& W^* \star E_{RR}~for~w <= 0 
+\end{eqnarray}
+
+\subsection{Implementation in the code (\tt fpbmos.f)}
+
+{\bf Warning: Note that in the code, the indices for $C$ derived from
+  {\tt PolPlane/ConjPlane} maps value are reversed.  I.e. value that
+  should be used from PolPlane is used from ConjPlane and vice
+  versa.   The index used for $V^G$ derived from {\tt PolMap} is
+  correct in the code as well.}
+
 To apply the w-term correctly, along with the $E$ term, the equations
 for predicting the visibilities ($V$) from a regular complex grid
 ($V^G$) for polarization plane {\tt RR} are:
 \begin{eqnarray}
- V_{RR} = E_{RR} \star W^* \star V^G_{RR}~for~w<0 \nonumber \\
- V_{RR} = E_{RR} \star W \star V^G_{RR}~for~w>0
+ V_{RR} &=& E_{RR} \star W \star V^G_{RR}~for~w>0  \nonumber \\
+ V_{RR} &=& E_{RR} \star W^* \star V^G_{RR}~for~w<=0 
 \end{eqnarray}
 The visibility polarization planes are picked up from the {\tt
   VisBuffer} serially - i.e. the loop over all polarizations goes from
@@ -102,47 +123,72 @@ below is therefore in {\tt PolMap}.  Noting that $C_{RR}^* = C_{LL}$,
 the above equations can be realized by keeping another map {\tt
   ConjMap=[0,1]} and de-gridding as :
 \begin{eqnarray}
- V[i] &=& C[PolMap[i]]^* \star V^G_{RR}[PolMap[i]]~for~w<0 \nonumber \\
- V[i] &=& C[ConjMap[i]] \star V^G_{RR}[PolMap[i]]~for~w>0 
+ V[i] &=& C[ConjMap[i]] \star V^G_{RR}[PolMap[i]]~for~w>0 \nonumber \\
+ V[i] &=& C[PolMap[i]]^* \star V^G_{RR}[PolMap[i]]~for~w<=0 
 \end{eqnarray}
 This is equivalent to
 \begin{eqnarray}
- MS[0]&=&C[1]^* \star V^G[1]~for~w<0\nonumber\\
- MS[0]&=&C[0] \star V^G[1]~for~w>0
+ MS[0]&=&C[0] \star V^G[1]~for~w>0\nonumber\\
+ MS[0]&=&C[1]^* \star V^G[1]~for~w<=0
 \end{eqnarray}
 which is 
 \begin{eqnarray}
- MS[RR]&=&C[LL]^* \star V^G[RR]~for~w<0\nonumber\\
- MS[RR]&=&C[RR] \star V^G[RR]~for~w>0
+ MS[RR]&=&C[RR] \star V^G[RR]~for~w>0\nonumber\\
+ MS[RR]&=&C[LL]^* \star V^G[RR]~for~w<=0
 \end{eqnarray}
+
+
+
+
+
+
+
+\section{Gridding}
+\subsection{Mathematical requirement}
+
+Mathematically speaking (though the following involves the sign
+convention for $FFT$ and $FFT^{-1}$), the following is what is
+required:
+
+\begin{eqnarray}
+ConvFunc_{RR} &=& W^* \star E^*_{RR}~for~w > 0 \nonumber \\
+ConvFunc_{RR} &=& W \star E^*_{RR}~for~w <= 0 
+\end{eqnarray}
+
+\subsection{Implementation in the code (\tt fpbmos.f)}
+{\bf Warning: Note that in the code, the indices for $C$ derived from
+  {\tt PolPlane/ConjPlane} maps value are reversed.  I.e. value that
+  should be used from PolPlane is used from ConjPlane and vice
+  versa.  The index used for $V^G$ derived from {\tt PolMap} is
+  correct in the code as well.}
 
 For imaging, the gridded visibilities are computed as:
 \begin{eqnarray}
- V^G_{RR} = E_{RR}^* \star W \star V_{RR}~for~w<0 \nonumber \\
- V^G_{RR} = E_{RR}^* \star W^* \star V_{RR}~for~w>0
+ V^G_{RR} &=& E_{RR}^* \star W^* \star V_{RR}~for~w>0 \nonumber \\
+ V^G_{RR} &=& E_{RR}^* \star W \star V_{RR}~for~w<=0
 \end{eqnarray}
 This is equivalent to
 \begin{eqnarray}
- V^G_{RR} = E_{LL} \star W \star V_{RR}~for~w<0 \nonumber \\
- V^G_{RR} = E_{LL} \star W^* \star V_{RR}~for~w>0
+ V^G_{RR} &=& E_{LL} \star W^* \star V_{RR}~for~w>0 \nonumber \\
+ V^G_{RR} &=& E_{LL} \star W \star V_{RR}~for~w<=0
 \end{eqnarray}
 Again, the polarization planes from $V^G$ are picked up serially, and
 hence gridding gets done in the order {\tt LL,RR}.
 Given the mapping as in Table~\ref{TAB:POLORDER}, this can be realized
 as:
 \begin{eqnarray}
- V^G[i] &=& C[ConjMap[i]] \star V^G_{RR}[PolMap[i]]~for~w<0 \nonumber \\
- V^G[i] &=& C[PolMap[i]]^* \star V^G_{RR}[PolMap[i]]~for~w>0 
+ V^G[PolMap[i]] &=& C[PolMap[i]]^* \star V_{RR}[i]~for~w>0  \nonumber \\
+ V^G[PolMap[i]] &=& C[ConjMap[i]] \star V_{RR}[i]~for~w<=0
 \end{eqnarray}
 This is equivalent to
 \begin{eqnarray}
- V^G[0]&=&C[0] \star MS[1]~for~w<0\nonumber\\
- V^G[0]&=&C[1]^* \star MS[1]~for~w>0
+ V^G[1]&=&C[1]^* \star MS[0]~for~w>0\nonumber\\
+ V^G[1]&=&C[0] \star MS[0]~for~w<=0
 \end{eqnarray}
 which is 
 \begin{eqnarray}
- V^G[LL]&=&C[RR] \star MS[LL]~for~w<0\nonumber\\
- V^G[LL]&=&C[LL]^* \star MS[LL]~for~w>0
+ V^G[RR]&=&C[RR]^* \star MS[RR]~for~w>0\nonumber\\
+ V^G[RR]&=&C[LL] \star MS[RR]~for~w<=0
 \end{eqnarray}
 
 
