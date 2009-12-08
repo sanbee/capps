@@ -23,7 +23,7 @@ OBJS = gtkpsfont.o \
        gtkplotps.o 
 
 LIBDIRS = $(shell gtk-config --libs)
-CFLAGS = -Wall $(shell gtk-config --cflags)
+CFLAGS = -Wall -I. $(shell gtk-config --cflags)
 
 all:    demo realdemo libgtkplot.a 
 
