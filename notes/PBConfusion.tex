@@ -1,0 +1,151 @@
+\documentclass[11pt,epsf]{article}
+%\documentstyle[12pt,amsmath]{article}
+%\usepackage{html}
+\usepackage{epsf}
+\usepackage{amsmath}
+\usepackage[dvips]{graphicx, color}  % The figure package
+
+%\setlength{\textheight}{23.0cm}
+%\setlength{\textwidth}{15.00cm}
+%\setlength{\topmargin}{-1.5cm}
+%\setlength{\oddsidemargin}{1.5cm}
+%\setlength{\evensidemargin}{1.5cm}
+%\setlength{\parskip}{5pt}
+%\setlength{\parindent}{20pt}
+
+%\evensidemargin -0.7cm
+%\oddsidemargin 1.5cm
+%\textwidth 15cm
+%\topmargin -1.5cm
+%\textheight 23cm
+\parskip 1ex    % White space between paragraphs amount
+
+\begin{document}
+\title{Documenting the PB-Confusion in CASA Synthesis Library}
+\author{S. Bhatnagar}
+\date{Jan. 09, 2009}
+\maketitle
+
+\normalsize
+
+%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%
+Here is my take on the sequences of operations required for FFT based
+forward and reverse transforms used in iterative deconvolution
+algorithms.
+\end{abstract}
+
+\section{The measurement process}
+
+The antenna surface acts a focusing (non-imaging) device, which
+reflects all the radiation incident on its surface to a single point
+in space (the location of the feed).  The measurements from the feeds
+of various antennas are then correlated\footnote{I am not deriving
+this part here - but I think we should get this also from first
+principles, just to be sure.} at the correlator to compute the
+visibility, $V_{ij}$, measured by two antennas denoted by sub-script
+$i$ and $j$.
+
+For the purpose of analysis, we can imagine a ``visibility field'' due
+to the spatially incoherent emission at infinity pervading all space
+in the measurement plane (the plane of {\it all} antennas).  Lets
+denote it by $V^o$.  An interferometric telescope can then be
+described as an array of ``collecting'' devices, the electromagnetic
+description of which can be given by $A^o=A^o_i \star
+A^{o^\star}_j$ where $A_i$ is the aperture illumination function of
+the antennas.  Measurement from a baseline of the interferometer can
+then be written as
+\begin{equation}
+ V_{ij}^{Obs} = (A^o \star V^o) \cdot S_{ij}
+\end{equation}
+where $S_{ij}$ is the uv-sampling function.  Each measurement
+$V_{ij}^{Obs}$ is also assigned a weight, $W_{ij}$, which is inversely
+proportional to the {\it measured} system temperature denoted by~
+$T_{ij}^{sys}$.
+
+\section{Forward transform (Vis-to-Image domain)}
+
+To grid the measured data on to a regular grid, lets construct a
+convolution function given by $A^M_{ij}$.  The process of re-sampling
+the data on a regular grid can then be written as
+\begin{eqnarray}
+\label{ME}
+V^G &+=& A^M_{ij} \star \left[V^{obs}_{ij} \cdot W_{ij} \cdot S_{ij}\right]\\
+&+=&A^M_{ij} \star \left[\left(A^o_{ij}\star V^o_{ij}\right) \cdot  \left(S_{ij}\cdot W_{ij}\right)\right]
+\end{eqnarray}
+Note that this operation ``sprays'' each measured visibility to a
+number of grid points, weighted by the function $A^M_{ij}$ (hence the
+term ``projection'' associated with such transforms).
+
+The image is then computed as 
+\begin{eqnarray}
+I^{D^M} &=& FT \left[V^G\right]\\
+\label{DIRTY_IMAGE_COMP}
+        &=& PB^M \cdot \left[\left(PB^o\cdot I^o\right)\star PSF\right]
+\end{eqnarray}
+Since Fourier Transform is essentially a vector average of its
+arguments, the effects of $PB$ in Eq.~\ref{DIRTY_IMAGE_COMP} can be
+interpreted as ``dirty image accumulating $PB^M\cdot PM^o$.  It is
+less clear in Eq.~\ref{DIRTY_IMAGE_COMP} why
+$avg\left[PB_i^{M^2}\right]$ is a better estimate of $PB^M \cdot
+PM^o$.  It is clearer from Eq.~\ref{ME} - once we recognize that
+algorithms that correct for direction dependent effects in the
+visibility plane can converge {\it only} if $A^M_{ij} \star A^o_{ij}$
+is close to 1.0 (basically the argument in our paper, that the
+equivalent operators must be unitary (or approximately so)).
+
+Current implementation of MS-MFS uses MS-Clean in minor cycle.  That
+being essentially Hogbom Clean, {\it requires} that the Dirty Image be
+accurate.  However since in MS-MFS, which does reconcile with the
+data, this should only be a matter of rate of convergence rather than
+accuracy of convergence.
+
+Convolution function corrected image is then computed as
+\begin{eqnarray}
+\label{DIRTY_IMAGE}
+I^{D} &=& \frac{I^{D^M}}{PB^M}\\
+where~ PB^M &=& FT\left[\frac{\sum_{ij} \left( A^M_{ij} \star A^o_{ij} \right) W_{ij}}{\sum_{ij} W_{ij}}\right]
+\end{eqnarray}
+Area under $A^M_{ij}$ must be unity.  Since $A^M_{ij}$ is the {\it
+best} available model for antenna aperture illumination, in practice
+$A^o_{ij}$ is replaced by $A^M_{ij}$ in the above equation.  The PSF
+is similarly computed with $V^{Obs}_{ij}$ set to 1.0.
+
+\section{Conclusions}
+Following is how I interpret these equations:
+\begin{enumerate}
+\item The PSF is is ``flat''.  I.e, it is {\it not} multiplied by PB.
+\item $I^D$ is convolved with this ``flat PSF''.  True sky ($I^o$) in $I^D$
+  is multiplied by the true PB ($PB^o$).  
+\end{enumerate}
+The following then appears to be an appropriate prescription for
+iterative deconvolution
+\begin{enumerate}
+\item Compute the Dirty Image and the PSF using Eq.~\ref{DIRTY_IMAGE}
+\item Do the minor cycle using these images and compute the model
+  image $I^M$.
+\item Use $I^M/PB^M$ to predict the visibilities in the major cycle
+\end{enumerate}
+
+The deconvolved image will be ``true sky'' multiplied by the PB.  That
+can then be corrected for PB (if required) using $PB^M$ (the best
+estimate of the average PB, given the model for the antenna aperture
+illumination function $A^M$).
+
+\section{Acknowledgments}
+Is this correct?  If not, what am I missing?  The issue as I see them,
+for deconvolution algorithms, is Eq.~\ref{ME} correct in the ordering
+of terms.  My take is - the ordering is determined by the order in
+which operations are done (physical measurements as well as
+computational operations).
+
+These are the precise equations I have used in the PBWProjectFT.  It
+works down to thermal limit on the IC2233 L-Band data (Stokes-I and
+-V).  I also simulated data using NVSS field with sources all over the
+PB.  Looking at the sources in the Dirty Image close to the edge of
+the PB confirmed (from what I can recall anyway) the conclusions.  I
+should (and will) simulate again and attach those images with this note
+to clarify a bit.
+
+\end{document}
