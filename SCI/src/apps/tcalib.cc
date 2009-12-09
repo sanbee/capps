@@ -18,9 +18,10 @@ using namespace casa;
 //#define RestartUI(Label)  {if(clIsInteractive()) {clRetry();goto Label;}}
 //
 void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, string& MINBuf,
-	string& OutCTNBuf, string& OutDCBuf, string& fieldStr, string& timeStr, string& spwStr, string& antStr,
-	string& uvrangeStr, string& jonesType, Float &Gain, Int &niter, Float &tol, string& integStr, /*Float &integ, */ Float &paInc,
-	Int &wplanes, Int& nchan, Int& start, Int& step)
+	string& OutCTNBuf, string& OutDCBuf, string& fieldStr, string& timeStr, 
+	string& spwStr, string& antStr,	string& uvrangeStr, string& jonesType, 
+	Float &Gain, Int &niter, Float &tol, string& refantStr, string& integStr, string& scanStr, 
+	Float &paInc, Int &wplanes, Int& nchan, Int& start, Int& step)
 {
   if (!restart)
     {
@@ -44,7 +45,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, str
 	i=1;clgetSValp("outcal",OutCTNBuf,i);  
 	//	i=1;clgetFValp("integ",integ,i);  
 	i=1;clgetSValp("integ",integStr,i);  
-
+	i=1;clgetSValp("refant",refantStr,i);
 	i=1;clgetIValp("nchan",nchan,i);
 	i=1;clgetIValp("start",start,i);
 	i=1;clgetIValp("step",step,i);
@@ -63,6 +64,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, str
 	clgetFullValp("uvrange",uvrangeStr);
 	clgetFullValp("antenna",antStr);
 	clgetFullValp("time",timeStr);
+	//	clgetFullValp("scan",scanStr);
 	//
 	// For the brave
 	//
@@ -88,8 +90,9 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   string MSNBuf, MINBuf, CTNBuf, OutCTNBuf,
-    OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, integStr;
-  Float Gain=0.1, Tolerance=1E-7, Integ=0,paInc=360.0;
+    OutDC, fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, integStr, scanStr,
+    refantStr;
+  Float Gain=0.1, Tolerance=1E-7, preInteg=0.0,paInc=360.0;
 
   Int Niter=100, wPlanes=1, nchan=1, start=0, step=1;
   Bool restartUI=False;;
@@ -99,15 +102,16 @@ int main(int argc, char **argv)
   Float cai; std::sscanf(std::string(cai_str).c_str(), "%f", &cai);
 
  RENTER:// UI re-entry point.
-  MSNBuf = MINBuf = CTNBuf = OutCTNBuf = OutDC = timeStr = antStr ="";
+  MSNBuf = MINBuf = CTNBuf = OutCTNBuf = OutDC = timeStr = antStr = refantStr = "";
   //
   // Factory defaults
   //
   jonesType="EP"; spwStr="*"; fieldStr="*";
+  scanStr="*";
 
   UI(restartUI,argc, argv, MSNBuf,CTNBuf,MINBuf, OutCTNBuf, OutDC, 
      fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, Gain, Niter, 
-     Tolerance, integStr, paInc, wPlanes, nchan,start,step);
+     Tolerance, refantStr, integStr, scanStr, paInc, wPlanes, nchan,start,step);
   restartUI = False;
   //
   //---------------------------------------------------
@@ -134,6 +138,7 @@ int main(int argc, char **argv)
       msSelection.setSpwExpr(spwStr);
       msSelection.setAntennaExpr(antStr);
       msSelection.setUvDistExpr(uvrangeStr);
+      //      msSelection.setScanExpr(scanStr);
       MS ms(MSName,TableLock(TableLock::AutoLocking),Table::Update),selectedMS(ms);
       TableExprNode exprNode=msSelection.toTableExprNode(&ms);
       if (!exprNode.isNull()) selectedMS = MS(ms(exprNode));
@@ -159,7 +164,14 @@ int main(int argc, char **argv)
 // 		    start,       // Start
 // 		    step       // Step
 // 		    );  
-      calib.selectvis("","","","","","","channel",nchan,start,step);
+      calib.selectvis("", //time
+		      spwStr, //spw
+		      "", //scan
+		      "", //field
+		      "", //baseline
+		      "", //uvrange
+		      "none");
+		      //	      "channel",nchan,start,step); // Old style
       calib.reset(True,True);
       Vector<Int> spwmap(1,-1);
       if (CTNBuf != "")
@@ -179,12 +191,14 @@ int main(int argc, char **argv)
       ostringstream IntegStr;
       //      IntegStr << Integ << "s";
 
+      if ((jonesType != "D") || (jonesType != "EP")) sscanf(integStr.c_str(), "%f", &preInteg);
+
       calib.setsolve(jonesType,       // Type
 		     integStr,           // Solution interval
 		     OutCalTableName,
 		     False,           // Append to the cal. table?
-		     Integ,           // Data integratin (before solver)
-		     "AP",4,"",False,0.0f,"",0,
+		     preInteg,           // Data integratin (before solver)
+		     "AP",4,refantStr,False,0.0f,"",0,
 		     diskCacheDir,    // Name of the CF disk cache
 		     paInc);          // PA increment (in deg).
       if (ModImgName != "") calib.setmodel(ModImgName);
