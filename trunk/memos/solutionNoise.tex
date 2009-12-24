@@ -4,6 +4,7 @@
 \usepackage{epsf}
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx, color}  % The figure package
+\usepackage{color} 
 %\usepackage{utopia} 
 \def\vec#1{\ensuremath{\mathchoice{\mbox{\boldmath$\displaystyle#1$}}
 {\mbox{\boldmath$\textstyle#1$}}
@@ -66,13 +67,16 @@ objective results (images).  % {\bf I wish to borrow your mind to prove
 The basic premise that we will make more precise in the following
 sections is:
 \begin{description}
-\item Noise on the solution for antenna based parameters is
+\item The noise on the solution for antenna based parameters is
   proportional to ${N^{-\frac{1}{2}}_{ant}}$ while the noise in the
   image domain is proportional to $N^{-1}_{ant}$.
-\item Therefore, in the space of telescope parameters, there must be a
+  The relevent time bandwidth products for the former are $\sqrt{\nu_{sol} \tau_{sol}}$ and $\sqrt{\nu_{tot} \tau_{tot}}$, respectively.
+  The subscript {\em sol} refer to the solution interval and {\em tot} to total span of the observations.
+\item Therefore, in the phase space of telescope parameters, there must \textcolor{red}{exist} a
   region where it might be fundamentally impossible to achieve imaging
   dynamic range, as determined {\it only} by the telescope System
   Equivalent Flux Density (SEFD).
+\item 
 \end{description}
 
 If the telescope parameters (embodied in SEFD) are such that the
@@ -95,9 +99,9 @@ Assuming identical antennas, only additive random noise and {\it only}
 antenna based corruptions, the observed data from
 baseline $i-j$ can be modeled as
 \begin{equation}
-V^{Obs}_{ij} = f(\left\{a_i\right\}, I^M) + \sigma_{ij}
+V^{Obs}_{ij} = f(\left\{a_k\right\}, I^M) + \sigma_{ij}
 \end{equation}
-where $\left\{a_i\right\}$ is the set of antenna based parameters, $I^M$ is the
+where $\left\{a_k\right\}$ is the set of antenna based parameters, $I^M$ is the
 model of the sky emission and $f$ is a function that models the
 observed data.  $\sigma_{ij}$ is the additive random noise
 and is related to the telescope and observation parameters as
@@ -106,7 +110,7 @@ and is related to the telescope and observation parameters as
 &=& \frac{SEFD}{\sqrt{\nu_{corr} \tau_{corr}}}
 \end{eqnarray}
 where $\nu_{corr}$ and $\tau_{corr}$ are the correlator
-bandwidth and integration time (strictly speaking, the above equation
+bandwidth and integration time for a given visibility (strictly speaking, the above equation
 also assumes the noise on the data samples separated by
 $\nu_{corr}$ in frequency and $\tau_{corr}$ in time is
 statistically independent).
@@ -150,6 +154,20 @@ reduces to averaging over all antennas since
     0,    &\text{otherwise}
   \end{cases}
 \end{equation}
+\textcolor{red}{
+While we are trying to do things right, let's try to be as rigorous as we can manage. 
+The above is true only for ensamble averages, over any given $\sqrt{\nu_{sol} \tau_{sol}}$, the ${\partial (g_ig_j^*)}/{\partial g_k} \neq  0$, only $<{\partial (g_ig_j^*)}/{\partial g_k}> \rightarrow  0$. 
+At this point, it is my pleasure to add to the confusion. In my view $g_i$ should by definition be constants or at most slowly varying quantities over $\nu_{sol}$ and $\tau_{sol}$. 
+This suggests that their partial derivates should be stable over these spans as well and the ratio of $\nu_{corr} \tau_{corr}/{\nu_{sol} \tau_{sol}}$ will not be contributing much to drive this term to 0, it will only reduce the noise of our estimate of its value.
+It is the randomness in the terms from different antennas which will help to drive the average to 0. 
+Now $\sqrt{30}$ is a distressingly small number, though things should get a lot better for large N systems.
+Let's at least keep this in mind and if we can accommodate it in the formulation, that will be good.\\
+At this point I wanted to suggest in order to take care of the above we should have an error term in the next equation for $C(G_i)$, but stopped short because the error in that is exactly what you calculate next. 
+As expected, that error does go down as $\sqrt{N_a \nu_{sol} \tau_{sol}}$, but I was just making the case that $\nu_{sol}$ and $\tau_{sol}$ should hardly contribute.\\
+After a bit of thought, my conclusion is that our formalism does not incorporate the sort of errors I was talking about earlier in the red section and hence the error estimated does not account for this.
+Wonder if it is simply that our forumation is only taking care of thermal noise type errors, while this should be regarded as an additional term, not sure.
+}
+
 Equation~\ref{CKKAvg} becomes
 \begin{equation}
 C(g_i) = \left[ \sum^{N_a}_{j} \sum_{\tau_{sol},\nu_{sol}}\left(\frac{Sg^*_j}{\sigma_{ij}}\right)^2  \right]^{-1}
