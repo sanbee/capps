@@ -28,7 +28,7 @@ GNOME_LIBS       = -lSM -lICE -lgtk -lgdk -lgmodule -lXext -lX11 -lesd -laudiofi
 CLIBS            = libmp.a libderr.a  ../libgtkplot.a
 ERROBJS          = ErrorObj.o MPDefaultErrorHandler.o
 LIBOBJS          = scrollbuf.o MultiPanel.o XYPanel.o SockIO.o nHub.o Dock.o \
-	           CommH.o MakeColorList.o 
+	           CommH.o MakeColorList.o MPPPacker.o
 LIBOBJS_C        = clstring.o mach.o hvs.o
 #	           GnomeWin.o callback.o
 
@@ -78,3 +78,4 @@ depend:
 
 clean: 
 	\rm -f *.{o,a} *~ $(APPS)
+# DO NOT DELETE

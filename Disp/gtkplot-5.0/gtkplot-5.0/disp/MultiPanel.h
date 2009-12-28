@@ -12,6 +12,7 @@
 #include <scrollbuf.h>
 #include <BitField.h>
 #include <namespace.h>
+#include <MPPPacker.h>
 typedef void (*PACKER_CALLBACK_PTR) (int n, int np, gfloat *cw, gfloat *ch, 
 				     gfloat *w, gfloat *h, gfloat *x, gfloat *y);
 typedef void (PACKER_CALLBACK) (int n, int np, gfloat *cw, gfloat *ch, 
@@ -41,8 +42,6 @@ extern "C" {
   gint progress_timeout( gpointer data );
   //  int MinSliderMove(GtkWidget *ob, float fac);
   //  int MinSliderMove(GtkWidget *ob, float fac);
-  PACKER_CALLBACK DefaultPacker;
-
 };
 
 class MultiPanel {
@@ -53,7 +52,7 @@ public:
   ~MultiPanel() {};
 
   void SetUp(int argc, char **argv, char *Title=NULL, int N=0, int NPoints=0);
-  void Init(int N,int NPoints, PACKER_CALLBACK_PTR DefaultP=DefaultPacker);
+  void Init(int N,int NPoints);
 
   void Show(char *Title,GtkWidget *F,int BorderType=0);
   void Hide(GtkWidget *F);
@@ -74,7 +73,7 @@ public:
   
 
   void SetCallBack(unsigned int Which, int Enum, GtkSignalFunc CB);
-  void SetCallBack(PACKER_CALLBACK_PTR PC) {Packer = PC;};
+  void SetPacker(MPPPacker& PC) {PackerObj = PC;}
   void Redraw(int Mode=AUTOSCALEX|AUTOSCALEY,int WhichPanel=ALLPANELS,
 	      int WhichOverlay=XYPanel::ALLOVERLAYS);
 //
@@ -157,10 +156,10 @@ private:
   GtkWidget             *TopLevelWin, *TopLevelVBox, *HBox, *ProgressBar,*Canvas, *CtrlPanel, *menubar;
   GtkWidget             *Scroll1, *Layout;
   GtkAdjustment         *XMin_Adj, *XMax_Adj;
-  PACKER_CALLBACK_PTR   Packer;
   BitField              ChosenOnes;
   unsigned short        NewPlot;
   int Timer;
+  MPPPacker PackerObj;
 };
 
 #endif
