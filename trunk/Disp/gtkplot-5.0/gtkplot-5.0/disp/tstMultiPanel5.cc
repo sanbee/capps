@@ -32,8 +32,15 @@ void plot(int NP, int NPoints)
   OnDisp.EnableProgressMeter();
   OnDisp.Init(NP,NPoints);
   for (int i=0;i<NP;i++) OnDisp[i].SetNoOfOverlays(2);
+
+  MPPPacker mppp;
+  mppp.Reset(NP,1000,100*NP-50);
+  mppp.SetPanelsPerPage(5);
+  OnDisp.SetPacker(mppp);
+
   OnDisp.MakePanels(NP,0.0,0.0,1000,100);
   OnDisp.FreezeDisplay();
+
   for (int j=0;j<NP;j++)
     for (int i=0;i<NPoints;i++)
       {
@@ -45,12 +52,11 @@ void plot(int NP, int NPoints)
       }
   Range[0] = Range[1] = 0.0;
   
+  vector<char *> ColorList;
+  int n=MakeColorList(ColorList);
   for (int i=0;i<NP;i++)
     {
-      int n;
-      vector<char *> ColorList;
       OnDisp.IterMainLoop();
-      n=MakeColorList(ColorList);
 
       OnDisp[i].SetAttribute(XYPanel::XTICS0,20.0);  // Major ticks
       OnDisp[i].SetAttribute(XYPanel::XTICS1,10.0);  // Minor ticks
@@ -58,8 +64,7 @@ void plot(int NP, int NPoints)
       OnDisp[i].SetAttribute(XYPanel::YTICS1,0.1);   // Minor ticks
 
       OnDisp[i].SetAttribute(XYPanel::XTITLE,0);
-      OnDisp[NP-1].SetAttribute(XYPanel::XTITLE,1);
-      if (i<NP-1) OnDisp[i].SetAttribute(XYPanel::XLABEL,0);
+      OnDisp[i].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_NONE);
       if (n>0)
 	{
 	  int k=i;
@@ -67,6 +72,8 @@ void plot(int NP, int NPoints)
 	  OnDisp[i].SetAttribute(XYPanel::GRAPH_FG_COLOUR,ColorList[k],NULL,-1);
 	}
     }
+  OnDisp[NP-1].SetAttribute(XYPanel::XTITLE,1);
+  OnDisp[NP-1].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_BOTTOM);
   OnDisp.GetRange(Range,0,0);      OnDisp.SetRange(Range,0);
   OnDisp.GetRange(Range,1,0);      OnDisp.SetRange(Range,1);
   gtk_plot_axis_labels_set_numbers(GTK_PLOT(OnDisp[0].GetObj()),

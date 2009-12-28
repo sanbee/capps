@@ -79,7 +79,7 @@ extern "C"
 
   void gtk_plot_layout_paint(GtkWidget *);
   void DefaultPacker(int n, int np, gfloat *cw, gfloat *ch, 
-		     gfloat *w, gfloat *h, gfloat *x, gfloat *y) 
+  		     gfloat *w, gfloat *h, gfloat *x, gfloat *y) 
   {
     *w = 0.87;
     *h = 0.9/np;
@@ -96,7 +96,8 @@ extern "C"
 //---------------------------------------------------------------------
 //
 MultiPanel::MultiPanel(int argc, char **argv, char *Title,
-		       int N,int NPoints) 
+		       int N,int NPoints):
+  PackerObj()
 {  
   SetUp(argc, argv, Title, N, NPoints);
 }
@@ -123,7 +124,7 @@ void MultiPanel::SetUp(int argc, char **argv, char *Title,
 //
 //---------------------------------------------------------------------
 //
-void MultiPanel::Init(int N,int NPoints, PACKER_CALLBACK_PTR DefaultP)
+void MultiPanel::Init(int N,int NPoints)//, PACKER_CALLBACK_PTR DefaultP)
 {
   CtrlPanel=NULL;
   NewPlot=1;
@@ -131,8 +132,6 @@ void MultiPanel::Init(int N,int NPoints, PACKER_CALLBACK_PTR DefaultP)
   X.resize(NPoints);
 
   for (int i=0;i<N;i++)  Panels[i].Init(NPoints,&X[0]);
-
-  Packer=DefaultP;
 }
 //
 //---------------------------------------------------------------------
@@ -347,6 +346,9 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   gfloat X,Y,W,H;
   gfloat CW,CH;
 
+  //
+  // Compute the total width and height of the canvas
+  //
   Width = (int)W0;
   Height= (int)H0*NP;
   //
@@ -356,10 +358,17 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   W=W0; H=H0;
   CW = Width;
   CH = Height;
+  // PackerObj.Reset(NP, CW-15, CH-50);
+  // PackerObj.SetPanelsPerPage(2);
 
   // Show("Progress", ProgressBar);
   // Timer = gtk_timeout_add (100, progress_timeout, ProgressBar);
 
+  //
+  // Limit the hight of the top-level window (arbitrarly set to 500
+  // pixels here).  The canvas can be larger and will be made
+  // scrollable.
+  //
   gtk_widget_set_usize(TopLevelWin,Width,Height>500?500:Height);
   Scroll1=gtk_scrolled_window_new(NULL,NULL);
   gtk_widget_set_name (Scroll1, "Surface");
@@ -432,10 +441,7 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
 	//	while (g_main_context_iteration(NULL, FALSE));
 	//	while (g_main_iteration(TRUE));
 	IterMainLoop();
-	float CW_M=CW-15, CH_M=CH-50;
-	X=X0; Y=Y0;
-	W=W0; H=H0;
-	Packer(i,NP,&CW_M, &CH_M, &W, &H, &X, &Y);
+	PackerObj.Geometry(i,W,H,X,Y);
 	Panels[i].Make(Layout,(gint)CW,(gint)CH,(gint)(X+10),(gint)(Y+5),(gint)(W),(gint)H,
 		       makeYScrollBars);
       }
@@ -475,7 +481,7 @@ GtkWidget *MultiPanel::MakeWindow(unsigned int Which,
   //
   // Get the size of canvas and the panels from the packer.
   //
-  Packer(1,NP,&CW,&CH,&W,&H,&X,&Y);
+  //  Packer(1,NP,&CW,&CH,&W,&H,&X,&Y);
   //
   // Make the toplevel window.  This is the window which will be
   // the visibile window on the screen.  Inside this will be everything
@@ -918,13 +924,13 @@ extern "C"
 			   gdouble y2, gdouble y1,
 			   gpointer data) 
   {
-    int cx0=panelx0+cxoff, cy0=panely0+cyoff,cx1=panelx1+cxoff,cy1=panely1+cyoff;
-    int PanelNumber0 = ((MultiPanel*)data)->MapPointerToPanel(cx0,cy0,FALSE),
-      PanelNumber1 = ((MultiPanel*)data)->MapPointerToPanel(cx1,cy1,FALSE);
-    cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
-    // cout << "Panel pixel = " << panelx0 << " " << panely0 << endl;
-    // cout << "Panel pixel = " << panelx1 << " " << panely1 << endl;
-    cout << "Panels = " << PanelNumber0 << " " << PanelNumber1 << endl;
+    //    int cx0=panelx0+cxoff, cy0=panely0+cyoff,cx1=panelx1+cxoff,cy1=panely1+cyoff;
+    // int PanelNumber0 = ((MultiPanel*)data)->MapPointerToPanel(cx0,cy0,FALSE),
+    //   PanelNumber1 = ((MultiPanel*)data)->MapPointerToPanel(cx1,cy1,FALSE);
+    int PanelNumber0 = ((MultiPanel*)data)->MapPointerToPanel(panelx0,panely0,FALSE),
+      PanelNumber1 = ((MultiPanel*)data)->MapPointerToPanel(panelx1,panely1,FALSE);
+    // cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
+    // cout << "Panels = " << PanelNumber0 << " " << PanelNumber1 << endl;
     gfloat Range[2];
     ((MultiPanel*)data)->operator[](PanelNumber0).SetXRangingMode(1); 
     ((MultiPanel*)data)->operator[](PanelNumber0).SetYRangingMode(1);
