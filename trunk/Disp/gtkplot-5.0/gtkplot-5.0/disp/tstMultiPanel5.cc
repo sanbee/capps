@@ -13,7 +13,7 @@
 #include <readline/readline.h>
 #include <namespace.h>
 
-int NPoints=100;
+int NPointsG=100000;
 void
 gtk_color_selection_hsv_to_rgb (double  h, double  s, double  v,
 				double *r, double *g, double *b);
@@ -27,21 +27,24 @@ MultiPanel OnDisp;
 void plot(int NP, int NPoints)
 {
   gdouble X[NPoints], Y[NPoints];
+  gint PanelsPerPage=3;
   float Range[2];
-
+  //
+  // Setup the packer.
+  //
+  MPPPacker mppp;
+  mppp.Reset(NP,1000,100*NP-50);
+  mppp.SetPanelsPerPage(PanelsPerPage);
+  //
+  // Setup the MultiPanel object and make the panels.
+  //
+  OnDisp.SetPacker(mppp);
   OnDisp.EnableProgressMeter();
   OnDisp.Init(NP,NPoints);
   for (int i=0;i<NP;i++) OnDisp[i].SetNoOfOverlays(2);
+  OnDisp.MakePanels(NP,0.0,0.0,1000,110);
 
-  MPPPacker mppp;
-  mppp.Reset(NP,1000,100*NP-50);
-  mppp.SetPanelsPerPage(5);
-  OnDisp.SetPacker(mppp);
-
-  OnDisp.MakePanels(NP,0.0,0.0,1000,100);
-  OnDisp.FreezeDisplay();
-
-  for (int j=0;j<NP;j++)
+  for (int j=0;j<mppp.NumberOfPanels();j++)
     for (int i=0;i<NPoints;i++)
       {
 	X[0]=i;
@@ -51,40 +54,8 @@ void plot(int NP, int NPoints)
 	OnDisp[j].PutYData(5*Y[0],i,1);
       }
   Range[0] = Range[1] = 0.0;
-  
-  vector<char *> ColorList;
-  int n=MakeColorList(ColorList);
-  for (int i=0;i<NP;i++)
-    {
-      OnDisp.IterMainLoop();
 
-      OnDisp[i].SetAttribute(XYPanel::XTICS0,20.0);  // Major ticks
-      OnDisp[i].SetAttribute(XYPanel::XTICS1,10.0);  // Minor ticks
-      OnDisp[i].SetAttribute(XYPanel::YTICS0,0.2);   // Major Ticks
-      OnDisp[i].SetAttribute(XYPanel::YTICS1,0.1);   // Minor ticks
-
-      OnDisp[i].SetAttribute(XYPanel::XTITLE,0);
-      OnDisp[i].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_NONE);
-      if (n>0)
-	{
-	  int k=i;
-	  k= (i+1)%ColorList.size();
-	  OnDisp[i].SetAttribute(XYPanel::GRAPH_FG_COLOUR,ColorList[k],NULL,-1);
-	}
-    }
-  OnDisp[NP-1].SetAttribute(XYPanel::XTITLE,1);
-  OnDisp[NP-1].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_BOTTOM);
-  OnDisp.GetRange(Range,0,0);      OnDisp.SetRange(Range,0);
-  OnDisp.GetRange(Range,1,0);      OnDisp.SetRange(Range,1);
-  gtk_plot_axis_labels_set_numbers(GTK_PLOT(OnDisp[0].GetObj()),
-				   GTK_PLOT_AXIS_LEFT,
-				   GTK_PLOT_LABEL_EXP,
-				   0);
-
-
-  OnDisp[0].EraseOverlay(1);
-  //  OnDisp.Redraw(0);      OnDisp.Redraw(1);
-  for (int i=0;i<NP;i++)
+  for (int i=0;i<mppp.NumberOfPanels();i++)
     {
       OnDisp.IterMainLoop();
       //      int angle=0;
@@ -93,6 +64,8 @@ void plot(int NP, int NPoints)
       OnDisp[i].SetAttribute(XYPanel::DATALEGEND,1,1);
       OnDisp[i].SetAttribute(XYPanel::DATALEGEND,"Sin",NULL,1);
     }
+  //  OnDisp[0].EraseOverlay(1);
+  //  OnDisp.Redraw(0);      OnDisp.Redraw(1);
   OnDisp.Redraw();
   OnDisp.UnFreezeDisplay();
   OnDisp.DisableProgressMeter();
@@ -108,7 +81,7 @@ void clreader(char *buf)
       OnDisp.Redraw();
     }
   if (buf==string("plot"))
-    plot(10,10000);
+    plot(10,NPointsG);
   if (buf==string("print"))
     OnDisp.print(string("tst.ps"));
   if (buf==string("quit"))
@@ -147,7 +120,7 @@ void UI(bool restart,int &argc, char **argv, int &npanels, int &npoints)
 int main(int argc, char **argv)
 {
   int N=5;
-  UI(false, argc, argv, N, NPoints);
+  UI(false, argc, argv, N, NPointsG);
 
   try
     {

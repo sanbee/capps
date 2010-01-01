@@ -13,6 +13,7 @@
 #include <gtk/gtk.h>
 #include <glib.h>
 #include <namespace.h>
+#include <Utils.h>
 
 char *ThisPointer;
 static GtkItemFactoryEntry menu_items[] = {
@@ -132,6 +133,45 @@ void MultiPanel::Init(int N,int NPoints)//, PACKER_CALLBACK_PTR DefaultP)
   X.resize(NPoints);
 
   for (int i=0;i<N;i++)  Panels[i].Init(NPoints,&X[0]);
+}
+//
+//---------------------------------------------------------------------
+//
+void MultiPanel::SetDefaults()
+{
+  vector<char *> ColorList;
+  int n=MakeColorList(ColorList);
+  for (int i=0;i<PackerObj.NumberOfPanels();i++)
+    {
+      IterMainLoop();
+
+      (*this)[i].SetAttribute(XYPanel::XTICS0,20.0);  // Major ticks
+      (*this)[i].SetAttribute(XYPanel::XTICS1,10.0);  // Minor ticks
+      (*this)[i].SetAttribute(XYPanel::YTICS0,0.2);   // Major Ticks
+      (*this)[i].SetAttribute(XYPanel::YTICS1,0.1);   // Minor ticks
+
+      (*this)[i].SetAttribute(XYPanel::XTITLE,0);
+      (*this)[i].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_NONE);
+      if (n>0)
+	{
+	  int k=i;
+	  k= (i+1)%ColorList.size();
+	  (*this)[i].SetAttribute(XYPanel::GRAPH_FG_COLOUR,ColorList[k],NULL,-1);
+	}
+      if ((i+1)%PackerObj.PanelsPerPage() == 0)
+	{
+	  (*this)[i].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_BOTTOM);
+	  (*this)[i].SetAttribute(XYPanel::XTITLE,1);
+	}
+    }
+  (*this)[PackerObj.NumberOfPanels()-1].SetAttribute(XYPanel::XTITLE,1);
+  (*this)[PackerObj.NumberOfPanels()-1].SetAttribute(XYPanel::XLABEL,GTK_PLOT_LABEL_BOTTOM);
+  // OnDisp.GetRange(Range,0,0);      OnDisp.SetRange(Range,0);
+  // OnDisp.GetRange(Range,1,0);      OnDisp.SetRange(Range,1);
+  gtk_plot_axis_labels_set_numbers(GTK_PLOT((*this)[0].GetObj()),
+				   GTK_PLOT_AXIS_LEFT,
+				   GTK_PLOT_LABEL_EXP,
+				   0);
 }
 //
 //---------------------------------------------------------------------
@@ -369,7 +409,7 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   // pixels here).  The canvas can be larger and will be made
   // scrollable.
   //
-  gtk_widget_set_usize(TopLevelWin,Width,Height>500?500:Height);
+  gtk_widget_set_usize(TopLevelWin,Width+20,Height>500?500:Height);
   Scroll1=gtk_scrolled_window_new(NULL,NULL);
   gtk_widget_set_name (Scroll1, "Surface");
   
@@ -382,7 +422,11 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   //
   // Make the canvas
   //
-  Canvas = gtk_plot_canvas_new(Width, Height);
+  vector<float> shape=PackerObj.PhysicalCanvasShape(false);
+  CW=shape[0]; CH=shape[1];
+
+  //  Canvas = gtk_plot_canvas_new(Width, Height);
+  Canvas = gtk_plot_canvas_new((int)shape[0],(int)(shape[1]));
   gtk_widget_set_name (Canvas, "Canvas");
   //
   // Capture the signal for DnD on data points (basically take 
@@ -414,11 +458,11 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   Layout = Canvas;
   gtk_container_add(GTK_CONTAINER(Scroll1),Layout);
 
-  gtk_layout_set_size(GTK_LAYOUT(Layout), Width, Height);
+  gtk_layout_set_size(GTK_LAYOUT(Layout), Width, (int)shape[1]);
 
   // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
   // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_WIDGET(Canvas)));
-  gtk_widget_set_usize(GTK_WIDGET(Canvas),Width,Height);
+  gtk_widget_set_usize(GTK_WIDGET(Canvas),Width, (int)shape[1]);
   
   // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
   // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_LAYOUT(Layout)));
@@ -450,6 +494,9 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   // else
   //   Panels[Which].Make(Layout,(gint)(CW-5),(gint)(CH-50),(gint)X0,(gint)Y0,Width,Height,
   // 		       makeYScrollBars);
+
+  FreezeDisplay();
+  SetDefaults();
   return Canvas;
 }
 //
@@ -676,6 +723,9 @@ int MultiPanel::MapPointerToPanel(int X, int Y, bool isWindowPixelLocation)
   
   //  fy = (Y-CanOff)/(GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height);
   if (!isWindowPixelLocation) Y+=menubar->allocation.height;
+  // cerr << "MPP: " << Y << " " << (menubar->allocation.height) << " "
+  //      << Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y << " " 
+  //      << GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height << endl;
   fy=((Y-((menubar->allocation.height)+ 
        Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y)) /
       (GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height));
@@ -921,7 +971,7 @@ extern "C"
 			   gint panelx0, gint panely0,
 			   gint panelx1, gint panely1,
 			   gdouble x1, gdouble x2,
-			   gdouble y2, gdouble y1,
+			   gdouble y1, gdouble y2,
 			   gpointer data) 
   {
     //    int cx0=panelx0+cxoff, cy0=panely0+cyoff,cx1=panelx1+cxoff,cy1=panely1+cyoff;

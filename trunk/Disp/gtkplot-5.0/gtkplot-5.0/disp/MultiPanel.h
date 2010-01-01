@@ -53,6 +53,7 @@ public:
 
   void SetUp(int argc, char **argv, char *Title=NULL, int N=0, int NPoints=0);
   void Init(int N,int NPoints);
+  void SetDefaults();
 
   void Show(char *Title,GtkWidget *F,int BorderType=0);
   void Hide(GtkWidget *F);
