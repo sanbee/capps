@@ -1104,13 +1104,27 @@ gtk_plot_canvas_button_release(GtkWidget *widget, GdkEventButton *event)
 
          new_width = abs(canvas->pointer_x - canvas->drag_x);
          new_height = abs(canvas->pointer_y - canvas->drag_y);
-         gtk_signal_emit(GTK_OBJECT(canvas), canvas_signals[SELECT_REGION_PIXEL],
-                         GTK_LAYOUT(canvas)->xoffset,GTK_LAYOUT(canvas)->yoffset,
-			 MIN(canvas->drag_x, canvas->pointer_x),
-			 MIN(canvas->drag_y, canvas->pointer_y),
-			 MAX(canvas->drag_x, canvas->pointer_x),
-			 MAX(canvas->drag_y, canvas->pointer_y),
-			 xmin, xmax, ymin, ymax);
+	 /* fprintf(stderr,"C: %d %d %d %d %d %d %f %f %f %f\n", */
+	 /* 	 GTK_LAYOUT(canvas)->xoffset,GTK_LAYOUT(canvas)->yoffset, */
+	 /* 	 MIN(canvas->drag_x, canvas->pointer_x), */
+	 /* 	 MIN(canvas->drag_y, canvas->pointer_y), */
+	 /* 	 MAX(canvas->drag_x, canvas->pointer_x), */
+	 /* 	 MAX(canvas->drag_y, canvas->pointer_y), */
+	 /* 	 xmin, xmax, ymin, ymax); */
+	 gtk_plot_signal_region_pixel(active_plot,
+				      GTK_LAYOUT(canvas)->xoffset,GTK_LAYOUT(canvas)->yoffset,
+				      MIN(canvas->drag_x, canvas->pointer_x),
+				      MIN(canvas->drag_y, canvas->pointer_y),
+				      MAX(canvas->drag_x, canvas->pointer_x),
+				      MAX(canvas->drag_y, canvas->pointer_y),
+				      xmin, xmax, ymin, ymax);
+         /* gtk_signal_emit(GTK_OBJECT(canvas), canvas_signals[SELECT_REGION_PIXEL],
+         /*                 GTK_LAYOUT(canvas)->xoffset,GTK_LAYOUT(canvas)->yoffset, */
+	 /* 		 MIN(canvas->drag_x, canvas->pointer_x), */
+	 /* 		 MIN(canvas->drag_y, canvas->pointer_y), */
+	 /* 		 MAX(canvas->drag_x, canvas->pointer_x), */
+	 /* 		 MAX(canvas->drag_y, canvas->pointer_y), */
+	 /* 		 xmin, xmax, ymin, ymax); */
          break;
     case GTK_PLOT_CANVAS_INACTIVE:
          return TRUE;

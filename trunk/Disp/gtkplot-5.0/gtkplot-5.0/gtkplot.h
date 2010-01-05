@@ -320,6 +320,18 @@ struct _GtkPlotClass
   gint (* resized) (GtkPlot *plot,
                     gdouble width, gdouble height);
 
+  gint (* plot_select_region_pixel) (GtkPlot *plot,
+				     gint arg1, 
+				     gint arg2, 
+				     gint arg3, 
+				     gint arg4, 
+				     gint arg5, 
+				     gint arg6, 
+				     gdouble arg7, 
+				     gdouble arg8, 
+				     gdouble arg9, 
+				     gdouble arg10);
+
   void (* error) (GtkPlot *plot, gint errno);
 };
 
