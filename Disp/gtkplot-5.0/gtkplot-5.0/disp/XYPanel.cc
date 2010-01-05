@@ -155,6 +155,9 @@ GtkWidget* XYPanel::Make(GtkWidget *Kanwas, gint CW, gint CH,
 
   gtk_widget_show(GTK_WIDGET(CHART));
 
+  gtk_signal_connect(GTK_OBJECT(GetObj()), "plot_select_region_pixel",
+		     GTK_SIGNAL_FUNC(XYPlot_SelectRegion_handler), 
+		     this);
   return CHART;
 };
 //
@@ -992,5 +995,26 @@ extern "C" {
   void xp_ymin_callback(GtkAdjustment *Ob, GtkWidget* data)
   {
     ((XYPanel *)data)->YMinCallback(Ob,data);
+  }
+  int XYPlot_SelectRegion_handler(GtkPlot *plot,
+				  gint cxoff, gint cyoff,
+				  gint panelx0, gint panely0,
+				  gint panelx1, gint panely1,
+				  gdouble x1, gdouble x2,
+				  gdouble y1, gdouble y2,
+				  gpointer data) 
+  {
+    // int PanelNumber0 = ((MultiPanel*)data)->MapPointerToPanel(panelx0,panely0,FALSE),
+    //   PanelNumber1 = ((MultiPanel*)data)->MapPointerToPanel(panelx1,panely1,FALSE);
+    gfloat Range[2];
+    //    cerr << "XY: " << x1 << " " << x2 << " " << y1 << " " << y2 << endl;
+    ((XYPanel *)data)->SetXRangingMode(1); 
+    ((XYPanel *)data)->SetYRangingMode(1);
+    Range[0]=x1;Range[1]=x2;    ((XYPanel *)data)->SetRange(Range,0);
+    Range[0]=y1;Range[1]=y2;    ((XYPanel *)data)->SetRange(Range,1);
+    ((XYPanel *)data)->SetXRangingMode(0); 
+    ((XYPanel *)data)->SetYRangingMode(0);
+
+    return TRUE;
   }
 };

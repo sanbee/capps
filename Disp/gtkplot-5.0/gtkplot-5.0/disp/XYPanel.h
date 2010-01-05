@@ -20,6 +20,13 @@ extern "C"{
   void xp_ymin_callback(GtkAdjustment* Ob, GtkWidget* data);
   int PanelPreHandler(GtkWidget *ob, GdkEvent* Event,
 		      gpointer data);
+  int XYPlot_SelectRegion_handler(GtkPlot *plot,
+				  gint cxoff, gint cyoff,
+				  gint panelx0, gint panely0,
+				  gint panelx1, gint panely1,
+				  gdouble x1, gdouble x2,
+				  gdouble y1, gdouble y2,
+				  gpointer data);
 };
 
 class XYPanel {
