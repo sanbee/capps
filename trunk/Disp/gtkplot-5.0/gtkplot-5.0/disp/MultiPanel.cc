@@ -15,6 +15,7 @@
 #include <namespace.h>
 #include <Utils.h>
 
+static vector<int> PanelIDs;
 char *ThisPointer;
 static GtkItemFactoryEntry menu_items[] = {
   { "/_File",         NULL,         NULL, 0, "<Branch>" },
@@ -440,9 +441,9 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   gtk_signal_connect(GTK_OBJECT(TopLevelWin), "key_press_event",
 		     GTK_SIGNAL_FUNC(mp_key_press_handler),
 		     (gpointer)this);
-  gtk_signal_connect(GTK_OBJECT(Canvas), "select_region_pixel",
-                     GTK_SIGNAL_FUNC(SelectRegion_handler), 
-		     (gpointer)this);
+  // gtk_signal_connect(GTK_OBJECT(Canvas), "select_region_pixel",
+  //                    GTK_SIGNAL_FUNC(SelectRegion_handler), 
+  // 		     (gpointer)this);
   
   gtk_widget_add_events(GTK_WIDGET(TopLevelWin), GDK_CONFIGURE);
   //
@@ -478,6 +479,7 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   // Make the multipanel form
   //
   //  if (Which == (unsigned int)ALLPANELS)
+  PanelIDs.resize(NP);
   {
     unsigned int i;
     for (i=0;i<NP;i++)
@@ -488,6 +490,12 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
 	PackerObj.Geometry(i,W,H,X,Y);
 	Panels[i].Make(Layout,(gint)CW,(gint)CH,(gint)(X+10),(gint)(Y+5),(gint)(W),(gint)H,
 		       makeYScrollBars);
+	// PanelIDs[i]=i;
+	// gtk_signal_connect(GTK_OBJECT(Panels[i].GetObj()), "plot_select_region_pixel",
+	// 		   GTK_SIGNAL_FUNC(SelectRegion_handler), 
+	// 		   this);
+			   //			   (gpointer)((this->operator[](i)).GetObj()));
+	//			   GTK_OBJECT(Panels[i].GetObj()));
       }
   }
   Show(NULL,Scroll1);
@@ -720,7 +728,10 @@ int MultiPanel::MapPointerToPanel(int X, int Y, bool isWindowPixelLocation)
 	 ->value);
   */
 
-  
+  gdouble yoff = menubar->allocation.height + Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y;
+  gdouble pheight = GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height;
+  gdouble p0;
+
   //  fy = (Y-CanOff)/(GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height);
   if (!isWindowPixelLocation) Y+=menubar->allocation.height;
   // cerr << "MPP: " << Y << " " << (menubar->allocation.height) << " "
@@ -729,6 +740,8 @@ int MultiPanel::MapPointerToPanel(int X, int Y, bool isWindowPixelLocation)
   fy=((Y-((menubar->allocation.height)+ 
        Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y)) /
       (GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height));
+
+  cerr << (Y-yoff)/pheight << " " << (int)fy << " " << yoff << " " << Y << " " << pheight << endl;
 
   return  (int)(fy<Panels.size()?fy:Panels.size()-1);
 }
@@ -982,14 +995,24 @@ extern "C"
     // cout << "Region = " << x1 << " " << y1 << " " << x2 << " " << y2 << endl;
     // cout << "Panels = " << PanelNumber0 << " " << PanelNumber1 << endl;
     gfloat Range[2];
+    /*
+    PanelNumber0=0;
     ((MultiPanel*)data)->operator[](PanelNumber0).SetXRangingMode(1); 
     ((MultiPanel*)data)->operator[](PanelNumber0).SetYRangingMode(1);
     Range[0]=x1;Range[1]=x2;    ((MultiPanel *)data)->operator[](PanelNumber0).SetRange(Range,0);
     Range[0]=y1;Range[1]=y2;    ((MultiPanel *)data)->operator[](PanelNumber0).SetRange(Range,1);
     ((MultiPanel*)data)->operator[](PanelNumber0).SetXRangingMode(0); 
     ((MultiPanel*)data)->operator[](PanelNumber0).SetYRangingMode(0);
-    //cout << "TLC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x1,y1) << endl;
-    //cout << "BRC Panel =" <<  ((MultiPanel *)data)->MapPointerToPanel(x2,y2) << endl;
+    */
+    /*
+    ((XYPanel *)data)->SetXRangingMode(1); 
+    ((XYPanel *)data)->SetYRangingMode(1);
+    Range[0]=x1;Range[1]=x2;    ((XYPanel *)data)->SetRange(Range,0);
+    Range[0]=y1;Range[1]=y2;    ((XYPanel *)data)->SetRange(Range,1);
+    ((XYPanel *)data)->SetXRangingMode(0); 
+    ((XYPanel *)data)->SetYRangingMode(0);
+    */
+    fprintf(stderr, "DATA = %d\n",*((int *)data));
     return TRUE;
   }
   // Update the value of the progress bar so that we get
