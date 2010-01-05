@@ -38,6 +38,7 @@ enum
   CHANGED,
   MOVED,
   RESIZED,
+  PLOT_SELECT_REGION_PIXEL,
   LAST_SIGNAL
 };
 
@@ -184,9 +185,52 @@ gtk_plot_marshal_BOOL__POINTER_POINTER   (GtkObject *object,
                                           gpointer func_data,
                                           GtkArg * args);
 
+typedef gboolean (*GtkPlotSignal4) (GtkObject *object,
+				    gint arg1, gint arg2, 
+				    gint arg3, gint arg4, 
+				    gint arg5, gint arg6, 
+				    gdouble arg7, gdouble arg8, 
+				    gdouble arg9, gdouble arg10, 
+				    gpointer user_data);
+
 static GtkWidgetClass *parent_class = NULL;
 static guint plot_signals[LAST_SIGNAL] = {0};
 
+static void
+gtk_plot_marshal_select_pixel	       (GtkObject *object,
+					GtkSignalFunc func,
+					gpointer func_data,
+					GtkArg * args)
+{
+  GtkPlotSignal4 rfunc;
+
+  rfunc = (GtkPlotSignal4) func;
+
+  /* fprintf(stderr,"M: %d %d %d %d %d %d %f %f %f %f\n", */
+  /* 	  GTK_VALUE_INT (args[0]), */
+  /* 	  GTK_VALUE_INT (args[1]), */
+  /* 	  GTK_VALUE_INT (args[2]), */
+  /* 	  GTK_VALUE_INT (args[3]), */
+  /* 	  GTK_VALUE_INT (args[4]), */
+  /* 	  GTK_VALUE_INT (args[5]), */
+  /* 	  GTK_VALUE_DOUBLE (args[6]), */
+  /* 	  GTK_VALUE_DOUBLE (args[7]), */
+  /* 	  GTK_VALUE_DOUBLE (args[8]), */
+  /* 	  GTK_VALUE_DOUBLE (args[9])); */
+	  
+  (*rfunc) (object, 
+            GTK_VALUE_INT (args[0]),
+            GTK_VALUE_INT (args[1]),
+            GTK_VALUE_INT (args[2]),
+            GTK_VALUE_INT (args[3]),
+            GTK_VALUE_INT (args[4]),
+            GTK_VALUE_INT (args[5]),
+            GTK_VALUE_DOUBLE (args[6]),
+            GTK_VALUE_DOUBLE (args[7]),
+            GTK_VALUE_DOUBLE (args[8]),
+            GTK_VALUE_DOUBLE (args[9]),
+            func_data);
+}
 
 guint
 gtk_plot_get_type (void)
@@ -250,6 +294,19 @@ gtk_plot_class_init (GtkPlotClass *class)
                    gtk_plot_marshal_BOOL__POINTER_POINTER,
                    GTK_TYPE_NONE, 2, GTK_TYPE_POINTER, GTK_TYPE_POINTER); 
 
+  plot_signals[PLOT_SELECT_REGION_PIXEL] =
+    gtk_signal_new ("plot_select_region_pixel",
+                    GTK_RUN_LAST,
+                    object_class->type,
+                    GTK_SIGNAL_OFFSET (GtkPlotClass, plot_select_region_pixel),
+                    gtk_plot_marshal_select_pixel,
+                    GTK_TYPE_NONE, 10, 
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+		    GTK_TYPE_INT, GTK_TYPE_INT,
+                    GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE,
+                    GTK_TYPE_DOUBLE, GTK_TYPE_DOUBLE);
+
 
   gtk_object_class_add_signals (object_class, plot_signals, LAST_SIGNAL);
 
@@ -258,7 +315,7 @@ gtk_plot_class_init (GtkPlotClass *class)
   class->changed = NULL;
   class->moved = NULL;
   class->resized = NULL;
-
+  class->plot_select_region_pixel = NULL;
 }
 
 static void
@@ -2260,6 +2317,23 @@ gtk_plot_move (GtkPlot *plot, gdouble x, gdouble y)
   plot->y = y;
 
   gtk_signal_emit (GTK_OBJECT(plot), plot_signals[CHANGED]);
+}
+void gtk_plot_signal_region_pixel(GtkPlot *plot, 
+				  gint xoff,   gint yoff,
+				  gint xpmin, gint ypmin,
+				  gint xpmax, gint ypmax,
+				  gdouble xmin,  gdouble xmax,
+				  gdouble ymin,  gdouble ymax)
+{
+  gboolean veto = TRUE;
+
+  /* fprintf(stderr,"P: %d %d %d %d %d %d %f %f %f %f\n", */
+  /* 	  xoff, yoff, xpmin, ypmin, xpmax, ypmax, xmin, xmax, ymin, ymax); */
+  gtk_signal_emit(GTK_OBJECT(plot), plot_signals[PLOT_SELECT_REGION_PIXEL],
+		  xoff, yoff, xpmin, ypmin, xpmax, ypmax, xmin, xmax, ymin, ymax, 
+		  //		  &xoff, &yoff, &xpmin, &ypmin, &xpmax, &ypmax, &xmin, &xmax, &ymin, &ymax, 
+		  &veto);
+  if (!veto) return;
 }
 
 void
