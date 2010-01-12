@@ -68,6 +68,7 @@ enum
 #define GTK_PLOT_CANVAS_FLAGS(canvas)	  (GTK_PLOT_CANVAS(canvas)->flags)
 #define GTK_PLOT_CANVAS_SET_FLAGS(canvas, flags)  (GTK_PLOT_CANVAS_FLAGS(canvas) |= (flags))
 #define GTK_PLOT_CANVAS_UNSET_FLAGS(canvas, flags)  (GTK_PLOT_CANVAS_FLAGS(canvas) &= ~(flags))
+#define GTK_PLOT_CANVAS_FLAG_ISSET(canvas, flag)   (GTK_PLOT_CANVAS_FLAGS(canvas) & flag)
 #define GTK_PLOT_CANVAS_CAN_DND_POINT(canvas)  (GTK_PLOT_CANVAS_FLAGS(canvas) & GTK_PLOT_CANVAS_CAN_DND_POINT)
 #define GTK_PLOT_CANVAS_CAN_RESIZE_PLOT(canvas)  (GTK_PLOT_CANVAS_FLAGS(canvas) & GTK_PLOT_CANVAS_CAN_RESIZE_PLOT)
 #define GTK_PLOT_CANVAS_CAN_MOVE_PLOT(canvas)  (GTK_PLOT_CANVAS_FLAGS(canvas) & GTK_PLOT_CANVAS_CAN_MOVE_PLOT)
