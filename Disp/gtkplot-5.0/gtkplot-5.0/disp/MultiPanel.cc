@@ -705,29 +705,50 @@ GtkWidget *MultiPanel::MakeCtrlPanel(gint X0, gint Y0,
 // This routine should talk to the Packer to do correct mapping.
 // Currently it assumes that the Packer used is a simple vertical
 // stack packer.
+//
+// Jan 12, 2010: The new code below simply polls all panels to find
+// out which one has the pointer.  This should always work (its
+// however inefficient) without the need to talk to the packer.
+//
 int MultiPanel::MapPointerToPanel(int X, int Y, bool isWindowPixelLocation)
 {
   double fy;
-  //  gint CanOff=26;
-
-  /*
-  CanOff= (menubar->allocation.height)+ 
-    Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y;
-  */
   //
-  // CanOff is the y-offset from where the Plots start. This begins
-  // at the end of the Control Button + the offset at which the
-  // first plot is put (which unfortunately has to be gotten from the 
-  // x-co-ord. of the slider of the first plot since the gkt_plot_new
-  // does not fill in the GtkWidget strutcture's co-ordinates properly).
+  // Offset of the scrolled window (canvas) is GTK_LAYOUT(Canvas)->yoffset;
   //
+  gdouble y0 = menubar->allocation.height + Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y;
 
-  /*
-  fy = (Y-CanOff+
-	 gtk_scrolled_window_get_vadjustment(GTK_SCROLLED_WINDOW(Scroll1))
-	 ->value);
-  */
+  int canWidth=GTK_LAYOUT(Canvas)->width, canHeight=GTK_LAYOUT(Canvas)->height, itsMe = -1;
+  for (int i=0;i < NPanels(); i++)
+    {
+      int tlc_x,tlc_y,brc_x,brc_y;
+      tlc_x = canWidth*GTK_PLOT(Panels[i].GetObj())->x;
+      tlc_y = canHeight*GTK_PLOT(Panels[i].GetObj())->y;
+      brc_x = tlc_x + canWidth*GTK_PLOT(Panels[i].GetObj())->width;
+      brc_y = tlc_y + canHeight*GTK_PLOT(Panels[i].GetObj())->height;
+      if ( ((X >=tlc_x) && (X <= brc_x)) && ((Y-y0 >= tlc_y) && (Y-y0 <= brc_y)))
+	{
+	  itsMe = i;
+	  break;
+	}
+      // cerr << i << " " 
+      // 	   // << canWidth*GTK_PLOT(Panels[i].GetObj())->x << " " 
+      // 	   // << canHeight*GTK_PLOT(Panels[i].GetObj())->y << " " 
+      // 	   // << canWidth*GTK_PLOT(Panels[i].GetObj())->width << " " 
+      // 	   // << canHeight*GTK_PLOT(Panels[i].GetObj())->height << " " 
+      // 	   << X << " " << Y  << " " << y0 << " " 
+      // 	   << GTK_LAYOUT(Canvas)->xoffset << " " << GTK_LAYOUT(Canvas)->yoffset << " "
+      // 	   << itsMe 
+      // 	   << endl;
+    }
+  //  cerr << endl << "Panel = " << itsMe << endl;
+  
+  return itsMe;
 
+
+  //
+  // Old code - not general enough
+  //
   gdouble yoff = menubar->allocation.height + Panels[0].GetObj(XYPanel::YMAXSLIDER)->allocation.y;
   gdouble pheight = GTK_LAYOUT(Layout)->height*GTK_PLOT(Panels[0].GetObj())->height;
   gdouble p0;
@@ -756,6 +777,8 @@ int MultiPanel::KeyPressHandler(GtkWidget *Ob, GdkEventKey *event,
 
   gtk_widget_get_pointer(Ob, &x, &y);
   y= x = MapPointerToPanel(x,y);
+  if (y < 0) return TRUE; // Pointer not in any panel
+
   Panels[x].GetRange(Range,1,XYPanel::RANGESLIDER);
   //
   // x now has to slider no. in focus
@@ -786,6 +809,14 @@ int MultiPanel::KeyPressHandler(GtkWidget *Ob, GdkEventKey *event,
     case GDK_F3:
       // Reset the range to huristic values
       cerr << "Huristic ranging not yet possible " << endl;
+      break;
+    case GDK_F10:
+      // Toggle DnD for panels.
+      if (GTK_PLOT_CANVAS_FLAG_ISSET(Canvas,GTK_PLOT_CANVAS_CAN_MOVE_PLOT))
+	GTK_PLOT_CANVAS_UNSET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_MOVE_PLOT);
+      else
+	GTK_PLOT_CANVAS_SET_FLAGS(GTK_PLOT_CANVAS(Canvas), GTK_PLOT_CANVAS_CAN_MOVE_PLOT);
+	
       break;
     case GDK_Down: 
       // Push the lower limit up by 10%
