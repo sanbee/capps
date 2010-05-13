@@ -36,7 +36,9 @@ UILIBS           = -L$(CLHOME)/lib -lshccl -lsh -lcalc                 \
                    -lreadline -lhistory -ltermcap -lm -lfl -lc
 UIINCL           = -I$(CLHOME)/include
 SYSLIBS          = $(UILIBS) $(READLINELIB) -lX11 -ltermcap -lm -lfl
+#CFLAGS           = -I. $(UIINCL) -I/usr/include/g++ $(shell pkg-config --cflags  --libs gtk+-2.0) $(shell gtk-config --cflags) 
 CFLAGS           = -I. $(UIINCL) -I/usr/include/g++ $(shell gtk-config --cflags) 
+#$(shell gtk-config --cflags) 
 
 SOURCE           = tstclient nmpsrvr tstMultiPanel5 tstscroll mpdisp
 #SOURCE = $(wildcard *.cc)
