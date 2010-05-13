@@ -26,6 +26,9 @@ MultiPanel OnDisp;
 
 void plot(int NP, int NPoints)
 {
+  cerr << "NP = " << NP << " " 
+       << "NPoints = " << NPoints 
+       << endl;
   gdouble X[NPoints], Y[NPoints];
   gint PanelsPerPage=3;
   float Range[2];

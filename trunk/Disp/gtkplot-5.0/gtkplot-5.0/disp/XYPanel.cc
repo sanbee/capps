@@ -195,9 +195,14 @@ void XYPanel::MakeStorage(int WhichOverlay)
     }
 
   if (Yi[WhichOverlay]->y == NULL)
-    Yi[WhichOverlay]->y=(gdouble *)g_realloc(Yi[WhichOverlay]->y,
-					     sizeof(gdouble)*NoOfDataPts);
-  if (X==NULL) X = (gdouble *)g_malloc(sizeof(gdouble)*NoOfDataPts);
+    {
+      Yi[WhichOverlay]->y=(gdouble *)g_realloc(Yi[WhichOverlay]->y,
+					       sizeof(gdouble)*NoOfDataPts);
+    }
+  if (X==NULL) 
+    {
+      X = (gdouble *)g_malloc(sizeof(gdouble)*NoOfDataPts);
+    }
 
   Yi[WhichOverlay]->x=X;
 
@@ -403,14 +408,25 @@ void XYPanel::Plot(int WhichOverlay)
   if (!(GTK_PLOT_FLAGS(CHART)))
     {
       GdkRectangle area;
-
+      gint xoffset, yoffset;
       if (WhichOverlay >= NoOfOverlays)
 	throw(ErrorObj("Requested overlay for plot does not exist",
 		       "###Error",
 		       ErrorObj::Recoverable));
 
-      area.x = GTK_WIDGET(CHART)->allocation.x+GTK_LAYOUT(Canvas)->xoffset;
-      area.y = GTK_WIDGET(CHART)->allocation.y+GTK_LAYOUT(Canvas)->yoffset;
+      // xoffset = GTK_LAYOUT(Canvas)->xoffset;
+      // yoffset = GTK_LAYOUT(Canvas)->yoffset;
+
+      //
+      // Trying to make it work for GTK 2.0
+      //
+      xoffset=gtk_layout_get_vadjustment(GTK_LAYOUT(Canvas))->value;
+      yoffset=gtk_layout_get_hadjustment(GTK_LAYOUT(Canvas))->value;
+      //      xoffset = gtk_adjustment_get_value(adj);
+      //      xoffset = adj->value;
+
+      area.x = GTK_WIDGET(CHART)->allocation.x + xoffset;
+      area.y = GTK_WIDGET(CHART)->allocation.y + yoffset;
       area.width = GTK_WIDGET(CHART)->allocation.width;	
       area.height = GTK_WIDGET(CHART)->allocation.height;	
 

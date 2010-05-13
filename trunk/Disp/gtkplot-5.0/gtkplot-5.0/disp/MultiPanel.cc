@@ -15,7 +15,7 @@
 #include <namespace.h>
 #include <Utils.h>
 
-static vector<int> PanelIDs;
+
 char *ThisPointer;
 static GtkItemFactoryEntry menu_items[] = {
   { "/_File",         NULL,         NULL, 0, "<Branch>" },
@@ -28,6 +28,19 @@ static GtkItemFactoryEntry menu_items[] = {
   { "/_Help/About",   NULL,         NULL, 0, "<LastBranch>"}
   //  ,{ "/X",             NULL,         NULL, 0, "<LastBranch>" },
 };
+
+// void gtk_widget_get_size (GtkWidget *widget, int *pcx, int *pcy)
+//   {
+//   GtkArg arg ;
+//   arg.name = "width" ;
+//   //  gtk_widget_get (widget, &arg) ;
+//   g_object_get (widget, arg.name, NULL) ;
+//   *pcx = GTK_VALUE_INT (arg) ;
+//   arg.name = "height" ;
+//   //  gtk_widget_get (widget, &arg) ;
+//   g_object_get (widget, arg.name, NULL) ;
+//   *pcy = GTK_VALUE_INT (arg) ;
+//   }
 
 void gtk_widget_get_size (GtkWidget *widget, int *pcx, int *pcy)
   {
@@ -462,7 +475,7 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   gtk_layout_set_size(GTK_LAYOUT(Layout), Width, (int)shape[1]);
 
   // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
-  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(GTK_WIDGET(Canvas)));
+  // 		     GTK_SIGNAL_FUNC(configure_handler), (gpointer)(Canvas));
   gtk_widget_set_usize(GTK_WIDGET(Canvas),Width, (int)shape[1]);
   
   // gtk_signal_connect(GTK_OBJECT(TopLevelWin), "configure-event",
@@ -479,7 +492,6 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
   // Make the multipanel form
   //
   //  if (Which == (unsigned int)ALLPANELS)
-  PanelIDs.resize(NP);
   {
     unsigned int i;
     for (i=0;i<NP;i++)
@@ -490,7 +502,6 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
 	PackerObj.Geometry(i,W,H,X,Y);
 	Panels[i].Make(Layout,(gint)CW,(gint)CH,(gint)(X+10),(gint)(Y+5),(gint)(W),(gint)H,
 		       makeYScrollBars);
-	// PanelIDs[i]=i;
 	// gtk_signal_connect(GTK_OBJECT(Panels[i].GetObj()), "plot_select_region_pixel",
 	// 		   GTK_SIGNAL_FUNC(SelectRegion_handler), 
 	// 		   this);
@@ -498,11 +509,11 @@ GtkWidget* MultiPanel::MakePanels(unsigned int NP,
 	//			   GTK_OBJECT(Panels[i].GetObj()));
       }
   }
-  Show(NULL,Scroll1);
   // else
   //   Panels[Which].Make(Layout,(gint)(CW-5),(gint)(CH-50),(gint)X0,(gint)Y0,Width,Height,
   // 		       makeYScrollBars);
 
+  Show(NULL,Scroll1);
   FreezeDisplay();
   SetDefaults();
   return Canvas;
@@ -1003,7 +1014,7 @@ extern "C"
     w = event->configure.width;
     h = event->configure.height;
     //    gtk_layout_set_size(GTK_LAYOUT((GtkLayout *)(data)), w, h);
-    gtk_widget_set_usize(GTK_WIDGET((GtkWidget *)data),w,h);
+    gtk_widget_set_usize(GTK_WIDGET(data),w,h);
     //    gtk_plot_resize(gtk_plot_canvas_get_active_plot(GTK_PLOT_CANVAS((GtkWidget *)(data))),w,h);
     ((MultiPanel *)ThisPointer)->Redraw();
     cerr << "X , Y = " << x << " " << y << " " << w << " " << h << endl;
