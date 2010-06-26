@@ -7,8 +7,44 @@
 #include <display/Display/StandAloneDisplayApp.h>
 #include <tables/Tables/Table.h>
 #include <iostream>
+#include "./casaChecks.h"
+#include <cl.h>
+#include <clinteract.h>
+#include <iostream>
 using namespace std;
 using namespace casa;
+
+//
+//-------------------------------------------------------------------------
+//
+#define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
+void UI(Bool restart, int argc, char **argv, string& image, string& mask)
+{
+  if (!restart)
+    {
+      BeginCL(argc,argv);
+      char TBuf[FILENAME_MAX];
+      clgetConfigFile(TBuf,argv[0]);strcat(TBuf,".config");
+      clloadConfig(TBuf);
+      clInteractive(0);
+    }
+  else
+   clRetry();
+  try
+    {
+      int i;
+      {
+	i=1;clgetSValp("image", image,i);
+	i=1;clgetSValp("mask",mask,i);
+      }
+      EndCL();
+    }
+  catch (clError x)
+    {
+      x << x << endl;
+      clRetry();
+    }
+}
 
 Bool clone(const String& imageName, const String& newImageName)
 {
@@ -29,12 +65,18 @@ Bool clone(const String& imageName, const String& newImageName)
 
 int main(int argc, char **argv)
 {
-  if (argc < 3)
-    {
-      cerr << argv[0] << " usage: " << "<ImageFileName> <MaskImageFileName>" << endl;
-      return -1;
-    }
-  String image(argv[1]), mask(argv[2]);
+  String image(""), mask("");
+  Bool restartUI=False;
+ RENTER:// UI re-entry point.
+  // if (argc < 3)
+  //   {
+  //     cerr << argv[0] << " usage: " << "<ImageFileName> <MaskImageFileName>" << endl;
+  //     return -1;
+  //   }
+  //  String image(argv[1]), mask(argv[2]);
+  image = mask = "";
+  UI(restartUI,argc, argv, image, mask);
+  restartUI=False;
 
    if(Table::isReadable(mask)) 
      {
@@ -48,5 +90,21 @@ int main(int argc, char **argv)
    Imager imager;
    String threshold("0mJy");
    Int niter=0, ncycle=0;
-   imager.interactivemask(image,mask,niter,ncycle,threshold);
+   try
+     {
+       imager.interactivemask(image,mask,niter,ncycle,threshold);
+     }
+    catch (clError& x)
+      {
+	x << x.what() << endl;
+	restartUI=True;
+	//      RestartUI(RENTER);
+      }
+    catch (AipsError& x)
+      {
+	cerr << "###AipsError: " << x.getMesg() << endl;
+	restartUI=True;
+	//      RestartUI(RENTER);
+      }
+   if (restartUI) RestartUI(RENTER);
 }
