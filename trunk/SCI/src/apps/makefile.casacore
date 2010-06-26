@@ -49,6 +49,7 @@ INCL = -I.                                   \
        -I$(COREROOT)/include                 \
        -I$(CASAROOT)/code/include            \
        -I/usr/include/cfitsio                \
+       -I/usr/include/ATM                \
        -I$(QT4HOME)/include                  \
        -I$(QT4HOME)/include/QtCore           \
        -I$(QT4HOME)/include/QtGui            \
@@ -69,35 +70,38 @@ DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
-	  $(SYNTHROOT)/lib/libcasadbus.a     \
-	  $(SYNTHROOT)/lib/libcalibration.a     \
-	  $(SYNTHROOT)/lib/libcasadbus.a \
-	  -laatm
-#	  $(SYNTHROOT)/lib/libgraphics.a         
+# SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
+# 	  $(SYNTHROOT)/lib/libcasadbus.a     \
+# 	  $(SYNTHROOT)/lib/libcalibration.a     \
+# 	  $(SYNTHROOT)/lib/libcasadbus.a \
+# 	  -laatm
+# #	  $(SYNTHROOT)/lib/libgraphics.a         
+SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
+		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
-CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so   \
-	  $(COREROOT)/lib/libmsvis.so            \
-	  $(COREROOT)/lib/libcasa_ms.so          \
-	  $(COREROOT)/lib/libcasa_images.so      \
-	  $(COREROOT)/lib/libcasa_components.so  \
-	  $(COREROOT)/lib/libcasa_coordinates.so \
-	  $(COREROOT)/lib/libcasa_lattices.so    \
-	  $(COREROOT)/lib/libcasa_fits.so        \
-	  $(COREROOT)/lib/libcasa_measures.so    \
-	  $(COREROOT)/lib/libcasa_measures_f.so  \
-	  $(COREROOT)/lib/libcasa_tables.so      \
-	  $(COREROOT)/lib/libcasa_scimath.so     \
-	  $(COREROOT)/lib/libcasa_scimath_f.so   \
-	  $(COREROOT)/lib/libcasa_casa.so 
 
-CORELIBS1 = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
+# CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so   \
+# 	  $(COREROOT)/lib/libmsvis.so            \
+# 	  $(COREROOT)/lib/libcasa_ms.so          \
+# 	  $(COREROOT)/lib/libcasa_images.so      \
+# 	  $(COREROOT)/lib/libcasa_components.so  \
+# 	  $(COREROOT)/lib/libcasa_coordinates.so \
+# 	  $(COREROOT)/lib/libcasa_lattices.so    \
+# 	  $(COREROOT)/lib/libcasa_fits.so        \
+# 	  $(COREROOT)/lib/libcasa_measures.so    \
+# 	  $(COREROOT)/lib/libcasa_measures_f.so  \
+# 	  $(COREROOT)/lib/libcasa_tables.so      \
+# 	  $(COREROOT)/lib/libcasa_scimath.so     \
+# 	  $(COREROOT)/lib/libcasa_scimath_f.so   \
+# 	  $(COREROOT)/lib/libcasa_casa.so 
+
+CORELIBS = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
             -lcasa_components -lcasa_coordinates -lcasa_lattices \
             -lcasa_fits -lcasa_measures -lcasa_measures_f        \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
             -lcasa_casa -lflagging -lcasaqt
 
-CASALIBS = $(CORELIBS1) $(SYNTHESISLIBS) $(DISPLAYLIBS)
+CASALIBS = $(CORELIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
 
 CAAPSLIBOBJS = casaChecks.o
 ifneq ($(strip $(SCILIBDIR)),)
@@ -128,7 +132,7 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
 	  $(WCSPKG)/libwcs.a                     \
 	  $(PGPLOTPKG)/libpgsbox.so              \
-	  -lQtCore -lQtGui -lQtXml -lqwt -lgomp
+	  -lQtCore -lQtGui -lQtDBus -lQtDBus_debug -ldbus-c++-1 -lQtXml -lqwt -lgomp
 
 #	  -lg2c -L/usr/local/lib -lcpgplot -lpgplot     \
 #
