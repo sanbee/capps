@@ -4,7 +4,7 @@
 #include <casa/Logging/LogMessage.h>
 #include <casa/BasicSL/String.h>
 //#include <display/QtViewer/QtClean.qo.h>
-#include <display/QtViewer/QtCleanPanelGui.qo.h>
+//#include <display/QtViewer/QtCleanPanelGui.qo.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <display/Display/StandAloneDisplayApp.h>
 #include <tables/Tables/Table.h>
