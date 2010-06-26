@@ -3,8 +3,6 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/BasicSL/String.h>
-//#include <display/QtViewer/QtClean.qo.h>
-//#include <display/QtViewer/QtCleanPanelGui.qo.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <display/Display/StandAloneDisplayApp.h>
 #include <tables/Tables/Table.h>
@@ -31,12 +29,9 @@ Bool clone(const String& imageName, const String& newImageName)
 
 int main(int argc, char **argv)
 {
-  //interactivemask(const String& image, const String& mask){
-
-  //  LogIO os(LogOrigin(argv[0], argv[0], WHERE));
   if (argc < 3)
     {
-      cerr << argv[0] << " usage: " << "<ImageFileName> <MaskImageFileName>" << endl;//LogIO::POST;
+      cerr << argv[0] << " usage: " << "<ImageFileName> <MaskImageFileName>" << endl;
       return -1;
     }
   String image(argv[1]), mask(argv[2]);
@@ -54,18 +49,4 @@ int main(int argc, char **argv)
    String threshold("0mJy");
    Int niter=0, ncycle=0;
    imager.interactivemask(image,mask,niter,ncycle,threshold);
-   // else
-   //   {
-   //     clone(image, mask);
-   //   }
-   // QtApp::init();
-   // QtClean vwrCln(image, mask); 
-   // //  if(!vwrCln.loadImage(image, mask)){
-   // if(!vwrCln.imageLoaded())
-   //   {
-   //     cerr << "Failed to load image and mask in viewer" << endl;
-   // 	 //	  << LogIO::SEVERE << LogIO::POST;
-   //     return -1;
-   //   }
-   // return vwrCln.go();
 }
