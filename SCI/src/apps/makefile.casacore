@@ -64,8 +64,13 @@ INCL = -I.                                   \
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
-DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
-	  $(DISPLAYROOT)/lib/libcasaqt.a      \
+#DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
+#	  $(DISPLAYROOT)/lib/libcasaqt.a      \
+#	  $(WCSPKG)/libwcs.a                  \
+#	  $(PGPLOTPKG)/libpgsbox.so              
+
+DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
+	  -lcasaqt \
 	  $(WCSPKG)/libwcs.a                  \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
