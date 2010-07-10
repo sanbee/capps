@@ -20,6 +20,17 @@ using namespace casa;
 //
 #define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
 
+void toCASAVector(std::vector<float>& stdv, Vector<Float>& tmp)
+{
+  Int n=stdv.size();
+//   if ((n > 0) && (stdv[0] < 0)) tmp.resize(0);
+//   else
+    {
+      tmp.resize(n);
+      for(Int i=0;i<n;i++) tmp(i) = stdv[i];
+    }
+}
+
 void toCASAVector(std::vector<int>& stdv, Vector<Int>& tmp)
 {
   Int n=stdv.size();
@@ -47,7 +58,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& psfs, Vector<String>& masks,string& complist,string&algo,string& taql,
 	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
-	bool& interactive,Long& cache, bool& copydata, bool& copyboth)
+	bool& interactive,Long& cache, bool& copydata, bool& copyboth, Vector<Float>& MSScales)
 {
   if (!restart)
     {
@@ -121,8 +132,14 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetSValp("cfcache",cfcache,i);  
 	i=1;clgetFValp("painc",paInc,i);  
 
-	i=1;clgetSValp("algorithm",algo,i);
-	
+	exposedKeys.resize(1);
+	exposedKeys[0]="scales";
+	watchPoints["multiscale"]=exposedKeys;
+	i=1;clgetSValp("algorithm",algo,i,watchPoints);
+	vector<float> dscales(1,0.0);
+	i=0;clgetNFValp("scales",dscales,i);
+	toCASAVector(dscales,MSScales);
+
 	i=1;clgetSValp("stokes",stokes,i);
 
 	ClearMap(watchPoints);
@@ -214,8 +231,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	options[3]="pbmosaic";
 	clSetOptions("ftmachine",options);
 
-	options.resize(4);
+	options.resize(5);
 	options[0]="cs";options[1]="clark";options[2]="hogbom";options[3]="mfclark";
+	options[4]="multiscale";
 	clSetOptions("algorithm",options);
 
 	options.resize(3);
@@ -305,6 +323,7 @@ int main(int argc, char **argv)
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1;
   bool applyOffsets=false,dopbcorr=true, copydata=false, copyboth=false, interactive=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
+  Vector<Float> MSScales(1,0.0);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
   Float gain,threshold;
@@ -334,7 +353,8 @@ int main(int argc, char **argv)
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
-     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth);
+     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth,
+     MSScales);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -372,9 +392,7 @@ int main(int argc, char **argv)
 	  spwid=msSelection.getSpwList();
 	  fieldid=msSelection.getFieldList();
 	}
-      cerr << "Field ID list: " << fieldid << endl;
-      //cout << "Field IDs = " << fieldid << endl;
-      //cout << "Spw IDs = " << spwid << endl;
+      cerr << "No. of rows = " << selectedMS.nrow() << endl;
       //
       // Imager requires the list of spectral window IDs and field IDs
       // present in the MS that is supplied to it.  This sort of
@@ -427,8 +445,8 @@ int main(int argc, char **argv)
       if (mode=="continuum") {casaMode="mfs";imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
       else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
-      else throw(AipsError("Incorrect setting for keyword \"mode\".  "
-			   "Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
+      else throw(AipsError("Incorrect setting for keyword \"mode\".  "));
+
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
       imager.defineImage(nx,ny,
@@ -523,6 +541,9 @@ int main(int argc, char **argv)
 			paInc,            // Def=4.0
 			pblimit           // Def=0.05
 			);
+      if ((MSScales.nelements() > 0) && (MSScales[0] > 0))
+	imager.setscales(String("uservector"), (Int)MSScales.nelements(), MSScales);
+
       Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
       if (operation=="clean")
 	{
@@ -534,62 +555,64 @@ int main(int argc, char **argv)
 	  if (residuals.nelements() == 0) residuals.resize(1);
 	  if (residuals[0] == "") residuals[0] = models[0] + ".res";
 
-	  if (interactive)
-	    {
-	      if ((residuals.nelements() <= 0) || (residuals[0] == ""))
-		{
-		  throw(AipsError("No residual image name given.  "
-				  "Need residual image for setting up interactive masks."));
-		}
+	  // if (interactive)
+	  //   {
+	  //     if ((residuals.nelements() <= 0) || (residuals[0] == ""))
+	  // 	{
+	  // 	  throw(AipsError("No residual image name given.  "
+	  // 			  "Need residual image for setting up interactive masks."));
+	  // 	}
 	      
-	      File file(residuals[0]);
-	      if (!file.exists()) imager.makeimage("corrected",residuals[0]);
+	  //     File file(residuals[0]);
+	  //     if (!file.exists()) imager.makeimage("corrected",residuals[0]);
 
 
-	      if ((masks.nelements() == 0) || (masks[0]==""))
-		{
-		  masks.resize(1);
-		  masks[0]=residuals[0]+".mask";
-		}
-	      for (Int initer=interactiveNiter;initer>0; initer--)
-		{
-		  status=imager.interactivemask(residuals[0], masks[0], 
-						nPerCycle,initer,
-						thresholdStr);
-		  //		  if (status==0); // Continue
-		  if (status==1)  // No more interaction required
-		    {
-		      nPerCycle=Niter-initer*nPerCycle;
-		      initer=0;
-		      nPerCycle=nPerCycle > 0 ? nPerCycle : 0;
-		    }
-		  else if (status==2) // Stop
-		    {
-		      nPerCycle = 0;
-		      initer=0;
-		    }
-		  else
-		    interactiveNiter=(Int)(Niter/nPerCycle + 0.5);
-		  imager.clean(algo,nPerCycle,gain,
-			       casa::Quantity(threshold,"mJy"),
-			       False,models,fixed,complist,masks, 
-			       restoredImgs,residuals,psfs);
-		}
-	    }
-	  else
-	    imager.clean(algo,
-			 Niter,
-			 gain,
-			 casa::Quantity(threshold,"mJy"),
-			 False,                 //displayProgress
-			 models,                //Vector<String>
-			 fixed,                 //Vector<Bool>
-			 complist,              //String
-			 masks,                 //Vector<String>
-			 restoredImgs,          //Vector<String>
-			 residuals,             //Vector<String>
-			 psfs
-			 );
+	  //     if ((masks.nelements() == 0) || (masks[0]==""))
+	  // 	{
+	  // 	  masks.resize(1);
+	  // 	  masks[0]=residuals[0]+".mask";
+	  // 	}
+	  //     for (Int initer=interactiveNiter;initer>0; initer--)
+	  // 	{
+	  // 	  status=imager.interactivemask(residuals[0], masks[0], 
+	  // 					nPerCycle,initer,
+	  // 					thresholdStr);
+	  // 	  //		  if (status==0); // Continue
+	  // 	  if (status==1)  // No more interaction required
+	  // 	    {
+	  // 	      nPerCycle=Niter-initer*nPerCycle;
+	  // 	      initer=0;
+	  // 	      nPerCycle=nPerCycle > 0 ? nPerCycle : 0;
+	  // 	    }
+	  // 	  else if (status==2) // Stop
+	  // 	    {
+	  // 	      nPerCycle = 0;
+	  // 	      initer=0;
+	  // 	    }
+	  // 	  else
+	  // 	    interactiveNiter=(Int)(Niter/nPerCycle + 0.5);
+	  // 	  imager.clean(algo,nPerCycle,gain,
+	  // 		       casa::Quantity(threshold,"mJy"),
+	  // 		       False,models,fixed,complist,masks, 
+	  // 		       restoredImgs,residuals,psfs);
+	  // 	}
+	  //   }
+	  // else
+	    imager.iClean(algo,
+			  Niter,
+			  gain,
+			  casa::Quantity(threshold,"mJy"),
+			  //			  "0.0mJy",
+			  False,                 //displayProgress
+			  models,                //Vector<String>
+			  fixed,                 //Vector<Bool>
+			  complist,              //String
+			  masks,                 //Vector<String>
+			  restoredImgs,          //Vector<String>
+			  residuals,             //Vector<String>
+			  psfs,
+			  interactive, nPerCycle,String(""),False
+			  );
 	}
       else if (operation=="predict")
 	{
