@@ -541,7 +541,7 @@ int main(int argc, char **argv)
 			paInc,            // Def=4.0
 			pblimit           // Def=0.05
 			);
-      if (algo="multiscale")
+      if (algo=="multiscale")
 	imager.setscales(String("uservector"), (Int)MSScales.nelements(), MSScales);
 
       Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
