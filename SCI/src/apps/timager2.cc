@@ -541,7 +541,7 @@ int main(int argc, char **argv)
 			paInc,            // Def=4.0
 			pblimit           // Def=0.05
 			);
-      if ((MSScales.nelements() > 0) && (MSScales[0] > 0))
+      if (algo="multiscale")
 	imager.setscales(String("uservector"), (Int)MSScales.nelements(), MSScales);
 
       Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
@@ -555,64 +555,21 @@ int main(int argc, char **argv)
 	  if (residuals.nelements() == 0) residuals.resize(1);
 	  if (residuals[0] == "") residuals[0] = models[0] + ".res";
 
-	  // if (interactive)
-	  //   {
-	  //     if ((residuals.nelements() <= 0) || (residuals[0] == ""))
-	  // 	{
-	  // 	  throw(AipsError("No residual image name given.  "
-	  // 			  "Need residual image for setting up interactive masks."));
-	  // 	}
-	      
-	  //     File file(residuals[0]);
-	  //     if (!file.exists()) imager.makeimage("corrected",residuals[0]);
-
-
-	  //     if ((masks.nelements() == 0) || (masks[0]==""))
-	  // 	{
-	  // 	  masks.resize(1);
-	  // 	  masks[0]=residuals[0]+".mask";
-	  // 	}
-	  //     for (Int initer=interactiveNiter;initer>0; initer--)
-	  // 	{
-	  // 	  status=imager.interactivemask(residuals[0], masks[0], 
-	  // 					nPerCycle,initer,
-	  // 					thresholdStr);
-	  // 	  //		  if (status==0); // Continue
-	  // 	  if (status==1)  // No more interaction required
-	  // 	    {
-	  // 	      nPerCycle=Niter-initer*nPerCycle;
-	  // 	      initer=0;
-	  // 	      nPerCycle=nPerCycle > 0 ? nPerCycle : 0;
-	  // 	    }
-	  // 	  else if (status==2) // Stop
-	  // 	    {
-	  // 	      nPerCycle = 0;
-	  // 	      initer=0;
-	  // 	    }
-	  // 	  else
-	  // 	    interactiveNiter=(Int)(Niter/nPerCycle + 0.5);
-	  // 	  imager.clean(algo,nPerCycle,gain,
-	  // 		       casa::Quantity(threshold,"mJy"),
-	  // 		       False,models,fixed,complist,masks, 
-	  // 		       restoredImgs,residuals,psfs);
-	  // 	}
-	  //   }
-	  // else
-	    imager.iClean(algo,
-			  Niter,
-			  gain,
-			  casa::Quantity(threshold,"mJy"),
-			  //			  "0.0mJy",
-			  False,                 //displayProgress
-			  models,                //Vector<String>
-			  fixed,                 //Vector<Bool>
-			  complist,              //String
-			  masks,                 //Vector<String>
-			  restoredImgs,          //Vector<String>
-			  residuals,             //Vector<String>
-			  psfs,
-			  interactive, nPerCycle,String(""),False
-			  );
+	  imager.iClean(algo,
+			Niter,
+			gain,
+			casa::Quantity(threshold,"mJy"),
+			//			  "0.0mJy",
+			False,                 //displayProgress
+			models,                //Vector<String>
+			fixed,                 //Vector<Bool>
+			complist,              //String
+			masks,                 //Vector<String>
+			restoredImgs,          //Vector<String>
+			residuals,             //Vector<String>
+			psfs,
+			interactive, nPerCycle,String(""),False
+			);
 	}
       else if (operation=="predict")
 	{
