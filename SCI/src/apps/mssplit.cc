@@ -74,7 +74,7 @@ void printInfo(MSSelection& msSelection)
     //       << "Baselines = "    << msSelection.getBaselineList() << endl
        << "Field        = " << msSelection.getFieldList()    << endl
        << "SPW          = " << msSelection.getSpwList()      << endl
-       << "Chan         = " << msSelection.getChanList(NULL,3)     << endl
+       << "Chan         = " << msSelection.getChanList()     << endl
        << "Scan         = " << msSelection.getScanList()     << endl
        << "Array        = " << msSelection.getSubArrayList() << endl
        << "Time         = " << msSelection.getTimeList()     << endl
