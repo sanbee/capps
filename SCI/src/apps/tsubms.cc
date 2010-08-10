@@ -46,8 +46,8 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf,
       dbgclgetFullValp("taql",taqlStr);  
       VString options;
       options.resize(5);
-      options[0]="data, "; options[1]="model, "; options[2]="corrected, ";
-      options[3]="all, or "; options[4]="a list of columns names";
+      options[0]="data"; options[1]="model"; options[2]="corrected";
+      options[3]="all"; options[4]="(a list of comma-separated column names)";
       clSetOptions("whichcol", options);
 
       EndCL();
