@@ -10,7 +10,7 @@
 #include <synthesis/MeasurementComponents/Utils.h>
 #include <cl.h>
 #include <clinteract.h>
-#include <xmlcasa/Quantity.h>
+//#include <xmlcasa/Quantity.h>
 #include <casa/OS/Directory.h>
 
 using namespace std;
@@ -139,6 +139,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	vector<float> dscales(1,0.0);
 	i=0;clgetNFValp("scales",dscales,i);
 	toCASAVector(dscales,MSScales);
+	MSScales = dscales;
 
 	i=1;clgetSValp("stokes",stokes,i);
 
@@ -392,7 +393,6 @@ int main(int argc, char **argv)
 	  spwid=msSelection.getSpwList();
 	  fieldid=msSelection.getFieldList();
 	}
-      cerr << "No. of rows = " << selectedMS.nrow() << endl;
       //
       // Imager requires the list of spectral window IDs and field IDs
       // present in the MS that is supplied to it.  This sort of
@@ -541,10 +541,12 @@ int main(int argc, char **argv)
 			paInc,            // Def=4.0
 			pblimit           // Def=0.05
 			);
-      if (algo=="multiscale")
+      if (algo == "multiscale")
 	imager.setscales(String("uservector"), (Int)MSScales.nelements(), MSScales);
 
-      Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
+      Vector<Bool> fixed(1,False); // If True, this will make the rest
+				   // of the code not go through
+				   // deconv.
       if (operation=="clean")
 	{
 	  String thresholdStr("0.0mJy");
