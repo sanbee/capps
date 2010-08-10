@@ -7,7 +7,7 @@
 #include "./casaChecks.h"
 #include <cl.h>
 #include <clinteract.h>
-#include <xmlcasa/Quantity.h>
+//#include <xmlcasa/Quantity.h>
 
 using namespace std;
 using namespace casa;
@@ -17,11 +17,12 @@ using namespace casa;
 #define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
 //#define RestartUI(Label)  {if(clIsInteractive()) {clRetry();goto Label;}}
 //
-void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, string& MINBuf,
-	string& OutCTNBuf, string& OutDCBuf, string& fieldStr, string& timeStr, 
-	string& spwStr, string& antStr,	string& uvrangeStr, string& jonesType, 
-	Float &Gain, Int &niter, Float &tol, string& refantStr, string& integStr, string& scanStr, 
-	Float &paInc, Int &wplanes, Int& nchan, Int& start, Int& step)
+void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf, 
+	string& MINBuf, string& OutCTNBuf, string& OutDCBuf, string& fieldStr, 
+	string& timeStr, string& spwStr, string& antStr, string& uvrangeStr, 
+	string& jonesType, Float &Gain, Int &niter, Float &tol, string& refantStr, 
+	string& integStr, string& scanStr, Float &paInc, Int &wplanes, Int& nchan, 
+	Int& start, Int& step)
 {
   if (!restart)
     {
