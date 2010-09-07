@@ -119,7 +119,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetIValp("facets",facets,i);
 	i=1;clgetIValp("wplanes",wplanes,i);  
 	
-	// Nothing other than clgetSValp can handle watchPoints.  Yuks!
+	//
+	// Key of "1" and "0" implies logical True and False for watchPoints.
 	//
 	InitMap(watchPoints,exposedKeys);
 	exposedKeys.push_back("pointingtable");
