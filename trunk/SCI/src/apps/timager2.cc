@@ -103,16 +103,15 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 
 	i=1;clgetSValp("complist",complist,i);
 	
-	ClearMap(watchPoints);
-	exposedKeys.resize(2);
-	exposedKeys[0]="facets";  exposedKeys[1]="wplanes";
+	InitMap(watchPoints, exposedKeys);
+	exposedKeys.push_back("facets");  exposedKeys.push_back("wplanes");
 	watchPoints["wproject"]=exposedKeys;
 
-	exposedKeys.resize(7);
-	exposedKeys[0]="facets";        exposedKeys[1]="wplanes";
-	exposedKeys[2]="cfcache";       exposedKeys[3]="painc";
-	exposedKeys[4]="pointingtable"; exposedKeys[5]="applyoffsets";
-	exposedKeys[6]="dopbcorr";
+	ClearKeys(exposedKeys);
+	exposedKeys.push_back("facets");   exposedKeys.push_back("wplanes");
+	exposedKeys.push_back("cfcache");  exposedKeys.push_back("painc");
+	exposedKeys.push_back("dopbcorr"); exposedKeys.push_back("applyoffsets");  
+	exposedKeys.push_back("pointingtable");
 	watchPoints["pbwproject"]=exposedKeys;	
 	watchPoints["pbmosaic"]=exposedKeys;	
 
@@ -122,20 +121,20 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	
 	// Nothing other than clgetSValp can handle watchPoints.  Yuks!
 	//
-	ClearMap(watchPoints);
-	exposedKeys.resize(1);
-	exposedKeys[0]="pointingtable";
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("pointingtable");
 	watchPoints["1"]=exposedKeys;
 	i=1;clgetBValp("applyoffsets",applyOffsets,i,watchPoints);
-	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("pointingtable",pointingTable,i);  
+	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("cfcache",cfcache,i);  
 	i=1;clgetFValp("painc",paInc,i);  
 
-	exposedKeys.resize(1);
-	exposedKeys[0]="scales";
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("scales");
 	watchPoints["multiscale"]=exposedKeys;
 	i=1;clgetSValp("algorithm",algo,i,watchPoints);
+
 	vector<float> dscales(1,0.0);
 	i=0;clgetNFValp("scales",dscales,i);
 	toCASAVector(dscales,MSScales);
@@ -143,9 +142,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 
 	i=1;clgetSValp("stokes",stokes,i);
 
-	ClearMap(watchPoints);
- 	exposedKeys.resize(2);
-	exposedKeys[0]="rmode";exposedKeys[1]="robust";
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("rmode");exposedKeys.push_back("robust");
  	watchPoints["briggs"]=exposedKeys;
 	i=1;clgetSValp("weighting",wtType,i,watchPoints);
 
@@ -160,10 +158,10 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFullValp("baseline",antStr);  
 	i=1;clgetFullValp("uvrange",uvDistStr);  
 
-	ClearMap(watchPoints);
-	exposedKeys.resize(3);
-	exposedKeys[0]="imnchan";  exposedKeys[1]="imstart";
-	exposedKeys[2]="imstep";   
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("imnchan");  
+	exposedKeys.push_back("imstart");
+	exposedKeys.push_back("imstep");   
 	watchPoints["pseudo"]=exposedKeys;
 
 	i=1;clgetSValp("mode",mode,i, watchPoints);
@@ -179,19 +177,18 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetIValp("imstart",imstart,i);
 	i=1;clgetIValp("imstep",imstep,i);
 
-	ClearMap(watchPoints);
-	exposedKeys.resize(4);
-	exposedKeys[0]="gain";      exposedKeys[1]="niter";
-	exposedKeys[2]="threshold"; exposedKeys[3]="interactive";
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("gain");  exposedKeys.push_back("niter");
+	exposedKeys.push_back("threshold"); exposedKeys.push_back("interactive");
 	watchPoints["clean"]=exposedKeys;
-	exposedKeys.resize(1);
-	exposedKeys[0] = "copydata";
+
+	ClearKeys(exposedKeys);
+	exposedKeys.push_back("copydata");
 	watchPoints["predict"]=exposedKeys;
 	i=1;clgetSValp("operation",operation,i,watchPoints);
 
-	ClearMap(watchPoints);
-	exposedKeys.resize(1);
-	exposedKeys[0]="copyboth";
+	InitMap(watchPoints,exposedKeys);
+	exposedKeys.push_back("copyboth");
 	watchPoints["1"]=exposedKeys;
 	i=1;clgetBValp("copydata",copydata,i,watchPoints);
 	i=1;clgetBValp("copyboth",copyboth,i);
@@ -214,31 +211,34 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	//
 	VString options;
 
-	options.resize(5);
-	options[0]="clean"; options[1]="predict"; options[2]="psf";
-	options[3]="dirty"; options[4]="residual";
+	options.resize(0);
+	options.push_back("clean"); options.push_back("predict"); options.push_back("psf");
+	options.push_back("dirty"); options.push_back("residual");
 	clSetOptions("operation",options);
 
-	options.resize(3);
-	options[0]="continuum";options[1]="spectral";options[2]="pseudo";
+	options.resize(0);
+	options.push_back("continuum");
+	options.push_back("spectral");
+	options.push_back("pseudo");
 	clSetOptions("mode",options);
 
-	options.resize(3);
-	options[0]="uniform";options[1]="natural";options[2]="briggs";
+	options.resize(0);
+	options.push_back("uniform");options.push_back("natural");options.push_back("briggs");
 	clSetOptions("weighting",options);
 
-	options.resize(4);
-	options[0]="ft";options[1]="wproject";options[2]="pbwproject";
-	options[3]="pbmosaic";
+	options.resize(0);
+	options.push_back("ft");options.push_back("wproject");options.push_back("pbwproject");
+	options.push_back("pbmosaic");
 	clSetOptions("ftmachine",options);
 
-	options.resize(5);
-	options[0]="cs";options[1]="clark";options[2]="hogbom";options[3]="mfclark";
-	options[4]="multiscale";
+	options.resize(0);
+	options.push_back("cs");options.push_back("clark");options.push_back("hogbom");
+	options.push_back("mfclark");
+	options.push_back("multiscale");
 	clSetOptions("algorithm",options);
 
-	options.resize(3);
-	options[0]="I";options[1]="IV";options[2]="IQUV";
+	options.resize(0);
+	options.push_back("I");options.push_back("IV");options.push_back("IQUV");
 	clSetOptions("stokes",options);
       }
       EndCL();
@@ -570,8 +570,10 @@ int main(int argc, char **argv)
 			restoredImgs,          //Vector<String>
 			residuals,             //Vector<String>
 			psfs,
-			interactive, nPerCycle,String(""),False
-			);
+			interactive, 
+			nPerCycle,String(""));
+			// False
+			// );
 	}
       else if (operation=="predict")
 	{
