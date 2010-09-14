@@ -58,7 +58,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& psfs, Vector<String>& masks,string& complist,string&algo,string& taql,
 	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
-	bool& interactive,Long& cache, bool& copydata, bool& copyboth, Vector<Float>& MSScales)
+	bool& interactive,Long& cache, bool& copydata, bool& copyboth, Vector<Float>& MSScales,
+	bool& useScratch)
 {
   if (!restart)
     {
@@ -207,6 +208,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;dbgclgetFullValp("taql",taql);
 	Float fcache=1024*1024*1024*2.0; 
 	i=1;dbgclgetFValp("cache",fcache,i); cache=(Long)fcache;
+	i=1;dbgclgetBValp("usescratch",useScratch,i);
 	//
 	// Do some user support!;-) Set the possible options for various keywords.
 	//
@@ -332,7 +334,7 @@ int main(int argc, char **argv)
   Vector<String> models, restoredImgs, residuals,masks,psfs;
   String complist,operation;
   MSSelection msSelection;
-
+  Bool useScratchColumns=False;
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
   Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
@@ -348,6 +350,7 @@ int main(int argc, char **argv)
   casaMode="channel";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
+  useScratchColumns=False;
   //
   // The user interface
   //
@@ -356,7 +359,7 @@ int main(int argc, char **argv)
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth,
-     MSScales);
+     MSScales,useScratchColumns);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -406,7 +409,7 @@ int main(int argc, char **argv)
       //
       // Set up the imager
       //
-      Bool compress=False, useScratchColumns=False;
+      Bool compress=False;
       if (operation == "predict") useScratchColumns=True;
       imager.open(selectedMS,compress,useScratchColumns);
       vector<double> pa(1);pa[0]=paInc;
