@@ -117,6 +117,7 @@ endif
 ifneq ($(strip $(CLHOME)),)
 UILIBS = $(CLHOME)/lib/libshccl.a                 \
          $(CLHOME)/lib/libsh.a                    \
+         $(CLHOME)/lib/libshccl.a                 \
 	 $(CLHOME)/lib/libcalc.a                  \
 	 -lreadline -lhistory -ltermcap -lm -lfl -lc
 endif
