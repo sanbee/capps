@@ -16,7 +16,8 @@ using namespace casa;
 //
 void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, bool& deepCopy,
 	string& fieldStr, string& timeStr, string& spwStr, string& baselineStr,
-	string& scanStr, string& arrayStr, string& uvdistStr,string& taqlStr, string& polnStr)
+	string& scanStr, string& arrayStr, string& uvdistStr,string& taqlStr, string& polnStr,
+	string& stateStr)
 {
   if (!restart)
     {
@@ -28,7 +29,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, b
   try
     {
       int i;
-      MSNBuf=OutMSBuf=timeStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr="";
+      MSNBuf=OutMSBuf=timeStr=baselineStr=uvdistStr=scanStr=arrayStr=polnStr=stateStr="";
       i=1;clgetSValp("ms", MSNBuf,i);  
       i=1;clgetSValp("outms",OutMSBuf,i);  
       i=1;clgetBValp("deepcopy",deepCopy,i);
@@ -40,6 +41,8 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, b
       clgetFullValp("scan",scanStr);  
       clgetFullValp("array",arrayStr);  
       clgetFullValp("uvdist",uvdistStr);  
+      clgetFullValp("state",stateStr);  
+
       dbgclgetFullValp("taql",taqlStr);  
       EndCL();
     }
@@ -74,7 +77,7 @@ void printInfo(MSSelection& msSelection)
     //       << "Baselines = "    << msSelection.getBaselineList() << endl
        << "Field        = " << msSelection.getFieldList()    << endl
        << "SPW          = " << msSelection.getSpwList()      << endl
-       << "Chan         = " << msSelection.getChanList()     << endl
+       << "Chan         = " << msSelection.getChanList(NULL,1,True)     << endl
        << "Scan         = " << msSelection.getScanList()     << endl
        << "Array        = " << msSelection.getSubArrayList() << endl
        << "Time         = " << msSelection.getTimeList()     << endl
@@ -82,7 +85,8 @@ void printInfo(MSSelection& msSelection)
        << "UV in meters = " << msSelection.getUVUnitsList()  << endl
        << "DDIDs        = " << msSelection.getDDIDList()     << endl
        << "PolMap       = " << msSelection.getPolMap()       << endl
-       << "CorrMap      = " << msSelection.getCorrMap( )     << endl;
+       << "CorrMap      = " << msSelection.getCorrMap( )     << endl
+       << "StateList    = " << msSelection.getStateObsModeList() << endl;
   //  printBaselineList(msSelection.getBaselineList(),cout);
 }
 //
@@ -95,17 +99,17 @@ int main(int argc, char **argv)
   //
   //  MSSelection msSelection;
   string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,
-    uvdistStr,taqlStr,scanStr,arrayStr, polnStr;
+    uvdistStr,taqlStr,scanStr,arrayStr, polnStr, stateStr;
   Bool deepCopy=0;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
   MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=
-    uvdistStr=taqlStr=scanStr=arrayStr=polnStr="";
+    uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateStr="";
   deepCopy=0;
   fieldStr=spwStr="*";
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, deepCopy,
-     fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,polnStr);
+     fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,uvdistStr,taqlStr,polnStr,stateStr);
   restartUI = False;
   //
   //---------------------------------------------------
@@ -119,7 +123,7 @@ int main(int argc, char **argv)
       //
       MSSelection msSelection(ms,MSSelection::PARSE_NOW,
 			      timeStr,baselineStr,fieldStr,spwStr,
-			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr);
+			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr,stateStr);
 
       printInfo(msSelection);
 
