@@ -8,6 +8,7 @@
 #include <images/Images/ImageUtilities.h>
 #include <images/Images/ImageOpener.h>
 #include <images/Images/ImageSummary.h>
+#include <casa/Containers/Record.h>
 //#include <images/Images/ImageSummary.cc>
 #include <lattices/Lattices/PagedArray.h>
 #include <fstream>
@@ -116,6 +117,14 @@ int main(int argc, char **argv)
 	      ImageSummary<Float> ims(*fImage);
 	      Vector<String> list = ims.list(logio);
 	      ofs << (os.str().c_str()) << endl;
+	      Record miscInfoRec=fImage->miscInfo();
+	      if (miscInfoRec.nfields() > 0)
+		{
+		  logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
+		  ostringstream oss;	      
+		  miscInfoRec.print(oss,25," MiscInfo : ");
+		  logio << oss.str() << LogIO::NORMAL;
+		}
 	    }
 	  else if (cImage != 0)
 	    {
@@ -123,6 +132,14 @@ int main(int argc, char **argv)
 	      ImageSummary<Complex> ims(*cImage);
 	      Vector<String> list = ims.list(logio);
 	      ofs << (os.str().c_str()) << endl;
+	      Record miscInfoRec=cImage->miscInfo();
+	      if (miscInfoRec.nfields() > 0)
+		{
+		  logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
+		  ostringstream oss;	      
+		  miscInfoRec.print(oss,25," MiscInfo : ");
+		  logio << oss.str() << LogIO::NORMAL;
+		}
 	    }
 	  else
 	    logio << "Unrecognized image data type." << LogIO::EXCEPTION;
