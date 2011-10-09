@@ -111,20 +111,15 @@ int main(int argc, char **argv)
 	  fImage = dynamic_cast<ImageInterface<Float>*>(lattPtr);
 	  cImage = dynamic_cast<ImageInterface<Complex>*>(lattPtr);
 
+	  ostringstream oss;	      
+	  Record miscInfoRec;
 	  if (fImage != 0)
 	    {
 	      logio << "Image data type  : Float" << LogIO::NORMAL;
 	      ImageSummary<Float> ims(*fImage);
 	      Vector<String> list = ims.list(logio);
 	      ofs << (os.str().c_str()) << endl;
-	      Record miscInfoRec=fImage->miscInfo();
-	      if (miscInfoRec.nfields() > 0)
-		{
-		  logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
-		  ostringstream oss;	      
-		  miscInfoRec.print(oss,25," MiscInfo : ");
-		  logio << oss.str() << LogIO::NORMAL;
-		}
+	      miscInfoRec=fImage->miscInfo();
 	    }
 	  else if (cImage != 0)
 	    {
@@ -132,18 +127,17 @@ int main(int argc, char **argv)
 	      ImageSummary<Complex> ims(*cImage);
 	      Vector<String> list = ims.list(logio);
 	      ofs << (os.str().c_str()) << endl;
-	      Record miscInfoRec=cImage->miscInfo();
-	      if (miscInfoRec.nfields() > 0)
-		{
-		  logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
-		  ostringstream oss;	      
-		  miscInfoRec.print(oss,25," MiscInfo : ");
-		  logio << oss.str() << LogIO::NORMAL;
-		}
+	      miscInfoRec=cImage->miscInfo();
 	    }
 	  else
 	    logio << "Unrecognized image data type." << LogIO::EXCEPTION;
-//	  exit(0);
+
+	  if (miscInfoRec.nfields() > 0)
+	    {
+	      logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
+	      miscInfoRec.print(oss,25," MiscInfo : ");
+	      logio << oss.str() << LogIO::NORMAL;
+	    }
 	}
       else 
 	{
