@@ -335,7 +335,7 @@ int main(int argc, char **argv)
   String complist,operation;
   MSSelection msSelection;
   Bool useScratchColumns=False;
-  Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
+  Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1, cycleMaxPSFFraction=0.8;
   Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
@@ -504,6 +504,7 @@ int main(int argc, char **argv)
       //		    );
       imager.setmfcontrol(cycleFactor,
 			  cycleSpeedup,
+			  cycleMaxPSFFraction,
 			  stopLargeNegatives, 
 			  stopPointMode,
 			  scaleType,
