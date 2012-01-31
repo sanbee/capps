@@ -21,7 +21,7 @@ CPPFLAGS = $(OPT) -Wno-deprecated                           \
            -DAIPS_NO_LEA_MALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
-	   -DAIPS_DEBUG                                     \
+#	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
 	   -DSIGNBIT                                        \
 	   -DAIPS_NO_TEMPLATE_SRC                           \
@@ -82,7 +82,8 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 # 	  -laatm
 # #	  $(SYNTHROOT)/lib/libgraphics.a         
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
+		-lsynthesis -lcasadbus -lcasadbus -laatm
+#		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
 # CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so   \
@@ -100,9 +101,14 @@ SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 # 	  $(COREROOT)/lib/libcasa_scimath_f.so   \
 # 	  $(COREROOT)/lib/libcasa_casa.so 
 
-CORELIBS = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
+#CORELIBS = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
+#            -lcasa_components -lcasa_coordinates -lcasa_lattices \
+#            -lcasa_fits -lcasa_measures \
+#	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
+#            -lcasa_casa -lflagging -lcasaqt
+CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images        \
             -lcasa_components -lcasa_coordinates -lcasa_lattices \
-            -lcasa_fits -lcasa_measures -lcasa_measures_f        \
+            -lcasa_fits -lcasa_measures \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
             -lcasa_casa -lflagging -lcasaqt
 
