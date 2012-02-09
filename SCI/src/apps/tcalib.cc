@@ -65,7 +65,7 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& CTNBuf,
 	clgetFullValp("uvrange",uvrangeStr);
 	clgetFullValp("antenna",antStr);
 	clgetFullValp("time",timeStr);
-	//	clgetFullValp("scan",scanStr);
+	clgetFullValp("scan",scanStr);
 	//
 	// For the brave
 	//
@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   // Factory defaults
   //
   jonesType="EP"; spwStr="*"; fieldStr="*";
-  scanStr="*";
+  scanStr="";
 
   UI(restartUI,argc, argv, MSNBuf,CTNBuf,MINBuf, OutCTNBuf, OutDC, 
      fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, Gain, Niter, 
@@ -165,12 +165,14 @@ int main(int argc, char **argv)
 // 		    start,       // Start
 // 		    step       // Step
 // 		    );  
-      calib.selectvis("", //time
+      calib.selectvis("",     //time
 		      spwStr, //spw
-		      "", //scan
-		      "", //field
-		      "", //baseline
-		      "", //uvrange
+		      scanStr,//scan
+		      "",     //field
+		      "",     //intent
+		      "",     //ObsId
+		      "",     //baseline
+		      "",     //uvrange
 		      "none");
 		      //	      "channel",nchan,start,step); // Old style
       calib.reset(True,True);
