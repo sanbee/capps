@@ -3,8 +3,8 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 //#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MeasurementComponents/Utils.h>
