@@ -2,6 +2,9 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MeasurementSets/MSSelectableTable.h>
+#include <tables/Tables/Table.h>
+#include <tables/Tables/PlainTable.h>
 #include <cl.h> // C++ized version
 #include <clinteract.h>
 
@@ -51,6 +54,15 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, b
       x << x << endl;
       clRetry();
     }
+}
+void showTableCache()
+{
+  const TableCache& cache = PlainTable::tableCache();
+  if(cache.ntable()!=0)
+    cerr << endl << "The Table Cache has the following " << cache.ntable() << " entries:"  << endl;
+  
+  for (uInt i=0; i<cache.ntable(); ++i) 
+    cerr << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << endl;
 }
 //
 //-------------------------------------------------------------------------
@@ -117,56 +129,74 @@ int main(int argc, char **argv)
   //
   //---------------------------------------------------
   //
-  try
-    {
-      //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
-      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
-      //
-      // Setup the MSSelection thingi
-      //
-      MSSelection msSelection(ms,MSSelection::PARSE_NOW,
-			      timeStr,baselineStr,fieldStr,spwStr,
-			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-			      stateObsModeStr,observationStr);
-
-      printInfo(msSelection);
-
-      if (!msSelection.getSelectedMS(selectedMS))
-	{
-	  cerr << "###Informational:  Nothing selected.  ";
+  //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+  
+  //
+  // Make a new scope, outside which there should be no tables lefts open.
+  //
+  {
+    MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
+    //
+    // Setup the MSSelection thingi
+    //
+    
+    MSInterface msInterface(ms);
+    MSSelection msSelection;
+    // MSSelectionLogError mssLE;
+    // msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+    try
+      {
+	// msSelection.reset(ms,MSSelection::PARSE_NOW,
+	// 			timeStr,baselineStr,fieldStr,spwStr,
+	// 			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+	// 			stateObsModeStr,observationStr);
+	msSelection.reset(msInterface,MSSelection::PARSE_NOW,
+			  timeStr,baselineStr,fieldStr,spwStr,
+			  uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+			  stateObsModeStr,observationStr);
+	// TableExprNode ten=msSelection.toTableExprNode(&msInterface);
+	// cerr << "TEN rows = " << ten.nrow() << endl;
+	printInfo(msSelection);
+	
+	if (!msSelection.getSelectedMS(selectedMS))
+	  {
+	    cerr << "###Informational:  Nothing selected.  ";
+	    if (OutMSBuf != "")
+	      cout << "New MS not written." << endl;
+	    else
+	      cout << endl;
+	  }
+	else
 	  if (OutMSBuf != "")
-	    cout << "New MS not written." << endl;
-	  else
-	    cout << endl;
-	}
-      else
-	if (OutMSBuf != "")
-	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
-	  else          selectedMS.rename(OutMSBuf,Table::New);
-      cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
-    }
-  catch (clError& x)
-    {
-      x << x.what() << endl;
-      restartUI=True;
-    }
-  catch (MSSelectionError& x)
-    {
-      cerr << "###MSSelectionError: " << x.getMesg() << endl;
-      restartUI=True;
-    }
-  //
-  // Catch any exception thrown by AIPS++ libs.  Do your cleanup here
-  // before returning to the UI (if you choose to).  Without this, all
-  // exceptions (AIPS++ or otherwise) are caught in the default
-  // exception handler (which is installed by the CLLIB as the
-  // clDefaultErrorHandler).
-  //
-  catch (AipsError& x)
-    {
-      cerr << "###AipsError: " << x.getMesg() << endl;
-      restartUI=True;
-    }
+	    if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
+	    else          selectedMS.rename(OutMSBuf,Table::New);
+	cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
+      }
+    catch (clError& x)
+      {
+	x << x.what() << endl;
+	restartUI=True;
+      }
+    catch (MSSelectionError& x)
+      {
+	cerr << "###MSSelectionError: " << x.getMesg() << endl;
+	restartUI=True;
+      }
+    //
+    // Catch any exception thrown by AIPS++ libs.  Do your cleanup here
+    // before returning to the UI (if you choose to).  Without this, all
+    // exceptions (AIPS++ or otherwise) are caught in the default
+    // exception handler (which is installed by the CLLIB as the
+    // clDefaultErrorHandler).
+    //
+    catch (AipsError& x)
+      {
+	cerr << "###AipsError: " << x.getMesg() << endl;
+	restartUI=True;
+      }
+  }
+
+  showTableCache();
   //if (restartUI) 
   restartUI=True;RestartUI(RENTER);
 }
