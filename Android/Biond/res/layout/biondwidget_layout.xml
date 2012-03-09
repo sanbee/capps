@@ -22,19 +22,32 @@
       android:layout_height="wrap_content" 
       android:gravity="center"
       android:textColor="#FFFFFF"
-      android:textSize="12sp"
+      android:textSize="30dp"
+      android:textStyle="bold"
       android:text="Bat. Status"
       android:typeface="sans"
      />
 
   <TextView
       style="@android:style/TextAppearance.Medium"
-      android:id="@+id/screen"
+      android:id="@+id/status"
       android:layout_width="match_parent"
       android:layout_height="wrap_content" 
       android:gravity="center"
       android:textColor="#FFFFFF"
-      android:textSize="14sp"
+      android:textSize="12dp"
+      android:text="UNKNOWN"
+      android:typeface="sans"
+     />
+
+  <TextView
+      style="@android:style/TextAppearance.Medium"
+      android:id="@+id/mode"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" 
+      android:gravity="center"
+      android:textColor="#FFFFFF"
+      android:textSize="14dp"
       android:typeface="sans"
      />
   <Button
@@ -42,7 +55,7 @@
       android:layout_width="match_parent"
       android:layout_height="18dp"
       android:layout_marginRight="0dp" 
-      android:text="Click me"
+      android:textSize="15dp"
       android:gravity="top"
      />
 
