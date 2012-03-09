@@ -19,6 +19,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 {
     //    private static final String TAG = "Biond Provider";
 
+    private static int oldbatterylevel = 0;
     private static final String ACTION_TOGGLE_BUTTON="toggleButton";
     private static final String ACTION_NULL="NULL";
     private static int nvisits = 0;
@@ -42,14 +43,14 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    {
 		unregisterForClick(context, gm, allWidgetIds, views_l);
 		registerForBroadcast(context, gm, allWidgetIds, views_l);
-		views_l.setTextViewText(R.id.screen,
+		views_l.setTextViewText(R.id.mode,
 					"B'cast");
 	    }
 	else
 	    {
 		unRegisterForBroadcast(context, gm, allWidgetIds, views_l);
 		registerForClick(context, gm, allWidgetIds, views_l);
-		views_l.setTextViewText(R.id.screen,
+		views_l.setTextViewText(R.id.mode,
 					"On'Dmnd");
 	    }
 	gm.updateAppWidget(thisWidget, views_l);
@@ -68,19 +69,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    views_p = new RemoteViews(context.getPackageName(), R.layout.biondwidget_layout);
 
 	localUpdateWidget(context,views_p);
-	//	unRegisterForBroadcast(context, appWidgetManager, appWidgetIds, views_p);
 	registerForClick(context, appWidgetManager, appWidgetIds, views_p);
-
-	// if (broadcastMode.equals(true))
-	//     {
-	// 	unregisterForClick(context, appWidgetManager, appWidgetIds, views_p);
-	// 	registerForBroadcast(context, appWidgetManager, appWidgetIds, views_p);
-	//     }
-	// else
-	//     {
-	// 	unRegisterForBroadcast(context, appWidgetManager, appWidgetIds, views_p);
-	// 	registerForClick(context, appWidgetManager, appWidgetIds, views_p);
-	//     }
     }
     //
     //-----------------------------------------------------------
@@ -127,7 +116,8 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	PendingIntent pendingIntent = PendingIntent.getBroadcast
 	    (context, 0, intent, 0);
 	views.setOnClickPendingIntent(R.id.level, pendingIntent);
-	views.setOnClickPendingIntent(R.id.screen, pendingIntent);
+	views.setOnClickPendingIntent(R.id.status, pendingIntent);
+	views.setOnClickPendingIntent(R.id.mode, pendingIntent);
     }
     //
     //-----------------------------------------------------------
@@ -145,19 +135,20 @@ public class BiondWidgetProvider extends AppWidgetProvider
 		    Intent intent = new Intent(context, BiondWidgetProvider.class);
 		    intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
 		    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
-		    PendingIntent pendingIntent1 = PendingIntent.getBroadcast
+		    PendingIntent pendingIntent = PendingIntent.getBroadcast
 			(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		    views.setOnClickPendingIntent(R.id.level, pendingIntent1);
-		    views.setOnClickPendingIntent(R.id.screen, pendingIntent1);
+		    views.setOnClickPendingIntent(R.id.level,  pendingIntent);
+		    views.setOnClickPendingIntent(R.id.status, pendingIntent);
+		    views.setOnClickPendingIntent(R.id.mode, pendingIntent);
 		}
 		{
 		    Intent intent = new Intent(context, BiondWidgetProvider.class);
 		    intent.setAction(ACTION_TOGGLE_BUTTON);
-		    PendingIntent pendingIntent1 = PendingIntent.getBroadcast
+		    PendingIntent pendingIntent = PendingIntent.getBroadcast
 			(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		    views.setOnClickPendingIntent(R.id.button, pendingIntent1);
+		    views.setOnClickPendingIntent(R.id.button, pendingIntent);
 		}
 		appWidgetManager.updateAppWidget(widgetId, views);
 	    }
@@ -173,25 +164,33 @@ public class BiondWidgetProvider extends AppWidgetProvider
 
 
 	int level = batteryIntent.getIntExtra("level", -1);
-	double scale = batteryIntent.getIntExtra("scale", -1)/100.0;
-	if (scale > 0) level = (int)(level / scale);
-	int status = batteryIntent.getIntExtra("status",-1);
+	if (level != oldbatterylevel)
+	    {
+		oldbatterylevel = level;
 
-	if (status == BatteryManager.BATTERY_STATUS_CHARGING)	        statusStr = "Charging"; 
-	else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)   statusStr = "Dis-charging";
-	else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING)  statusStr = "Not charging";
-	else if (status == BatteryManager.BATTERY_STATUS_FULL)          statusStr = "Full";
-	//	Log.i("update","...run" + statusStr);
-	Time now = new Time();
-	now.setToNow();
-	String time = now.format("%H:%M:%S");
-
-	views.setProgressBar(R.id.progress_bar,100,level,false);
-	views.setTextViewText(R.id.level,
-			      "Bat. Status:\n" +
-			      level + " %\n " + 
-			      statusStr + "\n" +
-			      nvisits + "@"+time);
+		double scale = batteryIntent.getIntExtra("scale", -1)/100.0;
+		if (scale > 0) level = (int)(level / scale);
+		int status = batteryIntent.getIntExtra("status",-1);
+		
+		if (status == BatteryManager.BATTERY_STATUS_CHARGING)	        statusStr = "Charging"; 
+		else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)   statusStr = "Dis-charging";
+		else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING)  statusStr = "Not charging";
+		else if (status == BatteryManager.BATTERY_STATUS_FULL)          statusStr = "Full";
+		//	Log.i("update","...run" + statusStr);
+		// Time now = new Time();
+		// now.setToNow();
+		// String time = now.format("%H:%M:%S");
+		
+		views.setProgressBar(R.id.progress_bar,100,level,false);
+		views.setTextViewText(R.id.level,
+				      //			      "Bat. Status:\n" +
+				      level + "%");
+		
+		views.setTextViewText(R.id.status,
+				      statusStr);
+		// + "\n" +
+		// nvisits + "@"+time);
+	    }
     }   
     //
     //-----------------------------------------------------------

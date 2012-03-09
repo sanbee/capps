@@ -22,7 +22,7 @@ import android.app.Notification;
 
 public class MyBatteryReceiver extends BroadcastReceiver
 {
-    // private int batterylevel = 0;
+    private static int oldbatterylevel = 0;
     // private String batteryStatus ="";
     private static int nvisits = 0;
     //    private static final int HELLO_ID = 1;
@@ -60,15 +60,20 @@ public class MyBatteryReceiver extends BroadcastReceiver
 	    {
 		nvisits++;
 		batterylevel = intent.getIntExtra("level", 0);
+		if (batterylevel != oldbatterylevel)
+		    {
+			//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
+			oldbatterylevel=batterylevel;
 		
-		int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
-		String strStatus;
-		if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
-		else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
-		else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
-		else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-		else                                                          batteryStatus = "";
-		updateAppWidget(context,batterylevel, batteryStatus);
+			int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
+			String strStatus;
+			if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
+			else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
+			else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
+			else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
+			else                                                          batteryStatus = "";
+			updateAppWidget(context,batterylevel, batteryStatus);
+		    }
 	    }
     }
 
@@ -80,10 +85,13 @@ public class MyBatteryReceiver extends BroadcastReceiver
 	now.setToNow();
 	String time = now.format("%H:%M:%S");
 	updateViews.setTextViewText(R.id.level,
-				    "Bat. Status:\n" +
-				    batterylevel + " %\n" +
-				    batteryStatus + "\n" +
-				    nvisits+ "@"+time);
+				    //				    "Bat. Status:\n" +
+				    batterylevel + "%");
+
+	updateViews.setTextViewText(R.id.status,
+				    batteryStatus);
+				    // + "\n" +
+				    // nvisits+ "@"+time);
 	updateViews.setProgressBar(R.id.progress_bar,100,batterylevel,false);
 	// updateViews.setTextViewText(R.id.message,
 	// 			    "Updates: " + nvisits);
