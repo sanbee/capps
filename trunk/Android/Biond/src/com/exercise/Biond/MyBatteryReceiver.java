@@ -22,7 +22,10 @@ import android.app.Notification;
 
 public class MyBatteryReceiver extends BroadcastReceiver
 {
+    private static final int LAYOUT=R.layout.biondwidget_layout;//_tablet_xlarge;
     private static int oldbatterylevel = 0;
+    private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
+
     // private String batteryStatus ="";
     private static int nvisits = 0;
     //    private static final int HELLO_ID = 1;
@@ -47,10 +50,6 @@ public class MyBatteryReceiver extends BroadcastReceiver
 	// mNotificationManager.notify(HELLO_ID, notification);
 
 
-
-
-
-
 	String action = intent.getAction();
 	//	Log.i(TAG, "##### I received intent: " + action);
 	String batteryStatus;
@@ -60,18 +59,19 @@ public class MyBatteryReceiver extends BroadcastReceiver
 	    {
 		nvisits++;
 		batterylevel = intent.getIntExtra("level", 0);
-		if (batterylevel != oldbatterylevel)
+		int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
+		if ((batterylevel != oldbatterylevel) || (status != oldstatus))
 		    {
 			//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
 			oldbatterylevel=batterylevel;
-		
-			int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
+			oldstatus = status;
+
 			String strStatus;
 			if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
 			else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
 			else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
 			else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-			else                                                          batteryStatus = "";
+			else                                                           batteryStatus = "";
 			updateAppWidget(context,batterylevel, batteryStatus);
 		    }
 	    }
@@ -80,7 +80,7 @@ public class MyBatteryReceiver extends BroadcastReceiver
     public void updateAppWidget(Context context,int batterylevel, String batteryStatus)
     {
 	//	Log.i(TAG, "updateAppWidget czall no. " + nvisits);
-	RemoteViews updateViews = new RemoteViews(context.getPackageName(), R.layout.biondwidget_layout);
+	RemoteViews updateViews = new RemoteViews(context.getPackageName(), LAYOUT);
 	Time now = new Time();
 	now.setToNow();
 	String time = now.format("%H:%M:%S");

@@ -18,8 +18,11 @@ import android.os.Bundle;
 public class BiondWidgetProvider extends AppWidgetProvider 
 {
     //    private static final String TAG = "Biond Provider";
+    private static final int LAYOUT=R.layout.biondwidget_layout;//_tablet_xlarge;
 
     private static int oldbatterylevel = 0;
+    private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
+
     private static final String ACTION_TOGGLE_BUTTON="toggleButton";
     private static final String ACTION_NULL="NULL";
     private static int nvisits = 0;
@@ -35,7 +38,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    broadcastMode=!broadcastMode;
 	AppWidgetManager gm = AppWidgetManager.getInstance(context);
 	RemoteViews views_l =  new RemoteViews(context.getPackageName(),
-					       R.layout.biondwidget_layout);
+					       LAYOUT);
 	ComponentName thisWidget = new ComponentName(context,
 						     BiondWidgetProvider.class);
 	int[] allWidgetIds = gm.getAppWidgetIds(thisWidget);
@@ -44,14 +47,14 @@ public class BiondWidgetProvider extends AppWidgetProvider
 		unregisterForClick(context, gm, allWidgetIds, views_l);
 		registerForBroadcast(context, gm, allWidgetIds, views_l);
 		views_l.setTextViewText(R.id.mode,
-					"B'cast");
+					"Auto");
 	    }
 	else
 	    {
 		unRegisterForBroadcast(context, gm, allWidgetIds, views_l);
 		registerForClick(context, gm, allWidgetIds, views_l);
 		views_l.setTextViewText(R.id.mode,
-					"On'Dmnd");
+					"Manual");
 	    }
 	gm.updateAppWidget(thisWidget, views_l);
     	super.onReceive(context,intent);
@@ -66,7 +69,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	//	Log.i(TAG, "########onUpdate called " + broadcastMode);
 	nvisits++;
 	if (views_p == null)
-	    views_p = new RemoteViews(context.getPackageName(), R.layout.biondwidget_layout);
+	    views_p = new RemoteViews(context.getPackageName(), LAYOUT);
 
 	localUpdateWidget(context,views_p);
 	registerForClick(context, appWidgetManager, appWidgetIds, views_p);
@@ -164,13 +167,14 @@ public class BiondWidgetProvider extends AppWidgetProvider
 
 
 	int level = batteryIntent.getIntExtra("level", -1);
-	if (level != oldbatterylevel)
+	int status = batteryIntent.getIntExtra("status",-1);
+	if ((level != oldbatterylevel) || (status != oldstatus))
 	    {
 		oldbatterylevel = level;
+		oldstatus = status;
 
 		double scale = batteryIntent.getIntExtra("scale", -1)/100.0;
 		if (scale > 0) level = (int)(level / scale);
-		int status = batteryIntent.getIntExtra("status",-1);
 		
 		if (status == BatteryManager.BATTERY_STATUS_CHARGING)	        statusStr = "Charging"; 
 		else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)   statusStr = "Dis-charging";
