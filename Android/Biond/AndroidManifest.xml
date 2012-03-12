@@ -3,28 +3,35 @@
 	  package="com.exercise.Biond"
 	  android:versionCode="1"
 	  android:versionName="1.0">
+  
+<application android:name=".BiondApp"
+       android:icon="@drawable/icon"
+       android:label="@string/app_name"
+       android:debuggable="true"
+       >
 
-  <application 
-      android:icon="@drawable/icon" 
-      android:label="@string/app_name" android:debuggable="true">
-
-    <receiver android:name="BiondWidgetProvider" >
+  <!-- <application -->
+  <!--     android:icon="@drawable/icon" -->
+  <!--     android:label="@string/app_name" -->
+  <!--     android:debuggable="true"> -->
+    
+    <receiver android:name=".BiondWidgetProvider" >
       <intent-filter>
 	<action 
 	    android:name="android.appwidget.action.APPWIDGET_UPDATE" />
       </intent-filter>
-      <meta-data 
-	  android:name="android.appwidget.provider"
-	  android:resource="@xml/biondwidgetproviderinfo" />
+      <meta-data
+      	  android:name="android.appwidget.provider"
+      	  android:resource="@xml/biondwidgetproviderinfo" />
     </receiver>
     
-    <service android:name="MyBatteryService" android:label="SBBatteryMonitor">
+    <service android:name=".MyBatteryService" android:label="SBBatteryMonitor">
       <intent-filter>
 	<action android:name="android.intent.action.BATTERY_CHANGED" />
       </intent-filter>
     </service>
-
-    <service android:name="MyScreenService" android:label="SBScreenMonitor">
+    
+    <service android:name=".MyScreenService" android:label="SBScreenMonitor">
       <intent-filter>
 	<action android:name="android.intent.action.SCREEN_ON" />
       </intent-filter>
@@ -32,7 +39,7 @@
 	<action android:name="android.intent.action.SCREEN_OFF" />
       </intent-filter>
     </service>
-
+    
     <!-- <service android:name=".MyBatteryReceiver" android:label="MyBatteryReceiver"> -->
     <!--   <intent-filter> -->
     <!-- 	<action android:name="android.intent.action.BATTERY_CHANGED" /> -->
@@ -49,7 +56,7 @@
     <!-- 	<category android:name="android.intent.category.LAUNCHER" /> -->
     <!--   </intent-filter> -->
     <!-- </activity> -->
-
+    
   </application>
   <uses-sdk android:minSdkVersion="4" />
   <uses-sdk android:targetSdkVersion="14" />
