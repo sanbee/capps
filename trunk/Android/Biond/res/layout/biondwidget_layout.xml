@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	      android:orientation="vertical"
+	      android:background="@drawable/myshape" 
 	      android:layout_width="match_parent"
 	      android:layout_height="match_parent"
-	      android:background="@drawable/myshape" 
 	      >
   <ProgressBar
       android:id="@+id/progress_bar"
@@ -23,7 +23,6 @@
       android:gravity="center"
       android:textColor="#FFFFFF"
       android:textSize="30dp"
-      android:textStyle="bold"
       android:text="Bat. Status"
       android:typeface="sans"
      />
@@ -50,18 +49,19 @@
       android:textSize="14dp"
       android:typeface="sans"
      />
-  <Button
-      android:id="@+id/button"
-      android:layout_width="match_parent"
-      android:layout_height="18dp"
-      android:layout_marginRight="0dp" 
-      android:textSize="15dp"
-      android:gravity="top"
-     />
-
-
 
 </LinearLayout>
+
+  <!-- <Button -->
+  <!--     android:id="@+id/button" -->
+  <!--     android:layout_width="match_parent" -->
+  <!--     android:layout_height="18dp" -->
+  <!--     android:layout_marginRight="0dp"  -->
+  <!--     android:textSize="15dp" -->
+  <!--     android:gravity="top" -->
+  <!--    /> -->
+
+
 <!-- <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" -->
 <!-- 	      android:orientation="vertical" -->
 <!-- 	      android:layout_width="fill_parent" -->
