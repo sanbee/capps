@@ -19,88 +19,122 @@ import android.text.format.Time;
 import android.util.Log;
 import android.app.NotificationManager;
 import android.app.Notification;
+import android.graphics.Color;
+import java.lang.Integer;
 
 public class MyBatteryReceiver extends BroadcastReceiver
 {
-    private static final int LAYOUT=R.layout.biondwidget_layout;//_tablet_xlarge;
-    private static int oldbatterylevel = 0;
-    private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
+    //    private final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
+       private static int oldbatterylevel = 0;
+       private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
 
     // private String batteryStatus ="";
-    private static int nvisits = 0;
     //    private static final int HELLO_ID = 1;
     //    private static final String TAG = "MyBatteryReceiver";
 
+    //
+    //-----------------------------------------------------------
+    //    
     public void onReceive(Context context, Intent intent)
     {
-	// String ns = Context.NOTIFICATION_SERVICE;
-	// NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(ns);
-
-	// CharSequence tickerText = "Hello";
-	// long when = System.currentTimeMillis();
-	// int icon = R.drawable.icon;
-	// Notification notification = new Notification(icon,tickerText,when);
-	// Log.i(TAG, notification.toString());
-	// CharSequence contentTitle = "My notification";
-	// CharSequence contentText = "Hello World!";
-	// Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
-	// PendingIntent contentIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
-
-	// notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
-	// mNotificationManager.notify(HELLO_ID, notification);
-
+	//	Log.i(TAG, "##### I received intent: " + action);
 
 	String action = intent.getAction();
-	//	Log.i(TAG, "##### I received intent: " + action);
-	String batteryStatus;
-	int batterylevel;
+	// int level;
 
 	if (action.equals(Intent.ACTION_BATTERY_CHANGED))
 	    {
-		nvisits++;
-		batterylevel = intent.getIntExtra("level", 0);
+		int level = intent.getIntExtra("level", 0);
 		int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
-		if ((batterylevel != oldbatterylevel) || (status != oldstatus))
-		    {
-			//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
-			oldbatterylevel=batterylevel;
-			oldstatus = status;
+		// RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
+		// 					  myApp(context).LAYOUT);
+		// myApp(context).displayInfo(context, updateViews, level, status);
 
-			String strStatus;
-			if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
-			else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
-			else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
-			else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-			else                                                           batteryStatus = "";
-			updateAppWidget(context,batterylevel, batteryStatus);
-		    }
+
+
+	    	if ((level != oldbatterylevel) || (status != oldstatus))
+	    	    {
+	    		//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
+			String batteryStatus;
+	    		oldbatterylevel=level;
+	    		oldstatus = status;
+
+	    		// if (level >= 30) normalColor=Color.WHITE;
+	    		// else if ((level < 30) && (level >= 20))  normalColor=Color.CYAN;
+	    		// else if ((level < 20) && (level >= 5))  normalColor=Color.YELLOW;
+	    		// else normalColor=Color.RED;
+
+	    		if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
+	    		else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
+	    		else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
+	    		else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
+	    		else                                                           batteryStatus = "";
+	    		updateAppWidget(context, level, batteryStatus);
+	    	    }
 	    }
     }
-
+    //
+    //-----------------------------------------------------------
+    //    
     public void updateAppWidget(Context context,int batterylevel, String batteryStatus)
     {
-	//	Log.i(TAG, "updateAppWidget czall no. " + nvisits);
-	RemoteViews updateViews = new RemoteViews(context.getPackageName(), LAYOUT);
-	Time now = new Time();
-	now.setToNow();
-	String time = now.format("%H:%M:%S");
-	updateViews.setTextViewText(R.id.level,
-				    //				    "Bat. Status:\n" +
-				    batterylevel + "%");
+    	//	Log.i(TAG, "updateAppWidget czall no. " + nvisits);
 
-	updateViews.setTextViewText(R.id.status,
-				    batteryStatus);
-				    // + "\n" +
-				    // nvisits+ "@"+time);
-	updateViews.setProgressBar(R.id.progress_bar,100,batterylevel,false);
-	// updateViews.setTextViewText(R.id.message,
-	// 			    "Updates: " + nvisits);
+    	RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
+    						  myApp(context).LAYOUT);
+    	// Time now = new Time();
+    	// now.setToNow();
+    	// String time = now.format("%H:%M:%S");
+    	updateViews.setTextViewText(R.id.level,
+    				    //				    "Bat. Status:\n" +
+    				    batterylevel + "%");
+
+    	updateViews.setTextViewText(R.id.status,
+    				    batteryStatus);
+    				    // + "\n" +
+    				    // nvisits+ "@"+time);
+    	updateViews.setProgressBar(R.id.progress_bar,100,batterylevel,false);
+    	// updateViews.setTextViewText(R.id.message,
+    	// 			    "Updates: " + nvisits);
 	
-	//		setupOnClickListener(context);
-	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
-	AppWidgetManager manager = AppWidgetManager.getInstance(context);
-	manager.updateAppWidget(myComponentName, updateViews);
+    	//		setupOnClickListener(context);
+    	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
+    	AppWidgetManager manager = AppWidgetManager.getInstance(context);
+    	notify(context, batterylevel);
+    	manager.updateAppWidget(myComponentName, updateViews);
     }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void notify(Context context, int level)
+    {
+	//	Log.i("notify", notification.toString());
 
+	String ns = Context.NOTIFICATION_SERVICE;
+	NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(ns);
 
+	CharSequence tickerText = Integer.toString(level)+"%";
+	long when = System.currentTimeMillis();
+	int icon = R.drawable.icon;
+
+	Notification notification = new Notification(icon,tickerText,when);
+	notification.flags |= Notification.FLAG_ONGOING_EVENT;
+
+	CharSequence contentTitle = "Battery Level";
+
+	CharSequence contentText = Integer.toString(level)+"%";
+	Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
+	PendingIntent contentIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
+
+	notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+	int HELLO_ID=1;
+	mNotificationManager.notify(HELLO_ID, notification);
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public BiondApp myApp(Context context)
+    {
+	return (BiondApp)context.getApplicationContext();
+    }
 }
