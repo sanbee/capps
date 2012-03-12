@@ -24,20 +24,13 @@ import android.graphics.Color;
 
 public class BiondWidgetProvider extends AppWidgetProvider 
 {
-    //    private static final String TAG = "Biond Provider";
-    // private final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
     private final String ACTION_TOGGLE_BUTTON="toggleButton";
     private final String ACTION_NULL="NULL";
 
-    private static int oldbatterylevel = 0;
-    private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
-    //    private static int blinkDelay=200, blinkColor=Color.GREEN, normalColor=Color.WHITE;
-    
     private static RemoteViews views_p=null;
     private static Boolean broadcastMode=true;
 
     private Toast myToast=null;
-    //    private String statusStr ="", batteryLevel="";
     private Context thisContext;
 
     @Override public void onReceive(Context context, Intent intent)
@@ -51,7 +44,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 		broadcastMode=!broadcastMode;
 		modeChanged=true;
 	    }
-	//	Log.i("onReceive: ","####called " + intentAction + " " + broadcastMode);
+
 	AppWidgetManager gm = AppWidgetManager.getInstance(context);
 
 	RemoteViews views_l =  new RemoteViews(context.getPackageName(),
@@ -205,37 +198,8 @@ public class BiondWidgetProvider extends AppWidgetProvider
 
 	int level = batteryIntent.getIntExtra("level", -1);
 	int status = batteryIntent.getIntExtra("status",-1);
-	//	myApp(context).displayInfo(context, views, level, status);
-	if ((level != oldbatterylevel) || (status != oldstatus))
-	    {
-		String statusStr="UNKNOWN";
-		//		Log.i("update","...run" + statusStr);
-		oldbatterylevel = level;
-		oldstatus = status;
-
-		double scale = batteryIntent.getIntExtra("scale", -1)/100.0;
-		if (scale > 0) level = (int)(level / scale);
-		
-		if (level >= 30) myApp(context).normalColor=Color.WHITE;
-		else if ((level < 30) && (level >= 20))  myApp(context).normalColor=Color.CYAN;
-		else if ((level < 20) && (level >= 5))  myApp(context).normalColor=Color.YELLOW;
-		else myApp(context).normalColor=Color.RED;
-		
-		if (status == BatteryManager.BATTERY_STATUS_CHARGING)	        statusStr = "Charging"; 
-		else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)   statusStr = "Dis-charging";
-		else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING)  statusStr = "Not charging";
-		else if (status == BatteryManager.BATTERY_STATUS_FULL)          statusStr = "Full";
-		// Time now = new Time();
-		// now.setToNow();
-		// String time = now.format("%H:%M:%S");
-		
-		views.setProgressBar(R.id.progress_bar,100,level,false);
-
-		views.setTextViewText(R.id.level, level + "%");
-
-		views.setTextViewText(R.id.status, statusStr);
-		// + "\n" +
-	    }
+	//	Log.i("locaUpdate: ", "Level = " + level);
+	myApp(context).displayInfo(context, views, level, status);
 
 	blink(context, R.id.level, 
 	      myApp(context).blinkColor, 
@@ -245,11 +209,11 @@ public class BiondWidgetProvider extends AppWidgetProvider
     //
     //-----------------------------------------------------------
     //    
-    public void blink(Context context, final int textViewId, int blinkcolor, final int normalcolor, int delay)
+    public void blink(Context context, final int textViewId, int blinkColor, final int normalColor, int delay)
     {
 	//	views_p.setInt(R.id.level, "setBackgroundColor", android.graphics.Color.WHITE);
 	//	views_p.setTextColor(R.id.level,blinkcolor);
-	views_p.setTextColor(textViewId,blinkcolor);
+	views_p.setTextColor(textViewId,blinkColor);
 	thisContext = context;
 	final Handler handler = new Handler(); 
 	Timer t = new Timer(); 
@@ -262,7 +226,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 			    public void run() 
 			    { 
 				//				views_p.setTextColor(R.id.level,normalcolor);
-				views_p.setTextColor(textViewId,normalcolor);
+				views_p.setTextColor(textViewId,normalColor);
 				ComponentName thisWidget = new ComponentName(thisContext,
 									     BiondWidgetProvider.class);
 				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(thisContext);
