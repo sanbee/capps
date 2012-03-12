@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	      android:orientation="vertical"
+	      android:background="@drawable/myshape" 
+	      android:layout_width="52dp"
+	      android:layout_height="62dp"
+	      >
+  <ProgressBar
+      android:id="@+id/progress_bar"
+      android:layout_width="match_parent"
+      android:layout_height="5dp"
+      style="@android:style/Widget.ProgressBar.Horizontal"
+      android:layout_marginRight="0dp" 
+      android:max = "100"
+      android:progress = "50"
+      />
+
+  <TextView
+      style="@android:style/TextAppearance.Medium"
+      android:id="@+id/level"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" 
+      android:gravity="center"
+      android:textColor="#FFFFFF"
+      android:textSize="20dp"
+      android:textStyle="bold"
+      android:text="Bat. Status"
+      android:typeface="sans"
+     />
+
+  <TextView
+      style="@android:style/TextAppearance.Medium"
+      android:id="@+id/status"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" 
+      android:gravity="center"
+      android:textColor="#FFFFFF"
+      android:textSize="8dp"
+      android:text="UNKNOWN"
+      android:typeface="sans"
+     />
+
+  <TextView
+      style="@android:style/TextAppearance.Medium"
+      android:id="@+id/mode"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content" 
+      android:gravity="center"
+      android:textColor="#FFFFFF"
+      android:textSize="8dp"
+      android:typeface="sans"
+     />
+  <Button
+      android:id="@+id/button"
+      android:layout_width="match_parent"
+      android:layout_height="18dp"
+      android:layout_marginRight="0dp" 
+      android:textSize="15dp"
+      android:gravity="top"
+     />
+
+</LinearLayout>
