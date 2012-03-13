@@ -1,3 +1,23 @@
+// $Id$
+// ******************************************************************
+// Copyright (c) 2012 S.Bhatnagar
+// 
+// This program is free software; you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation; either version 2 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+// 
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+// 
+// History:
+//       Dark ages version: March, 2012
 package com.exercise.Biond;
 
 import android.app.Service;
@@ -39,6 +59,26 @@ public class MyBatteryReceiver extends BroadcastReceiver
 							  myApp(context).LAYOUT);
 		myApp(context).displayInfo(context, updateViews, level, status);
 		notify(context,level);
+
+	    	// if ((level != oldbatterylevel) || (status != oldstatus))
+	    	//     {
+	    	// 	//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
+		// 	String batteryStatus;
+	    	// 	oldbatterylevel=level;
+	    	// 	oldstatus = status;
+
+	    	// 	// if (level >= 30) normalColor=Color.WHITE;
+	    	// 	// else if ((level < 30) && (level >= 20))  normalColor=Color.CYAN;
+	    	// 	// else if ((level < 20) && (level >= 5))  normalColor=Color.YELLOW;
+	    	// 	// else normalColor=Color.RED;
+
+	    	// 	if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
+	    	// 	else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
+	    	// 	else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
+	    	// 	else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
+	    	// 	else                                                           batteryStatus = "";
+	    	// 	updateAppWidget(context, level, batteryStatus);
+	    	//     }
 	    }
     }
     //
@@ -55,8 +95,15 @@ public class MyBatteryReceiver extends BroadcastReceiver
 	long when = System.currentTimeMillis();
 	int icon = R.drawable.icon;
 
-	Notification notification = new Notification(icon,tickerText,when);
+	//
+	// When tickerText is set to null, notification bar won't
+	// scroll when a notifaction is posted.
+	//
+	Notification notification = new Notification(icon,null/*tickerText*/,when);
 	notification.flags |= Notification.FLAG_ONGOING_EVENT;
+	notification.flags |= Notification.FLAG_NO_CLEAR;
+	// notification.tickerView = new RemoteViews(context.getPackageName(), 
+	// 					  myApp(context).LAYOUT);
 
 	CharSequence contentTitle = "Battery Level";
 
