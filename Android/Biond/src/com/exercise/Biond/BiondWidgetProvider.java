@@ -56,23 +56,27 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    {
 		unregisterForClick(context, gm, allWidgetIds, views_l);
 		registerForBroadcast(context, gm, allWidgetIds, views_l);
-		mode="Auto";
+
+		mode="";        views_l.setTextViewText(R.id.blank, mode);
+
 		views_l.setTextColor(R.id.mode_auto,Color.GREEN);
-		views_l.setTextViewText(R.id.mode_auto, mode);
-		mode="Manual";
+		mode="Auto";    views_l.setTextViewText(R.id.mode_auto, mode);
+
 		views_l.setTextColor(R.id.mode_manual,Color.LTGRAY);
-		views_l.setTextViewText(R.id.mode_manual, mode);
+		mode="Manual";  views_l.setTextViewText(R.id.mode_manual, mode);
 	    }
 	else
 	    {
 		unRegisterForBroadcast(context, gm, allWidgetIds, views_l);
 		registerForClick(context, gm, allWidgetIds, views_l,broadcastMode);
-		mode="Manual";
+
+		mode="";       views_l.setTextViewText(R.id.blank, mode);
+
 		views_l.setTextColor(R.id.mode_manual,Color.GREEN);
-		views_l.setTextViewText(R.id.mode_manual, mode);
-		mode="Auto";
+		mode="Manual"; views_l.setTextViewText(R.id.mode_manual, mode);
+
 		views_l.setTextColor(R.id.mode_auto,Color.LTGRAY);
-		views_l.setTextViewText(R.id.mode_auto, mode);
+		mode="Auto";   views_l.setTextViewText(R.id.mode_auto, mode);
 	    }
 	// if (modeChanged)
 	//     {
@@ -141,8 +145,8 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	//	Log.i(TAG, "unregisteringOnClick");
 	Intent intent = new Intent(context, BiondWidgetProvider.class);
 	intent.setAction(ACTION_NULL);
-	PendingIntent pendingIntent = PendingIntent.getBroadcast
-	    (context, 0, intent, 0);
+	PendingIntent pendingIntent = 
+	    PendingIntent.getBroadcast(context, 0, intent, 0);
 	views.setOnClickPendingIntent(R.id.level, pendingIntent);
 	views.setOnClickPendingIntent(R.id.status, pendingIntent);
 	//	views.setOnClickPendingIntent(R.id.blank, pendingIntent);
@@ -194,7 +198,6 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	//	RemoteViews views_l = new RemoteViews(context.getPackageName(), R.layout.biondwidget_layout);
 	Intent batteryIntent = context.getApplicationContext().registerReceiver
 	    (null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-
 
 	int level = batteryIntent.getIntExtra("level", -1);
 	int status = batteryIntent.getIntExtra("status",-1);

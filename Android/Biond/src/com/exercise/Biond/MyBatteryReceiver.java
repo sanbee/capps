@@ -24,8 +24,6 @@ import java.lang.Integer;
 
 public class MyBatteryReceiver extends BroadcastReceiver
 {
-    // private static int oldbatterylevel = 0;
-    // private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
     //
     //-----------------------------------------------------------
     //    
@@ -41,58 +39,8 @@ public class MyBatteryReceiver extends BroadcastReceiver
 							  myApp(context).LAYOUT);
 		myApp(context).displayInfo(context, updateViews, level, status);
 		notify(context,level);
-
-	    	// if ((level != oldbatterylevel) || (status != oldstatus))
-	    	//     {
-	    	// 	//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
-		// 	String batteryStatus;
-	    	// 	oldbatterylevel=level;
-	    	// 	oldstatus = status;
-
-	    	// 	// if (level >= 30) normalColor=Color.WHITE;
-	    	// 	// else if ((level < 30) && (level >= 20))  normalColor=Color.CYAN;
-	    	// 	// else if ((level < 20) && (level >= 5))  normalColor=Color.YELLOW;
-	    	// 	// else normalColor=Color.RED;
-
-	    	// 	if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-	    	// 	else                                                           batteryStatus = "";
-	    	// 	updateAppWidget(context, level, batteryStatus);
-	    	//     }
 	    }
     }
-    //
-    //-----------------------------------------------------------
-    //    
-    // public void updateAppWidget(Context context,int batterylevel, String batteryStatus)
-    // {
-    // 	//	Log.i(TAG, "updateAppWidget czall no. " + nvisits);
-
-    // 	RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
-    // 						  myApp(context).LAYOUT);
-    // 	// Time now = new Time();
-    // 	// now.setToNow();
-    // 	// String time = now.format("%H:%M:%S");
-    // 	updateViews.setTextViewText(R.id.level,
-    // 				    //				    "Bat. Status:\n" +
-    // 				    batterylevel + "%");
-
-    // 	updateViews.setTextViewText(R.id.status,
-    // 				    batteryStatus);
-    // 				    // + "\n" +
-    // 				    // nvisits+ "@"+time);
-    // 	updateViews.setProgressBar(R.id.progress_bar,100,batterylevel,false);
-    // 	// updateViews.setTextViewText(R.id.message,
-    // 	// 			    "Updates: " + nvisits);
-	
-    // 	//		setupOnClickListener(context);
-    // 	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
-    // 	AppWidgetManager manager = AppWidgetManager.getInstance(context);
-    // 	notify(context, batterylevel);
-    // 	manager.updateAppWidget(myComponentName, updateViews);
-    // }
     //
     //-----------------------------------------------------------
     //    
