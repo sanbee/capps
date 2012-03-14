@@ -151,7 +151,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
 	for (int widgetId : allWidgetIds) 
 	    {
-		appWidgetManager.updateAppWidget(widgetId, views);
+		//		appWidgetManager.updateAppWidget(widgetId, views);
 		context.startService(new Intent(context, MyBatteryService.class));
 		context.startService(new Intent(context, MyScreenService.class));
 	    }

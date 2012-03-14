@@ -37,10 +37,6 @@ import android.os.IBinder;
 import android.widget.RemoteViews;
 import android.text.format.Time;
 import android.util.Log;
-import android.app.NotificationManager;
-import android.app.Notification;
-import android.graphics.Color;
-import java.lang.Integer;
 
 public class MyBatteryReceiver extends BroadcastReceiver
 {
@@ -58,62 +54,8 @@ public class MyBatteryReceiver extends BroadcastReceiver
 		RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
 							  myApp(context).LAYOUT);
 		myApp(context).displayInfo(context, updateViews, level, status);
-		notify(context,level);
-
-	    	// if ((level != oldbatterylevel) || (status != oldstatus))
-	    	//     {
-	    	// 	//			Log.i("New level: "," = " + batterylevel + " " + oldbatterylevel);
-		// 	String batteryStatus;
-	    	// 	oldbatterylevel=level;
-	    	// 	oldstatus = status;
-
-	    	// 	// if (level >= 30) normalColor=Color.WHITE;
-	    	// 	// else if ((level < 30) && (level >= 20))  normalColor=Color.CYAN;
-	    	// 	// else if ((level < 20) && (level >= 5))  normalColor=Color.YELLOW;
-	    	// 	// else normalColor=Color.RED;
-
-	    	// 	if (status == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
-	    	// 	else if (status == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-	    	// 	else                                                           batteryStatus = "";
-	    	// 	updateAppWidget(context, level, batteryStatus);
-	    	//     }
+		//		myApp(context).notify(context,level);
 	    }
-    }
-    //
-    //-----------------------------------------------------------
-    //    
-    public void notify(Context context, int level)
-    {
-	//	Log.i("notify", notification.toString());
-
-	String ns = Context.NOTIFICATION_SERVICE;
-	NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(ns);
-
-	CharSequence tickerText = Integer.toString(level)+"%";
-	long when = System.currentTimeMillis();
-	int icon = R.drawable.icon;
-
-	//
-	// When tickerText is set to null, notification bar won't
-	// scroll when a notifaction is posted.
-	//
-	Notification notification = new Notification(icon,null/*tickerText*/,when);
-	notification.flags |= Notification.FLAG_ONGOING_EVENT;
-	notification.flags |= Notification.FLAG_NO_CLEAR;
-	// notification.tickerView = new RemoteViews(context.getPackageName(), 
-	// 					  myApp(context).LAYOUT);
-
-	CharSequence contentTitle = "Battery Level";
-
-	CharSequence contentText = Integer.toString(level)+"%";
-	Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
-	PendingIntent contentIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
-
-	notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
-	int HELLO_ID=1;
-	mNotificationManager.notify(HELLO_ID, notification);
     }
     //
     //-----------------------------------------------------------

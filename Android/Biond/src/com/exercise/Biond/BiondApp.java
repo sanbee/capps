@@ -21,14 +21,19 @@
 
 package com.exercise.Biond;
 
-import android.graphics.Color;
-import android.app.Application;
 import android.appwidget.AppWidgetManager;
-import android.content.Context;
-import android.widget.RemoteViews;
+import android.app.Application;
+import android.app.NotificationManager;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.content.ComponentName;
-import android.os.BatteryManager;
+import android.content.Context;
+import android.content.Intent;
+import android.widget.RemoteViews;
+import android.graphics.Color;
 import android.util.Log;
+import android.os.BatteryManager;
+import java.lang.Integer;
 
 public class BiondApp extends Application 
 {
@@ -58,7 +63,11 @@ public class BiondApp extends Application
 	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
 	AppWidgetManager manager = AppWidgetManager.getInstance(context);
 	//	notify(context, batteryLevel);
-	if (writeToScreen) manager.updateAppWidget(myComponentName, updateViews);
+	if (writeToScreen) 
+	    {
+		manager.updateAppWidget(myComponentName, updateViews);
+		notify(context,batteryLevel);
+	    }
     }
     //
     //-----------------------------------------------------------------------------------
@@ -84,6 +93,40 @@ public class BiondApp extends Application
 		else                                                              batteryStatus = "";
 	    }
 	globalUpdateAppWidget(context, level, batteryStatus, views,doit);
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void notify(Context context, int level)
+    {
+	//	Log.i("notify", notification.toString());
+
+	String ns = Context.NOTIFICATION_SERVICE;
+	NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(ns);
+
+	CharSequence tickerText = Integer.toString(level)+"%";
+	long when = System.currentTimeMillis();
+	int icon = R.drawable.icon;
+
+	//
+	// When tickerText is set to null, notification bar won't
+	// scroll when a notifaction is posted.
+	//
+	Notification notification = new Notification(icon,null/*tickerText*/,when);
+	notification.flags |= Notification.FLAG_ONGOING_EVENT;
+	notification.flags |= Notification.FLAG_NO_CLEAR;
+	// notification.tickerView = new RemoteViews(context.getPackageName(), 
+	// 					  myApp(context).LAYOUT);
+
+	CharSequence contentTitle = "Battery Level";
+
+	CharSequence contentText = Integer.toString(level)+"%";
+	Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
+	PendingIntent contentIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
+
+	notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+	int HELLO_ID=1;
+	mNotificationManager.notify(HELLO_ID, notification);
     }
 }
 
