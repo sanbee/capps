@@ -50,13 +50,14 @@ public class MyBatteryService extends Service
 
     @Override public void onCreate() 
     {
+	//	Log.i("BetteryService:", "onCreate");
 	super.onCreate();
 	startBatteryReceiver();
     }
     
     @Override public void onDestroy() 
     {
-	//	Log.i(TAG,"onDestroy()");
+	//	Log.i("BetteryService:", "onDestroy");
 	super.onDestroy();
 	stopBatteryReceiver();
     }

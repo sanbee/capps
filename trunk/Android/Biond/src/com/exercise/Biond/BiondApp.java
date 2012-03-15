@@ -40,15 +40,17 @@ public class BiondApp extends Application
     public final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
     public static int blinkDelay=100, blinkColor=Color.GREEN, normalColor=Color.WHITE;
     public static String batteryStatus;
+    public static Boolean batteryServiceIsFresh=true;
 
-    private static int oldbatterylevel = 0;
-    private static int oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
+    private static int oldbatterylevel = 0, oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
+    private final  CharSequence contentTitle = "Battery Level";
+
     //
     //-----------------------------------------------------------------------------------
     //
     public void globalUpdateAppWidget(Context context, int batteryLevel, 
 				      String batteryStatus, RemoteViews updateViews,
-				      Boolean writeToScreen)
+				      Boolean writeToScreen, Boolean rollingNotify)
     {
 	//Log.i("GlobalUpdate: ", "Level = " + batteryLevel + " Status = " + batteryStatus);
 
@@ -62,20 +64,23 @@ public class BiondApp extends Application
 
 	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
 	AppWidgetManager manager = AppWidgetManager.getInstance(context);
-	//	notify(context, batteryLevel);
+
+	//
+	// Change the visible displays: the screen and post a notification.
+	//
 	if (writeToScreen) 
 	    {
 		manager.updateAppWidget(myComponentName, updateViews);
-		notify(context,batteryLevel);
+		notify(context,batteryLevel,rollingNotify);
 	    }
     }
     //
     //-----------------------------------------------------------------------------------
     //
-    public void displayInfo(Context context, RemoteViews views, int level, int status)
+    public void displayInfo(Context context, RemoteViews views, int level, int status, Boolean forceDisplay)
     {
-	//Log.i("New level: "," = " + level + " " + oldbatterylevel);
-	Boolean doit=(level != oldbatterylevel) || (status != oldstatus);
+	Boolean doit=(level != oldbatterylevel) || (status != oldstatus) || forceDisplay;
+	//	Log.i("New level: "," = " + level + " " + oldbatterylevel + doit);
 	if (doit)
 	    {
 		oldbatterylevel=level;
@@ -92,12 +97,12 @@ public class BiondApp extends Application
 		else if (oldstatus == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
 		else                                                              batteryStatus = "";
 	    }
-	globalUpdateAppWidget(context, level, batteryStatus, views,doit);
+	globalUpdateAppWidget(context, level, batteryStatus, views,doit,forceDisplay);
     }
     //
     //-----------------------------------------------------------
     //    
-    public void notify(Context context, int level)
+    public void notify(Context context, int level,Boolean rollingNotify)
     {
 	//	Log.i("notify", notification.toString());
 
@@ -112,13 +117,16 @@ public class BiondApp extends Application
 	// When tickerText is set to null, notification bar won't
 	// scroll when a notifaction is posted.
 	//
-	Notification notification = new Notification(icon,null/*tickerText*/,when);
+	Notification notification;
+	if (rollingNotify)
+	    notification = new Notification(icon,tickerText,when);
+	else
+	    notification = new Notification(icon,null,when);
+	
 	notification.flags |= Notification.FLAG_ONGOING_EVENT;
 	notification.flags |= Notification.FLAG_NO_CLEAR;
 	// notification.tickerView = new RemoteViews(context.getPackageName(), 
 	// 					  myApp(context).LAYOUT);
-
-	CharSequence contentTitle = "Battery Level";
 
 	CharSequence contentText = Integer.toString(level)+"%";
 	Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
