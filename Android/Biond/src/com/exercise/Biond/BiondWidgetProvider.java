@@ -222,7 +222,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	int level = batteryIntent.getIntExtra("level", -1);
 	int status = batteryIntent.getIntExtra("status",-1);
 	//	Log.i("locaUpdate: ", "Level = " + level);
-	myApp(context).displayInfo(context, views, level, status);
+	myApp(context).displayInfo(context, views, level, status, false);
 
 	blink(context, R.id.level, 
 	      myApp(context).blinkColor, 

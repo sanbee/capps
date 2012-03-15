@@ -47,14 +47,25 @@ public class MyBatteryReceiver extends BroadcastReceiver
     {
 	//	Log.i(TAG, "##### I received intent: " + action);
 	String action = intent.getAction();
+	BiondApp myApp=myApp(context);
 	if (action.equals(Intent.ACTION_BATTERY_CHANGED))
 	    {
-		int level = intent.getIntExtra("level", 0);
+		int level  = intent.getIntExtra("level", 0);
 		int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
 		RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
-							  myApp(context).LAYOUT);
-		myApp(context).displayInfo(context, updateViews, level, status);
+							  myApp.LAYOUT);
+		myApp.displayInfo(context, updateViews, level, status, myApp.batteryServiceIsFresh);
 		//		myApp(context).notify(context,level);
+	    }
+	if (myApp.batteryServiceIsFresh==true)
+	    {
+		//		Log.i("Bat:Rec:", "##### Fresh notification issued");
+		int level  = intent.getIntExtra("level", 0);
+		int status = intent.getIntExtra("status", BatteryManager.BATTERY_STATUS_UNKNOWN);
+		RemoteViews updateViews = new RemoteViews(context.getPackageName(), 
+							  myApp.LAYOUT);
+		myApp.displayInfo(context, updateViews, level, status, myApp.batteryServiceIsFresh);
+		myApp.batteryServiceIsFresh=false;
 	    }
     }
     //

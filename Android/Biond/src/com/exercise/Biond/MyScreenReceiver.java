@@ -69,10 +69,18 @@ public class MyScreenReceiver extends BroadcastReceiver
 		//		Log.i("####Screen is ", "on");
 		screenOn = true;
 		//
-		// Stop the service that starts the receiver that
+		// Start the service that starts the receiver that
 		// receivers the ACTION_BATTERY_CHANGED intents.
 		//
 		context.startService(new Intent(context, MyBatteryService.class));
+		myApp(context).batteryServiceIsFresh=true;
 	    }
     };
+    //
+    //-----------------------------------------------------------
+    //    
+    public BiondApp myApp(Context context)
+    {
+	return (BiondApp)context.getApplicationContext();
+    }
 };
