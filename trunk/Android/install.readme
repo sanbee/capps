@@ -29,7 +29,9 @@ o Modify /home/tara/sanjay/Projects/Android/start.sh
 o Make a project
     android create project --package com.example.helloandroid  --activity HelloAndroid --target 7 --path <path-to-your-project>/HelloAndroid 
    
-    android update project -path <PATH>/HelloAndroid #This makes build.xml
+o Update an existing project
+
+    android update project -path <PATH>/HelloAndroid --target 7 #This makes build.xml
 
 o Compile
   [Make sure the emulator is running via the "android" command]
