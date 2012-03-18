@@ -53,11 +53,11 @@ public class BiondWidgetProvider extends AppWidgetProvider
     //
     @Override public void onReceive(Context context, Intent intent)
     {
-	//	Log.i("Biond: ", "#####onReceive called");
-	Boolean modeChanged=false;
+	//Log.i("Biond: ", "#####onReceive called");
 	String intentAction = intent.getAction();
 	String mode;
 	BiondApp myapp=myApp(context);
+	Boolean modeChanged=false;
 
     	super.onReceive(context,intent);
 	if (intent.getAction().equals(myapp.ACTION_TOGGLE_BUTTON))
@@ -67,7 +67,9 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    }
 
 	//	RemoteViews views_l = buildView(context, myApp(context).broadcastMode_g);
-	RemoteViews views_l = myapp.gBuildView(context, myapp.broadcastMode_g);
+	myapp.views_g = myapp.gBuildView(context, myapp.views_g, 
+					 (myapp.views_g == null), 
+					 myapp.broadcastMode_g);
     }
     //
     //------------------------------------------------------------------
@@ -75,7 +77,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
     @Override public void onUpdate(Context context, AppWidgetManager appWidgetManager,
 				   int[] appWidgetIds) 
     {
-	//	Log.i("onUpdate: ", "########onUpdate called " + myApp(context).broadcastMode_g);
+	//Log.i("onUpdate: ", "########onUpdate called " + myApp(context).broadcastMode_g);
 	BiondApp myapp=myApp(context);
 	if (myapp.views_g == null)
 	    {
@@ -85,7 +87,8 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	    }
 
 	//	localUpdateWidget(context, myApp(context).views_g);
-	myapp.globalUpdateWidget(context,myapp.views_g,false);
+	if (myapp.broadcastMode_g.equals(false))
+	    myapp.globalUpdateWidget(context,myapp.views_g,false);
 	myapp.gRegisterForClick(context, 
 				myapp.views_g, 
 				myapp.broadcastMode_g);

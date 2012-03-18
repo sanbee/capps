@@ -78,6 +78,7 @@ public class BiondApp extends Application
 	//
 	if (writeToScreen) 
 	    {
+		//Log.i("writting to screen","rollingNotify = "+rollingNotify);
 		manager.updateAppWidget(myComponentName, updateViews);
 		notify(context,batteryLevel,rollingNotify);
 	    }
@@ -174,20 +175,23 @@ public class BiondApp extends Application
 	displayInfo(context, views_l, level, status, false);
 
 	gBlink(context, R.id.level, 
-	       blinkColor, 
-	       normalColor, 
-	       blinkDelay);
+	       blinkColor, normalColor, blinkDelay);
     }   
     //
     //-----------------------------------------------------------
     //    
-    public RemoteViews gBuildView(Context context, Boolean broadcastMode)
+    public RemoteViews gBuildView(Context context, RemoteViews views_l, Boolean makeNewView,
+				  Boolean broadcastMode)
     {
+	//Log.i("Biond: ", "gBuildView " + broadcastMode);
+
     	String modeStr;
     	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
 
-    	RemoteViews views_l =  new RemoteViews(context.getPackageName(),
-    					       LAYOUT);
+	if (makeNewView)
+	    views_l =  new RemoteViews(context.getPackageName(),
+				       LAYOUT);
+
     	ComponentName thisWidget = new ComponentName(context,
     						     BiondWidgetProvider.class);
     	int[] allWidgetIds = paperPusher.getAppWidgetIds(thisWidget);
@@ -275,7 +279,7 @@ public class BiondApp extends Application
     public void gRegisterForClick(Context context, RemoteViews views, 
 				  Boolean registerOnlyMode)
     {
-	//	Log.i("Biond: ", "#####registeringOnClick");
+	//Log.i("Biond: ", "#####registeringOnClick");
 	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
 	ComponentName thisWidget = new ComponentName(context,
 						     BiondWidgetProvider.class);
