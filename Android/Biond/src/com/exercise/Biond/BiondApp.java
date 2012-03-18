@@ -34,13 +34,17 @@ import android.graphics.Color;
 import android.util.Log;
 import android.os.BatteryManager;
 import java.lang.Integer;
+import android.content.IntentFilter;
 
 public class BiondApp extends Application 
 {
     public final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
     public static int blinkDelay=100, blinkColor=Color.GREEN, normalColor=Color.WHITE;
     public static String batteryStatus;
-    public static Boolean batteryServiceIsFresh=true;
+    public static Boolean batteryServiceIsFresh=true, broadcastMode_g=true;
+    public static RemoteViews views_g=null;
+    public final String ACTION_TOGGLE_BUTTON="toggleButton";
+    public final String ACTION_NULL="NULL";
 
     private static int oldbatterylevel = 0, oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
     private final  CharSequence contentTitle = "Battery Level";
@@ -77,7 +81,8 @@ public class BiondApp extends Application
     //
     //-----------------------------------------------------------------------------------
     //
-    public void displayInfo(Context context, RemoteViews views, int level, int status, Boolean forceDisplay)
+    public void displayInfo(Context context, RemoteViews views, int level, int status, 
+			    Boolean forceDisplay)
     {
 	Boolean doit=(level != oldbatterylevel) || (status != oldstatus) || forceDisplay;
 	//	Log.i("New level: "," = " + level + " " + oldbatterylevel + doit);
@@ -91,11 +96,16 @@ public class BiondApp extends Application
 		else if ((level < 20) && (level >= 5))  normalColor=Color.YELLOW;
 		else                                    normalColor=Color.RED;
 		
-		if (oldstatus == BatteryManager.BATTERY_STATUS_CHARGING)          batteryStatus = "Charging"; 
-		else if (oldstatus == BatteryManager.BATTERY_STATUS_DISCHARGING)  batteryStatus = "Dis-charging";
-		else if (oldstatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING) batteryStatus = "Not charging";
-		else if (oldstatus == BatteryManager.BATTERY_STATUS_FULL)         batteryStatus = "Full";
-		else                                                              batteryStatus = "";
+		if (oldstatus == BatteryManager.BATTERY_STATUS_CHARGING)
+		    batteryStatus = "Charging"; 
+		else if (oldstatus == BatteryManager.BATTERY_STATUS_DISCHARGING)
+		    batteryStatus = "Dis-charging";
+		else if (oldstatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING)
+		    batteryStatus = "Not charging";
+		else if (oldstatus == BatteryManager.BATTERY_STATUS_FULL)
+		    batteryStatus = "Full";
+		else
+		    batteryStatus = "";
 	    }
 	globalUpdateAppWidget(context, level, batteryStatus, views,doit,forceDisplay);
     }
@@ -107,7 +117,8 @@ public class BiondApp extends Application
 	//	Log.i("notify", notification.toString());
 
 	String ns = Context.NOTIFICATION_SERVICE;
-	NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(ns);
+	NotificationManager mNotificationManager = 
+	    (NotificationManager) context.getSystemService(ns);
 
 	CharSequence tickerText = Integer.toString(level)+"%";
 	long when = System.currentTimeMillis();
@@ -129,12 +140,170 @@ public class BiondApp extends Application
 	// 					  myApp(context).LAYOUT);
 
 	CharSequence contentText = Integer.toString(level)+"%";
-	Intent notificationIntent = new Intent(context, MyBatteryReceiver.class);
-	PendingIntent contentIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
+	Intent notificationIntent = 
+	    new Intent(context, MyBatteryReceiver.class);
+	PendingIntent contentIntent = 
+	    PendingIntent.getBroadcast(context, 0, notificationIntent, 0);
 
-	notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+	notification.setLatestEventInfo(context, contentTitle, 
+					contentText, contentIntent);
 	int HELLO_ID=1;
 	mNotificationManager.notify(HELLO_ID, notification);
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void globalUpdateWidget(Context context, RemoteViews views_l, 
+				   Boolean makeNewView)
+    {
+	//	Log.i("Biond: ", "#####localUpdateWidget called");
+
+	if (makeNewView)
+	    views_g = views_l;
+
+	Intent batteryIntent = context.getApplicationContext().registerReceiver
+	    (null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+
+	int level = batteryIntent.getIntExtra("level", -1);
+	int status = batteryIntent.getIntExtra("status",-1);
+	//	Log.i("locaUpdate: ", "Level = " + level);
+	displayInfo(context, views_l, level, status, false);
+
+	// blink(context, R.id.level, 
+	//       blinkColor, 
+	//       normalColor, 
+	//       blinkDelay);
+    }   
+    //
+    //-----------------------------------------------------------
+    //    
+    public RemoteViews gBuildView(Context context, Boolean broadcastMode)
+    {
+    	String modeStr;
+    	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
+
+    	RemoteViews views_l =  new RemoteViews(context.getPackageName(),
+    					       LAYOUT);
+    	ComponentName thisWidget = new ComponentName(context,
+    						     BiondWidgetProvider.class);
+    	int[] allWidgetIds = paperPusher.getAppWidgetIds(thisWidget);
+    	if (broadcastMode_g.equals(true))
+    	    {
+    		gUnregisterForClick(context,   views_l);
+    		gRegisterForBroadcast(context, views_l);
+
+    		modeStr="";        views_l.setTextViewText(R.id.blank, modeStr);
+
+    		views_l.setTextColor(R.id.mode_auto,Color.GREEN);
+    		modeStr="Auto";    views_l.setTextViewText(R.id.mode_auto, modeStr);
+
+    		views_l.setTextColor(R.id.mode_manual,Color.LTGRAY);
+    		modeStr="Manual";  views_l.setTextViewText(R.id.mode_manual, modeStr);
+    	    }
+    	else
+    	    {
+    		gUnRegisterForBroadcast(context, views_l);
+    		gRegisterForClick(context, views_l,broadcastMode);
+
+    		modeStr="";       views_l.setTextViewText(R.id.blank, modeStr);
+
+    		views_l.setTextColor(R.id.mode_manual,Color.GREEN);
+    		modeStr="Manual"; views_l.setTextViewText(R.id.mode_manual, modeStr);
+
+    		views_l.setTextColor(R.id.mode_auto,Color.LTGRAY);
+    		modeStr="Auto";   views_l.setTextViewText(R.id.mode_auto, modeStr);
+    	    }
+    	paperPusher.updateAppWidget(thisWidget, views_l);
+
+    	return views_l;
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void gUnRegisterForBroadcast(Context context, RemoteViews views)
+    {
+	//	Log.i("Biond: ", "#####unregisteringBroadcast");
+	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
+
+	ComponentName thisWidget = new ComponentName(context,
+						     BiondWidgetProvider.class);
+	int[] allWidgetIds = paperPusher.getAppWidgetIds(thisWidget);
+	for (int widgetId : allWidgetIds) 
+	    {
+		context.stopService(new Intent(context, MyBatteryService.class));
+		context.stopService(new Intent(context, MyScreenService.class));
+	    }
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void gRegisterForBroadcast(Context context, RemoteViews views)
+    {
+	//	Log.i("Biond: ", "#####registeringBroadcast");
+	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
+	ComponentName thisWidget = new ComponentName(context,
+						     BiondWidgetProvider.class);
+	int[] allWidgetIds = paperPusher.getAppWidgetIds(thisWidget);
+	for (int widgetId : allWidgetIds) 
+	    {
+		context.startService(new Intent(context, MyBatteryService.class));
+		context.startService(new Intent(context, MyScreenService.class));
+	    }
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void gUnregisterForClick(Context context, RemoteViews views)
+    {
+	//	Log.i("Biond: ", "#####unregisteringOnClick");
+	Intent intent = new Intent(context, BiondWidgetProvider.class);
+	intent.setAction(ACTION_NULL);
+	PendingIntent pendingIntent = 
+	    PendingIntent.getBroadcast(context, 0, intent, 0);
+	views.setOnClickPendingIntent(R.id.level, pendingIntent);
+	views.setOnClickPendingIntent(R.id.status, pendingIntent);
+	//	views.setOnClickPendingIntent(R.id.blank, pendingIntent);
+	//	views.setOnClickPendingIntent(R.id.mode, pendingIntent);
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void gRegisterForClick(Context context, RemoteViews views, 
+				  Boolean registerOnlyMode)
+    {
+	//	Log.i("Biond: ", "#####registeringOnClick");
+	AppWidgetManager paperPusher = AppWidgetManager.getInstance(context);
+	ComponentName thisWidget = new ComponentName(context,
+						     BiondWidgetProvider.class);
+	int[] allWidgetIds = paperPusher.getAppWidgetIds(thisWidget);
+	for (int widgetId : allWidgetIds) 
+	    {
+		if (registerOnlyMode.equals(false))
+		{
+		    Intent intent = new Intent(context, BiondWidgetProvider.class);
+		    intent.setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE);
+		    //intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds);
+		    intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, allWidgetIds);
+		    PendingIntent pendingIntent = PendingIntent.getBroadcast
+			(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		    views.setOnClickPendingIntent(R.id.level,  pendingIntent);
+		    views.setOnClickPendingIntent(R.id.status, pendingIntent);
+		    //		    views.setOnClickPendingIntent(R.id.blank,   pendingIntent);
+		    //		    views.setOnClickPendingIntent(R.id.mode,   pendingIntent);
+		}
+		{
+		    Intent intent = new Intent(context, BiondWidgetProvider.class);
+		    intent.setAction(ACTION_TOGGLE_BUTTON);
+		    PendingIntent pendingIntent = PendingIntent.getBroadcast
+			(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+		    views.setOnClickPendingIntent(R.id.mode_auto,   pendingIntent);
+		    views.setOnClickPendingIntent(R.id.mode_manual,   pendingIntent);
+		    //		    views.setOnClickPendingIntent(R.id.button, pendingIntent);
+		}
+		paperPusher.updateAppWidget(widgetId, views);
+	    }
     }
 }
 
