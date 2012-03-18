@@ -93,7 +93,7 @@
       android:layout_below="@id/status"
       android:gravity="center"
       android:textColor="#FFFFFF"
-      android:textSize="4dp"
+      android:textSize="3dp"
       android:typeface="sans"
       android:text="  "
      />
