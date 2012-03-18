@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.app.Service;
 import android.os.IBinder;
 import android.util.Log;
+import android.content.res.Configuration;
+import android.content.Context;
 
 public class MyScreenService extends Service 
 {
@@ -66,5 +68,25 @@ public class MyScreenService extends Service
     @Override public IBinder onBind(Intent arg0) 
     {
 	return null;
+    }
+    @Override public void onConfigurationChanged(Configuration newConfig) 
+    { 
+	//	Log.i("BatteryService: ", "#####onConfigChanged");
+	BiondApp myApp = myApp(this);
+
+	myApp.views_g = 
+	    myApp.gBuildView(this, myApp.broadcastMode_g);
+	myApp.globalUpdateWidget(this,myApp.views_g,false);
+	myApp.gRegisterForClick(this, 
+				myApp.views_g, 
+				myApp.broadcastMode_g);
+
+	// RemoteViews remoteView = buildRemoteView(this); 
+	// // Push update to home screen 
+	// pushUpdate(remoteView); 
+    } 
+   public BiondApp myApp(Context context)
+    {
+	return (BiondApp)context.getApplicationContext();
     }
 }

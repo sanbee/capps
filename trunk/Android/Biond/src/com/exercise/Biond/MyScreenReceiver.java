@@ -40,14 +40,14 @@ import android.util.Log;
 
 public class MyScreenReceiver extends BroadcastReceiver
 {
-    private static final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
+    //    private static final int LAYOUT=R.layout.biondwidget_layout_relative;//_tablet_xlarge;
     private static Boolean screenOn = true;
     private static int nScreenVisits=0;
 
     @Override public void onReceive(Context context, Intent intent)
     {
 	nScreenVisits++;
-	RemoteViews views_l = new RemoteViews(context.getPackageName(), LAYOUT);
+	RemoteViews views_l = new RemoteViews(context.getPackageName(), myApp(context).LAYOUT);
 	// views_l.setTextViewText(R.id.screen,
 	// 		      "SVisits: " + nScreenVisits);
 	ComponentName myComponentName = new ComponentName(context, BiondWidgetProvider.class);
