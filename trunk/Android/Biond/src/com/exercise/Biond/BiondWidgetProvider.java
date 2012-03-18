@@ -48,7 +48,6 @@ public class BiondWidgetProvider extends AppWidgetProvider
     //    private static Boolean broadcastMode_p=true;
 
     private Toast myToast=null;
-    private Context thisContext;
     //
     //------------------------------------------------------------------
     //
@@ -81,7 +80,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	if (myapp.views_g == null)
 	    {
 		myapp.views_g = new RemoteViews(context.getPackageName(), 
-							 myapp.LAYOUT);
+						myapp.LAYOUT);
 		views_p = myapp.views_g;
 	    }
 
@@ -90,44 +89,6 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	myapp.gRegisterForClick(context, 
 				myapp.views_g, 
 				myapp.broadcastMode_g);
-    }
-    //
-    //-----------------------------------------------------------
-    //    
-    public void blink(Context context, final int textViewId, int blinkColor, 
-		      final int normalColor, int delay)
-    {
-	//	Log.i("Biond: ", "#####blink called");
-	//	views_p.setInt(R.id.level, "setBackgroundColor", android.graphics.Color.WHITE);
-	//	views_p.setTextColor(R.id.level,blinkcolor);
-	// views_p=null;
-	//	views_p = new RemoteViews(context.getPackageName(), myApp(context).LAYOUT);
-	myApp(context).views_g.setTextColor(textViewId,blinkColor);
-	thisContext = context;
-	final Handler handler = new Handler(); 
-	Timer t = new Timer(); 
-	t.schedule(new TimerTask() 
-	    { 
-		public void run() 
-		{ 
-		    handler.post(new Runnable() 
-			{ 
-			    public void run() 
-			    { 
-				//views_p.setTextColor(R.id.level,normalcolor);
-				views_p.setTextColor(textViewId,normalColor);
-				ComponentName thisWidget = new ComponentName(thisContext,
-									     BiondWidgetProvider.class);
-				AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(thisContext);
-				int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
-				for (int widgetId : allWidgetIds) 
-				    appWidgetManager.updateAppWidget(widgetId, 
-								     views_p);
-			    } 
-			}
-			); 
-		} 
-	    }, delay); 
     }
     //
     //-----------------------------------------------------------
