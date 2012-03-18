@@ -35,6 +35,9 @@ import android.util.Log;
 import android.os.BatteryManager;
 import java.lang.Integer;
 import android.content.IntentFilter;
+import java.util.Timer;
+import java.util.TimerTask;
+import android.os.Handler;
 
 public class BiondApp extends Application 
 {
@@ -48,6 +51,7 @@ public class BiondApp extends Application
 
     private static int oldbatterylevel = 0, oldstatus = BatteryManager.BATTERY_STATUS_UNKNOWN;
     private final  CharSequence contentTitle = "Battery Level";
+    private Context thisContext;
 
     //
     //-----------------------------------------------------------------------------------
@@ -169,10 +173,10 @@ public class BiondApp extends Application
 	//	Log.i("locaUpdate: ", "Level = " + level);
 	displayInfo(context, views_l, level, status, false);
 
-	// blink(context, R.id.level, 
-	//       blinkColor, 
-	//       normalColor, 
-	//       blinkDelay);
+	gBlink(context, R.id.level, 
+	       blinkColor, 
+	       normalColor, 
+	       blinkDelay);
     }   
     //
     //-----------------------------------------------------------
@@ -213,7 +217,7 @@ public class BiondApp extends Application
     		views_l.setTextColor(R.id.mode_auto,Color.LTGRAY);
     		modeStr="Auto";   views_l.setTextViewText(R.id.mode_auto, modeStr);
     	    }
-    	paperPusher.updateAppWidget(thisWidget, views_l);
+	paperPusher.updateAppWidget(thisWidget, views_l);
 
     	return views_l;
     }
@@ -304,6 +308,46 @@ public class BiondApp extends Application
 		}
 		paperPusher.updateAppWidget(widgetId, views);
 	    }
+    }
+    //
+    //-----------------------------------------------------------
+    //    
+    public void gBlink(Context context, final int textViewId, int blinkColor, 
+		      final int normalColor, int delay)
+    {
+	//	Log.i("Biond: ", "#####blink called");
+	//	views_p.setInt(R.id.level, "setBackgroundColor", android.graphics.Color.WHITE);
+	//	views_p.setTextColor(R.id.level,blinkcolor);
+	// views_p=null;
+	//	views_p = new RemoteViews(context.getPackageName(), myApp(context).LAYOUT);
+	views_g.setTextColor(textViewId,blinkColor);
+	thisContext = context;
+	final Handler handler = new Handler(); 
+	Timer t = new Timer(); 
+	t.schedule(new TimerTask() 
+	    { 
+		public void run() 
+		{ 
+		    handler.post(new Runnable() 
+			{ 
+			    public void run() 
+			    { 
+				//views_p.setTextColor(R.id.level,normalcolor);
+				views_g.setTextColor(textViewId,normalColor);
+				ComponentName thisWidget = 
+				    new ComponentName(thisContext,
+						      BiondWidgetProvider.class);
+				AppWidgetManager appWidgetManager = 
+				    AppWidgetManager.getInstance(thisContext);
+				int[] allWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+				for (int widgetId : allWidgetIds) 
+				    appWidgetManager.updateAppWidget(widgetId, 
+								     views_g);
+			    } 
+			}
+			); 
+		} 
+	    }, delay); 
     }
 }
 
