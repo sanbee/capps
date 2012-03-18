@@ -28,6 +28,8 @@ import android.os.IBinder;
 import android.util.Log;
 import android.content.res.Configuration;
 import android.content.Context;
+import android.content.ComponentName;
+import android.appwidget.AppWidgetManager;
 
 public class MyScreenService extends Service 
 {
@@ -62,31 +64,30 @@ public class MyScreenService extends Service
 	super.onDestroy();
 	stopScreenReceiver();
     }
+
+    @Override public void onConfigurationChanged(Configuration newConfig) 
+    { 
+	//	Log.i("BatteryService: ", "#####onConfigChanged");
+	BiondApp myApp = getMyApp(this);
+
+	myApp.views_g = 
+	    myApp.gBuildView(this, myApp.views_g, true, myApp.broadcastMode_g);
+	myApp.globalUpdateWidget(this,myApp.views_g,true);
+	
+	myApp.gRegisterForClick(this, 
+				myApp.views_g, 
+				myApp.broadcastMode_g);
+
+    } 
+   public BiondApp getMyApp(Context context)
+    {
+	return (BiondApp)context.getApplicationContext();
+    }
     //
     // This one is requrired -- looks likes a pure virutal
     //
     @Override public IBinder onBind(Intent arg0) 
     {
 	return null;
-    }
-    @Override public void onConfigurationChanged(Configuration newConfig) 
-    { 
-	//	Log.i("BatteryService: ", "#####onConfigChanged");
-	BiondApp myApp = myApp(this);
-
-	myApp.views_g = 
-	    myApp.gBuildView(this, myApp.broadcastMode_g);
-	myApp.globalUpdateWidget(this,myApp.views_g,false);
-	myApp.gRegisterForClick(this, 
-				myApp.views_g, 
-				myApp.broadcastMode_g);
-
-	// RemoteViews remoteView = buildRemoteView(this); 
-	// // Push update to home screen 
-	// pushUpdate(remoteView); 
-    } 
-   public BiondApp myApp(Context context)
-    {
-	return (BiondApp)context.getApplicationContext();
     }
 }
