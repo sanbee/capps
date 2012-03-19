@@ -57,18 +57,14 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	String intentAction = intent.getAction();
 	String mode;
 	BiondApp myapp=myApp(context);
-	Boolean modeChanged=false;
 
     	super.onReceive(context,intent);
 	if (intent.getAction().equals(myapp.ACTION_TOGGLE_BUTTON))
-	    {
-		myapp.broadcastMode_g=!myapp.broadcastMode_g;
-		modeChanged=true;
-	    }
+	    myapp.broadcastMode_g=!myapp.broadcastMode_g;
 
 	//	RemoteViews views_l = buildView(context, myApp(context).broadcastMode_g);
 	myapp.views_g = myapp.gBuildView(context, myapp.views_g, 
-					 (myapp.views_g == null), 
+					 true,//(myapp.views_g == null), 
 					 myapp.broadcastMode_g);
     }
     //
