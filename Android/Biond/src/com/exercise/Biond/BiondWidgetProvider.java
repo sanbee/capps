@@ -58,7 +58,6 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	String mode;
 	BiondApp myapp=myApp(context);
 
-    	super.onReceive(context,intent);
 	if (intent.getAction().equals(myapp.ACTION_TOGGLE_BUTTON))
 	    myapp.broadcastMode_g=!myapp.broadcastMode_g;
 
@@ -66,6 +65,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	myapp.views_g = myapp.gBuildView(context, myapp.views_g, 
 					 true,//(myapp.views_g == null), 
 					 myapp.broadcastMode_g);
+    	super.onReceive(context,intent);
     }
     //
     //------------------------------------------------------------------
