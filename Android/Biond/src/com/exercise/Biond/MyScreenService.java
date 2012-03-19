@@ -20,16 +20,14 @@
 //       Dark ages version: March, 2012
 package com.exercise.Biond;
 
+import android.content.res.Configuration;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
+import android.content.Context;
 import android.content.Intent;
 import android.app.Service;
 import android.os.IBinder;
 import android.util.Log;
-import android.content.res.Configuration;
-import android.content.Context;
-import android.content.ComponentName;
-import android.appwidget.AppWidgetManager;
 
 public class MyScreenService extends Service 
 {
