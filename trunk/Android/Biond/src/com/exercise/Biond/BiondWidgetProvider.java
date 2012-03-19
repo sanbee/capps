@@ -20,43 +20,30 @@
 //       Dark ages version: March, 2012
 package com.exercise.Biond;
 
-import java.lang.Thread;
-import java.lang.Object;
-import java.util.Timer;
-import java.util.TimerTask;
 import android.util.Log;
-import android.os.BatteryManager;
-import android.os.Bundle;
-import android.os.Handler;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
+import android.content.IntentFilter;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.widget.RemoteViews;
-import android.text.format.Time;
-import android.widget.ProgressBar;
-import android.widget.Toast;
-import android.graphics.Color;
+//import android.widget.Toast;
+//import android.graphics.Color;
 
 public class BiondWidgetProvider extends AppWidgetProvider 
 {
     private static RemoteViews views_p=null;
     //    private static Boolean broadcastMode_p=true;
-
-    private Toast myToast=null;
+    //    private Toast myToast=null;
     //
     //------------------------------------------------------------------
     //
     @Override public void onReceive(Context context, Intent intent)
     {
 	//Log.i("Biond: ", "#####onReceive called");
-	String intentAction = intent.getAction();
-	String mode;
 	BiondApp myapp=myApp(context);
+	String mode;
 
 	if (intent.getAction().equals(myapp.ACTION_TOGGLE_BUTTON))
 	    myapp.broadcastMode_g=!myapp.broadcastMode_g;
@@ -85,9 +72,7 @@ public class BiondWidgetProvider extends AppWidgetProvider
 	//	localUpdateWidget(context, myApp(context).views_g);
 	if (myapp.broadcastMode_g.equals(false))
 	    myapp.globalUpdateWidget(context,myapp.views_g,false);
-	myapp.gRegisterForClick(context, 
-				myapp.views_g, 
-				myapp.broadcastMode_g);
+	myapp.gRegisterForClick(context, myapp.views_g, myapp.broadcastMode_g);
     }
     //
     //-----------------------------------------------------------

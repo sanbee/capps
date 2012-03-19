@@ -21,23 +21,23 @@
 
 package com.exercise.Biond;
 
-import android.appwidget.AppWidgetManager;
-import android.app.Application;
 import android.app.NotificationManager;
-import android.app.Notification;
 import android.app.PendingIntent;
+import android.app.Notification;
+import android.app.Application;
+import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
+import android.content.IntentFilter;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
-import android.graphics.Color;
-import android.util.Log;
 import android.os.BatteryManager;
-import java.lang.Integer;
-import android.content.IntentFilter;
-import java.util.Timer;
+import android.graphics.Color;
 import java.util.TimerTask;
 import android.os.Handler;
+import java.lang.Integer;
+import android.util.Log;
+import java.util.Timer;
 
 public class BiondApp extends Application 
 {

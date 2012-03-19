@@ -20,22 +20,11 @@
 //       Dark ages version: March, 2012
 package com.exercise.Biond;
 
-import android.app.Service;
-import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.TextView;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.app.PendingIntent;
-import android.content.IntentFilter;
-import android.os.BatteryManager;
-import android.os.PowerManager;
-import android.os.IBinder;
 import android.widget.RemoteViews;
-import android.text.format.Time;
+import android.os.BatteryManager;
 import android.util.Log;
 
 public class MyBatteryReceiver extends BroadcastReceiver
