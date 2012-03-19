@@ -239,7 +239,19 @@ public class BiondApp extends Application
 	for (int widgetId : allWidgetIds) 
 	    {
 		context.stopService(new Intent(context, MyBatteryService.class));
-		context.stopService(new Intent(context, MyScreenService.class));
+		//
+		// The following service is required to always be
+		// running if the TextView is to be automatically
+		// updated on screen orientation change when in Manual
+		// mode.  It is only required for this purpose when in
+		// Manual mode.  If this service is stopped in Manual
+		// mode (for optimization), then the app has to tapped
+		// once on screen orientation change in Manual mode.
+		// Not a big deal and half-way reasonable behaviour,
+		// in case having this service run all the time
+		// becomes an issue.
+
+		// context.stopService(new Intent(context, MyScreenService.class));
 	    }
     }
     //
