@@ -104,7 +104,7 @@ public class BiondApp extends Application
 		if (oldstatus == BatteryManager.BATTERY_STATUS_CHARGING)
 		    batteryStatus = "Charging"; 
 		else if (oldstatus == BatteryManager.BATTERY_STATUS_DISCHARGING)
-		    batteryStatus = "Dis-charging";
+		    batteryStatus = "Discharging";
 		else if (oldstatus == BatteryManager.BATTERY_STATUS_NOT_CHARGING)
 		    batteryStatus = "Not charging";
 		else if (oldstatus == BatteryManager.BATTERY_STATUS_FULL)
