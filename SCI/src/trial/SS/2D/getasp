@@ -1,2 +1,0 @@
-
-grep -v '^[#F-]' $2 | awk -v N=$1 '{if (NF > 5) if (N < 0) print $0; else if ($4==N) print $0}' -

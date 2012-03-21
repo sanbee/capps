@@ -1,8 +1,0 @@
-- Polar Charts.
-- Non-linear scales.
-
-- Data markers.
-
-- Resizing all the widgets on the canvas (including the GTKPLOT widget
-  when the parent window is resized.
-

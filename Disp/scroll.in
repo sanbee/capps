@@ -1,7 +1,0 @@
-npoints=50
-columns=3
-psize=300,100
-scroll=1
-init
-make
-start

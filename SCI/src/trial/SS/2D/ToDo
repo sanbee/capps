@@ -1,6 +1,0 @@
-1. Do propoer chisq computation
-2. Check for errors when opening files in ssdeconv
-3. Write a glish client to listen to async messages from ssdeconv  [DONE]
-4. When deconvolving small scales, is there an optimization possible?
-5. Get rid of the "stable" Asps from the problem
-6. Try switching on position fitting again
