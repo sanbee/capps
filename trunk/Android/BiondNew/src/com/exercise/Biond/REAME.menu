@@ -1,0 +1,9 @@
+o To disable double-click, uncomment
+   - Line no.138,145: BiondWidgetProvider.java
+   - Line no.196,197,214,215: BiondApp.java
+  
+  Comment out
+   - Line no. 195, 213: BiondApp.java
+   - Line no. 147,93,94: BiondWidgetProvider.java
+
+

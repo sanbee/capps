@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- $Id$ -->
+<!-- ****************************************************************** -->
+<!-- Copyright (c) 2012 S.Bhatnagar -->
+ 
+<!-- This program is free software; you can redistribute it and/or modify -->
+<!-- it under the terms of the GNU General Public License as published by -->
+<!-- the Free Software Foundation; either version 2 of the License, or -->
+<!-- (at your option) any later version. -->
+
+<!-- This program is distributed in the hope that it will be useful, -->
+<!-- but WITHOUT ANY WARRANTY; without even the implied warranty of -->
+<!-- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the -->
+<!-- GNU General Public License for more details. -->
+
+<!-- You should have received a copy of the GNU General Public License -->
+<!-- along with this program; if not, write to the Free Software -->
+<!-- Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA -->
+
+<!-- History: -->
+<!--       Dark ages version: March, 2012 -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	  package="com.exercise.Biond"
+	  android:versionCode="1"
+	  android:versionName="1.0">
+  
+<application android:name=".BiondApp"
+       android:icon="@drawable/icon"
+       android:label="@string/app_name"
+       android:debuggable="true"
+       >
+
+  <!-- <application -->
+  <!--     android:icon="@drawable/icon" -->
+  <!--     android:label="@string/app_name" -->
+  <!--     android:debuggable="true"> -->
+    
+    <receiver android:name=".BiondWidgetProvider" >
+      <intent-filter>
+	<action 
+	    android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+      </intent-filter>
+      <meta-data
+      	  android:name="android.appwidget.provider"
+      	  android:resource="@xml/biondwidgetproviderinfo" />
+    </receiver>
+    
+    <receiver android:name=".BiondBatteryReceiver" >
+      <intent-filter>
+	<action 
+	    android:name="android.appwidget.action.BATTERY_CHANGED" />
+      </intent-filter>
+    </receiver>
+
+    <!-- <activity android:name=".MenuActivity" android:noHistory="false"> -->
+    <!--   <intent-filter> -->
+    <!-- 	<action android:name="android.intent.action.MAIN" /> -->
+    <!-- 	<category android:name="android.intent.category.LAUNCHER" /> -->
+    <!--   </intent-filter> -->
+    <!-- </activity> -->
+
+  </application>
+  <uses-sdk android:minSdkVersion="4" />
+  <uses-sdk android:targetSdkVersion="14" />
+</manifest>
+
+    

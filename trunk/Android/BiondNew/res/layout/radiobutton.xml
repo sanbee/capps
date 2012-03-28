@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+
+  <RadioGroup android:id="@+id/rlist"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent">
+
+    <RadioButton
+	android:id="@+id/button1"
+	android:text="Auto mode"
+	/>
+    <RadioButton
+	android:id="@+id/button2"
+	android:text="Manual mode"
+	/>
+  </RadioGroup>
+</LinearLayout>
