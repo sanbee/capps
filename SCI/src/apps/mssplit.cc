@@ -55,11 +55,14 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, b
       clRetry();
     }
 }
+//
+//-------------------------------------------------------------------------
+//
 void showTableCache()
 {
   const TableCache& cache = PlainTable::tableCache();
   if(cache.ntable()!=0)
-    cerr << endl << "The Table Cache has the following " << cache.ntable() << " entries:"  << endl;
+    cerr << endl << "####WARNING!!!!: The Table Cache has the following " << cache.ntable() << " entries:"  << endl;
   
   for (uInt i=0; i<cache.ntable(); ++i) 
     cerr << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << endl;
@@ -84,22 +87,24 @@ void printBaselineList(Matrix<Int> list,ostream& os)
 //
 void printInfo(MSSelection& msSelection)
 {
-  cout << "Ant1         = " << msSelection.getAntenna1List() << endl
-       << "Ant2         = " << msSelection.getAntenna2List() << endl
-       << "Baselines = "    << msSelection.getBaselineList() << endl
-       << "Field        = " << msSelection.getFieldList()    << endl
-       << "SPW          = " << msSelection.getSpwList()      << endl
-       << "Chan         = " << msSelection.getChanList(NULL,1,True)     << endl
-       << "Scan         = " << msSelection.getScanList()     << endl
-       << "StateObsMode  = " << msSelection.getStateObsModeList()     << endl
-       << "Array        = " << msSelection.getSubArrayList() << endl
-       << "Time         = " << msSelection.getTimeList()     << endl
-       << "UVRange      = " << msSelection.getUVList()       << endl
-       << "UV in meters = " << msSelection.getUVUnitsList()  << endl
-       << "DDIDs        = " << msSelection.getDDIDList()     << endl
-       << "PolMap       = " << msSelection.getPolMap()       << endl
-       << "CorrMap      = " << msSelection.getCorrMap( )     << endl
-       << "StateList    = " << msSelection.getStateObsModeList() << endl;
+  cout << "Ant1         = " << msSelection.getAntenna1List() << endl;
+  cout << "Ant2         = " << msSelection.getAntenna2List() << endl;
+  cout << "Baselines    = " << msSelection.getBaselineList() << endl;
+  cout << "Field        = " << msSelection.getFieldList()    << endl;
+  cout << "SPW          = " << msSelection.getSpwList()      << endl;
+  cout << "Chan         = " << msSelection.getChanList(NULL,1,True)     << endl;
+  cout << "Freq         = " << msSelection.getChanFreqList(NULL,True)     << endl;
+  cout << "Scan         = " << msSelection.getScanList()     << endl;
+  cout << "StateObsMode = " << msSelection.getStateObsModeList()     << endl;
+  cout << "Array        = " << msSelection.getSubArrayList() << endl;
+  cout << "Time         = " << msSelection.getTimeList()     << endl;
+  cout << "UVRange      = " << msSelection.getUVList()       << endl;
+  cout << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
+  cout << "DDIDs        = " << msSelection.getDDIDList()     << endl;
+  cout << "PolMap       = " << msSelection.getPolMap()       << endl;
+  cout << "CorrMap      = " << msSelection.getCorrMap( )     << endl;
+  cout << "StateList    = " << msSelection.getStateObsModeList() << endl;
+  cout << "ObservationIDList    = " << msSelection.getObservationList() << endl;
   //  printBaselineList(msSelection.getBaselineList(),cout);
 }
 //
@@ -122,6 +127,7 @@ int main(int argc, char **argv)
     uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateObsModeStr=observationStr="";
   deepCopy=0;
   fieldStr=spwStr="*";
+  fieldStr=spwStr="";
   UI(restartUI,argc, argv, MSNBuf,OutMSBuf, deepCopy,
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,
      uvdistStr,taqlStr,polnStr,stateObsModeStr,observationStr);
@@ -142,8 +148,8 @@ int main(int argc, char **argv)
     
     MSInterface msInterface(ms);
     MSSelection msSelection;
-    // MSSelectionLogError mssLE;
-    // msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+    MSSelectionLogError mssLE;
+    msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLE);
     try
       {
 	// msSelection.reset(ms,MSSelection::PARSE_NOW,
