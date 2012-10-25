@@ -45,8 +45,7 @@ INCL = -I.                                   \
        -I$(SCIINCLDIR)                       \
        -I$(CLHOME)/include                   \
        -I$(COREROOT)/include/$(CASACORENAME) \
-       -I$(CASAROOT)/include/$(CASACORENAME) \
-       -I$(COREROOT)/include                 \
+       -I$(CASAROOT)/include/$(CASACODENAME) \
        -I$(CASAROOT)/code/include            \
        -I/usr/include/cfitsio                \
        -I/usr/include/ATM                \
@@ -82,7 +81,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 # 	  -laatm
 # #	  $(SYNTHROOT)/lib/libgraphics.a         
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lsynthesis -lcasadbus -lcasadbus -laatm
+		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
