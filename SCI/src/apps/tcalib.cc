@@ -108,7 +108,7 @@ int main(int argc, char **argv)
   // Factory defaults
   //
   jonesType="EP"; spwStr="*"; fieldStr="*";
-  scanStr="";
+  scanStr="*";
 
   UI(restartUI,argc, argv, MSNBuf,CTNBuf,MINBuf, OutCTNBuf, OutDC, 
      fieldStr, timeStr, spwStr, antStr, uvrangeStr, jonesType, Gain, Niter, 
@@ -167,13 +167,14 @@ int main(int argc, char **argv)
 // 		    );  
       calib.selectvis("",     //time
 		      spwStr, //spw
-		      scanStr,//scan
+		      "",//scan
 		      "",     //field
 		      "",     //intent
 		      "",     //ObsId
 		      "",     //baseline
 		      "",     //uvrange
-		      "none");
+		      "");
+//		      "none");
 		      //	      "channel",nchan,start,step); // Old style
       calib.reset(True,True);
       Vector<Int> spwmap(1,-1);

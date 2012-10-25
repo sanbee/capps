@@ -2,7 +2,7 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelectionTools.h>
-#include <msvis/MSVis/SubMS.h>
+#include <synthesis/MSVis/SubMS.h>
 #include <cl.h> // C++ized version
 #include <clinteract.h>
 
