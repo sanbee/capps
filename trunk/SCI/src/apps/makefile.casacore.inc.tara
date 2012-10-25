@@ -1,0 +1,112 @@
+# -*- makefile -*-
+#
+# Most of the user defined variables are here.  More complicated
+# compiler and linker variables are in the makefile.  It is hoped that
+# the end-user will need to set up only this file - but again, it is
+# only a hope. :-)
+#
+ARCH         = linux_64b
+#
+# The instance of CASA pacakge that you want to link to
+#
+CASAHOME     = /home/tara2/sanjay/
+#CASAHOME     = /home/spike2/nelias/
+#CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
+#
+# This is the home of the stand-alone interface library used for
+# embedded user interface (Parafeed --
+# http://code.google.com/p/parafeed)
+#
+CLHOME       = /home/tara/sanjay/Projects/parafeed/linux_gnu
+#
+# The home of the Simple CASA Interface package (stand-alone programs
+# to drive CASA algorithms).
+#
+SCIHOME      = /home/tara/sanjay/bin/
+SCISRC       = /home/tara/sanjay/Projects/capps/SCI
+SCILIBDIR    = $(SCISRC)/src/lib
+SCIINCLDIR   = $(SCISRC)/src/include
+#
+# The CASA distribution used to build the SCI applications (this
+# appends to CASAHOME).
+#
+#CASADISTRO   = casa_active_pristine/
+#SYNTHESISPKG = casa_active_pristine/
+#COREPKG      = casa_active_pristine/
+#DISPLAYPKG   = casa_active_pristine/
+
+#CASADISTRO   = casa_active_personal/sanjay/active/
+#SYNTHESISPKG = casa_active_personal/sanjay/active/
+#COREPKG      = casa_active_personal/sanjay/active/
+#DISPLAYPKG   = casa_active_personal/sanjay/active/
+#
+# Nick's
+#CASADISTRO   = personal/
+#SYNTHESISPKG = personal/
+#COREPKG      = personal/
+#DISPLAYPKG   = personal/
+
+# Urvashi's
+#CASADISTRO   = active/
+#SYNTHESISPKG = active/
+#COREPKG      = active/
+#DISPLAYPKG   =active/
+
+# Sanjay's
+#CASADISTRO   = casa_active_swig/active
+#SYNTHESISPKG = casa_active_swig/active
+#COREPKG      = casa_active_swig/active
+#DISPLAYPKG   = casa_active_swig/active
+
+#CASADISTRO   = casa_daily_cmake/
+#SYNTHESISPKG = casa_daily_cmake/
+#COREPKG      = casa_daily_cmake/
+#DISPLAYPKG   = casa_daily_cmake/
+
+#CASADISTRO   = casa_active_sanjay/active/
+#SYNTHESISPKG = casa_active_sanjay/active/
+#COREPKG      = casa_active_sanjay/active/
+#DISPLAYPKG   = casa_active_sanjay/active/
+
+#CASADISTRO   = casa_active_personal_ardg/
+#SYNTHESISPKG = casa_active_personal_ardg/
+#COREPKG      = casa_active_personal_ardg/
+#DISPLAYPKG   = casa_active_personal_ardg/
+
+CASADISTRO   = casa_active_swig/active/
+SYNTHESISPKG = casa_active_swig/active/
+COREPKG      = casa_active_swig/active/
+DISPLAYPKG   = casa_active_swig/active/
+
+#
+# The CASACore package to link to
+#
+CASACORENAME = casacore
+CASACODENAME = casacode
+WCSPKG       = $(CASAROOT)/$(ARCH)/lib
+PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
+WCSPKG       = /usr/lib64
+PGPLOTPKG    = /usr/lib64
+
+C++          = /usr/bin/g++
+DEFS64       = -DAIPS_64B -DCASA_STANDALONE
+#OPT64        = -m64
+USRLIB       = /usr/lib64
+X11LIB       = /usr/X11R6/lib
+OPT          = -g -O2 $(OPT64)
+
+#---------------------------------------------------------- 
+#
+# Settings below this should not require twiking.  Well...but have a
+# look here if the final linking does not find libraries!
+#
+SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)/$(ARCH)
+COREROOT     = $(CASAHOME)/$(COREPKG)/$(ARCH)
+DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)
+
+CASAROOT     = $(CASAHOME)/$(CASADISTRO)/$(ARCH)
+#QT4HOME      = /usr/local/Trolltech/Qt-4.1.3
+#QT4HOME      = /usr/local/lib
+QT4HOME      = /usr/lib/qt4
+QT4LIBD      = $(QT4HOME)/lib
+SCIBIN       = $(SCIHOME)/linux_gnu/bin
