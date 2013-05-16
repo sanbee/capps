@@ -1,0 +1,54 @@
+# -*- makefile -*-
+#
+# Most of the user defined variables are here.  More complicated
+# compiler and linker variables are in the makefile.  It is hoped that
+# the end-user will need to set up only this file - but again, it is
+# only a hope. :-)
+#
+ARCH         = linux_64b
+#
+# The instance of CASA pacakge that you want to link to
+#
+CASAHOME     = /home/tara2/sanjay/
+#
+# The CASA distribution used to build the SCI applications (this
+# appends to CASAHOME).
+#
+
+CASADISTRO   = casa_active_swig/trunk/
+SYNTHESISPKG = casa_active_swig/trunk/
+COREPKG      = casa_active_swig/trunk/
+DISPLAYPKG   = casa_active_swig/trunk/
+
+#
+# The CASACore package to link to
+#
+CASACORENAME = casacore
+CASACODENAME = casacode
+WCSPKG       = $(CASAROOT)/$(ARCH)/lib
+PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
+WCSPKG       = /usr/lib64
+PGPLOTPKG    = /usr/lib64
+
+C++          = /usr/bin/g++
+DEFS64       = -DAIPS_64B -DCASA_STANDALONE
+#OPT64        = -m64
+USRLIB       = /usr/lib64
+X11LIB       = /usr/X11R6/lib
+OPT          = -g -O2 $(OPT64)
+
+#---------------------------------------------------------- 
+#
+# Settings below this should not require twiking.  Well...but have a
+# look here if the final linking does not find libraries!
+#
+SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)/$(ARCH)
+COREROOT     = $(CASAHOME)/$(COREPKG)/$(ARCH)
+DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)
+
+CASAROOT     = $(CASAHOME)/$(CASADISTRO)/$(ARCH)
+#QT4HOME      = /usr/local/Trolltech/Qt-4.1.3
+#QT4HOME      = /usr/local/lib
+QT4HOME      = /usr/lib/qt4
+QT4LIBD      = $(QT4HOME)/lib
+SCIBIN       = $(SCIHOME)/linux_gnu/bin
