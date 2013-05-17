@@ -163,6 +163,20 @@ namespace casa{
     (ap.aperture)->get(skyJonesBuf);
     IPosition shape = skyJonesBuf.shape().asVector();
 
+    // Pradeep:
+    //
+    // skyJonesBuf is a CASA Array of type Complex.  I have extracted
+    // its shape in the shape variable.  The following code will tell
+    // you: (1) No. of dimensions, and (2) the size of the Array along
+    // each dimension.
+    //   Int nDim = shape.nelements();
+    //   for(Int i=0;i<nDim;i++) cerr << "Size " << i << " = " << shape(i) <<  endl;
+
+    // If you need to get a C-pointer to the storage inside the Array,
+    // you can do that as follows:
+    //  Bool dummy;
+    //  Complex *pointer = skyJonesBuf.getStorage(dummy);
+
     LatticeFFT::cfft2d(*(ap.aperture));
     
     skyMuller(skyJonesBuf, shape, inStokes);
