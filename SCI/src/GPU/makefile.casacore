@@ -51,7 +51,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-SYNTHESISLIBS = -L$(SYNTHROOT)/lib ./AntennaATerm.o ./BeamCalc.o \
+SYNTHESISLIBS = -L$(SYNTHROOT)/lib ./AntennaATerm.o ./BeamCalc.o ./WTerm.o \
 		-lsynthesis -lcasadbus -laatm
 
 
