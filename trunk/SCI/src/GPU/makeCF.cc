@@ -3,6 +3,8 @@
 #include <WTerm.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <casa/OS/Timer.h>
+
 #define OVERSAMPLING 20
 #undef HAS_OMP
 
@@ -17,6 +19,9 @@ int main(int argc, char **argv[])
   //
   // Set up the parameters required to compute the A- and the W-terms.
   //
+  Timer timer;
+  Double timeATerm=0.0, timeWTerm=0.0, timeFFT=0.0, timeResize=0.0;
+
   Float Freq = 1.4e9, pa=-1.2;
   Float sampling=OVERSAMPLING;
   Int bandID= BeamCalc::Instance()->getBandID(Freq,"EVLA");
@@ -52,8 +57,11 @@ int main(int argc, char **argv[])
   // Apply the A-term to a buffer and re-use this buffer with multiple
   // w-terms.
   //
+  timer.mark();
   aat.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
   aat.applyPB(thePB, pa,Freq, bandID, True);
+  timeATerm+=timer.all();
+
   //
   // Apply the w-term to a buffer and then multiply that buffer with
   // the A-term. FFT of the resulting buffer is the CF.  Re-size the
@@ -65,18 +73,27 @@ int main(int argc, char **argv[])
   {
     cfBuf=1.0;
     Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
+    timer.mark();
     wTerm.applySky(theCFMat, iw, cellSize, wScale, theCFMat.shape()(0));///4);
-
+    
     cfBuf *= thePB.get();
     
     theCF.put(cfBuf);
-    LatticeFFT::cfft2d(theCF);
+    timeWTerm+=timer.all();
 
+    timer.mark();
+    LatticeFFT::cfft2d(theCF);
+    timeFFT+=timer.all();
+
+    timer.mark();
     cfBuf=theCF.get();
     resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
+    timeResize+=timer.all();
   }
 
-  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
+  //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
+
+  cerr << "Times: " << "ATerm: " << timeATerm << ", WTerm: " << timeWTerm << ", FFT: " << timeFFT << ", Resize: " << timeResize << endl;
 
   //
   // Write out the CF.  Transform the image co-oridinates to uv-coordinates before saving.
