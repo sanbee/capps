@@ -51,7 +51,13 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-SYNTHESISLIBS = -L$(SYNTHROOT)/lib ./AntennaATerm.o ./BeamCalc.o ./WTerm.o \
+SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o cuda_calls.o 
+
+SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
+		-lsynthesis -lcasadbus -laatm
+
+CUSYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 		-lsynthesis -lcasadbus -laatm
 
 
@@ -61,7 +67,8 @@ CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images        \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
             -lcasa_casa -lflagging -lcasaqt
 
-CASALIBS = $(CORELIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
+CASALIBS = $(CORELIBS) $(SOLIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
+CYCASALIBS = $(CORELIBS) $(CUSOLIBS) $(CUSYNTHESISLIBS) $(DISPLAYLIBS)
 
 CAAPSLIBOBJS = casaChecks.o
 ifneq ($(strip $(SCILIBDIR)),)
@@ -98,7 +105,7 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 #
 # The list of source file names 
 #
-SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc
+SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc 
 SOURCE  = $(wildcard *.cc)
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
@@ -107,6 +114,7 @@ endif
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
 APPS    = $(patsubst %.cc,%,$(SOURCE))
+CUAPPS  = cumakeCF
 #
 # The list object files derived from the list of application in $(APPS)
 #
@@ -134,10 +142,18 @@ $(CAAPSLIBOBJS): %.o: %.cc
 $(OBJECTS): %.o: %.cc 
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
-$(APPS): % : %.o $(CAAPSLIB) 
+$(CUOBJECTS): %.o: %.cu
+	$(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c $< -o $@
+#        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
+
+$(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
 	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
+
+$(CUAPPS): % : %.o $(CAAPSLIB) $(CUCASALIBS)
+	 $(C++) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+	 $(CUCASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #
 #-------------------------------------------------------------------------------------------------
 #
