@@ -144,7 +144,7 @@ $(OBJECTS): %.o: %.cc
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
-	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $< -o $@
+	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $< -o $@
 #        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
 
 $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
