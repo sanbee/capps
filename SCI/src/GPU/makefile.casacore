@@ -52,7 +52,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 
 
 SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
-CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o cuda_calls.o 
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls.o 
 
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 		-lsynthesis -lcasadbus -laatm
@@ -68,7 +68,7 @@ CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images        \
             -lcasa_casa -lflagging -lcasaqt
 
 CASALIBS = $(CORELIBS) $(SOLIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
-CYCASALIBS = $(CORELIBS) $(CUSOLIBS) $(CUSYNTHESISLIBS) $(DISPLAYLIBS)
+CUCASALIBS = $(CORELIBS) $(CUSOLIBS) $(CUSYNTHESISLIBS) $(DISPLAYLIBS)
 
 CAAPSLIBOBJS = casaChecks.o
 ifneq ($(strip $(SCILIBDIR)),)
@@ -114,11 +114,12 @@ endif
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
 APPS    = $(patsubst %.cc,%,$(SOURCE))
-CUAPPS  = cumakeCF
+CUAPPS  = cumakeCF cuda_calls
 #
 # The list object files derived from the list of application in $(APPS)
 #
 OBJECTS = $(patsubst %,%.o,$(APPS))
+CUOBJECTS = $(patsubst %,%.o,$(CUAPPS))
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBOBJS = $(patsubst %.cc, %.o, $(CAAPSLIBSRC))
 endif
@@ -143,7 +144,7 @@ $(OBJECTS): %.o: %.cc
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
-	$(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c $< -o $@
+	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $< -o $@
 #        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
 
 $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
@@ -151,7 +152,7 @@ $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
 	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 
-$(CUAPPS): % : %.o $(CAAPSLIB) $(CUCASALIBS)
+$(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
 	 $(C++) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
 	 $(CUCASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #
