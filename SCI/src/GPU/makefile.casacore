@@ -11,7 +11,19 @@
 HOST := $(shell $(HOSTNAME))
 include makefile.casacore.inc.localhost
 
+
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
+           $(DEFS64)                                        \
+           -DHAVE_QT4                                       \
+           -DAIPS_NEEDS_RETHROW                             \
+           -DAIPS_LINUX                                     \
+           -DAIPS_LITTLE_ENDIAN                             \
+           -DAIPS_STDLIB                                    \
+           -DAIPS_NO_LEA_MALLOC                             \
+           -D_GLIBCPP_DEPRECATED                            \
+	   -DAIPS_AUTO_STL                                  \
+
+CU_CPPFLAGS = $(OPT)                            \
            $(DEFS64)                                        \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
@@ -88,6 +100,8 @@ LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
 	     -Wl,-rpath -Wl,$(QT4LIBD)
 
+CU_LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib 
 
 LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
@@ -98,6 +112,14 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  $(WCSPKG)/libwcs.a                     \
 	  $(PGPLOTPKG)/libpgsbox.so              \
 	  -lQtCore -lQtGui -lQtDBus -lQtDBus_debug -ldbus-c++-1 -lQtXml -lqwt -lgomp
+
+CU_LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+	  -L$(USRLIB)                            \
+	  -lcfitsio -llapack -lblas              \
+	  -L/usr/local/lib -lcpgplot -lpgplot    \
+	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
+	  $(WCSPKG)/libwcs.a                     
+	  
 
 #-------------------------------------------------------------------------------------------------
 # Variables that control the generic targets below
@@ -144,7 +166,7 @@ $(OBJECTS): %.o: %.cc
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
-	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $< -o $@
+	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
 #        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
 
 $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
@@ -153,7 +175,7 @@ $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 
 $(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
-	 $(C++) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+	 $(C++) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) -L $(CUDA_LIB_PATH) $(LDFLAGS_CUDA)\
 	 $(CUCASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #
 #-------------------------------------------------------------------------------------------------
