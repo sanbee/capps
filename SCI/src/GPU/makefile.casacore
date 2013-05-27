@@ -11,6 +11,9 @@
 HOST := $(shell $(HOSTNAME))
 include makefile.casacore.inc.localhost
 
+ACC_FLAGS = -acc -ta=nvidia::cc3x -Minfo=accel
+
+
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
            $(DEFS64)                                        \
@@ -160,10 +163,13 @@ ifneq ($(strip $(SCILIBDIR)),)
 	ar r $(CAAPSLIB) $(CAAPSLIBOBJS)
 endif
 $(CAAPSLIBOBJS): %.o: %.cc
-	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
+	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
 
 $(OBJECTS): %.o: %.cc 
-	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
+	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
+
+#$(OBJECTS): %.o: %.c 
+#	 $(PGC++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
 	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
@@ -171,7 +177,7 @@ $(CUOBJECTS): %.o: %.cu
 
 $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
-	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
+	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) $(CUDAFLAGS) -o $@
 #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 
 $(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)

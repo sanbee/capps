@@ -36,6 +36,7 @@ WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
 C++          = /usr/bin/g++
+PGC++          = /opt/pgi/linux86-64/13.5/bin/pgc++
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -m64
 USRLIB       = /usr/lib64
