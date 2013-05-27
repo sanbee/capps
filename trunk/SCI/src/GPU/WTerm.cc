@@ -46,12 +46,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 
     if (!isNoOp())
       {
+        #pragma acc kernels
 	for (Int iy=-inner/2;iy<inner/2;iy++) 
 	  {
 	    Double m=sampling(1)*Double(iy);
 	    Double msq=m*m;
 #pragma omp parallel default(none) firstprivate(msq,iy) shared(twoPiW,convSize) num_threads(Nth)
     {
+#pragma acc kernel
 #pragma omp for
 	    for (Int ix=-inner/2;ix<inner/2;ix++) 
 	      {

@@ -5,6 +5,9 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/Utils.h>
+//#include "cuda_calls.h"
+
+
 namespace casa{
   
   void AntennaATerm::initAP(ApertureCalcParams& ap)
@@ -174,10 +177,18 @@ namespace casa{
 
     // If you need to get a C-pointer to the storage inside the Array,
     // you can do that as follows:
-    //  Bool dummy;
-    //  Complex *pointer = skyJonesBuf.getStorage(dummy);
+      Bool dummy;
+      Complex *pointer = skyJonesBuf.getStorage(dummy);
+      int NX = shape(0);
+      int NY = shape(1);
 
+
+
+    #ifdef CUDA
+    call_cufft(complex *pointer, int  NX, int NY)    
+    #else
     LatticeFFT::cfft2d(*(ap.aperture));
+    #endif
     
     skyMuller(skyJonesBuf, shape, inStokes);
   }
