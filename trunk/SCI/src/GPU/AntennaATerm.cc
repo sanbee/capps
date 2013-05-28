@@ -5,7 +5,7 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/Utils.h>
-//#include "cuda_calls.h"
+#include "cuda_calls.h"
 
 
 namespace casa{
@@ -185,7 +185,7 @@ namespace casa{
 
 
     #ifdef CUDA
-    call_cufft(complex *pointer, int  NX, int NY)    
+    call_cufft(Complex *pointer, int  NX, int NY);
     #else
     LatticeFFT::cfft2d(*(ap.aperture));
     #endif
