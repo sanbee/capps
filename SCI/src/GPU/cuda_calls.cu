@@ -1,17 +1,19 @@
 #include<cuda_runtime.h>
-
+#include <complex>
 #include "/usr/local/cuda-5.5/include/cufft.h"
-#if 0
+
+
 //CUFFT Call replacing the FFT call in AntenaaAterm.cc file
-int call_cufft(complex *pointer, int  NX, int NY)
+
+int call_cufft(Complex *pointer, int  NX, int NY)
 {
     cufftHandle plan;
-    cufftDoubleComplex *data;
-    data = pointer;
+    //cufftDoubleComplex *data;
+    //data = pointer;
 
     int n[NRANK] = {NX, NY};
 
-    cudaMalloc((void**)&data, sizeof(cufftDoubleComplex)*NX*(NY));
+    cudaMalloc((void**)&pointer, sizeof(cufftDoubleComplex)*NX*(NY));
     if (cudaGetLastError() != cudaSuccess){
         fprintf(stderr, "Cuda error: Failed to allocate\n");
         return;
@@ -29,10 +31,9 @@ int call_cufft(complex *pointer, int  NX, int NY)
     }
 
 
-    if (cufftExecC2C(plan, data, data, CUFFT_FORWARD) != CUFFT_SUCCESS){
+    if (cufftExecC2C(plan, pointer, pointer, CUFFT_FORWARD) != CUFFT_SUCCESS){
         fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
         return;
     }
     return 0;
 }
-#endif
