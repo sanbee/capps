@@ -6,6 +6,7 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include "cuda_calls.h"
+#include "/usr/local/cuda-5.5/include/cufft.h"
 
 
 namespace casa{
@@ -181,14 +182,15 @@ namespace casa{
       Complex *pointer = skyJonesBuf.getStorage(dummy);
       int NX = shape(0);
       int NY = shape(1);
+      int ret;
 
-
-
-    #ifdef CUDA
-    call_cufft(Complex *pointer, int  NX, int NY);
-    #else
-    LatticeFFT::cfft2d(*(ap.aperture));
-    #endif
+    //#ifdef CUDA
+    printf("CUFFT call start, NX=%d, NY=%d pointer=%p\n", NX, NY, pointer);
+    ret = call_cufft((cufftDoubleComplex*)pointer, NX, NY);
+    printf("CUFFT call ends\n");
+   // #else
+    //LatticeFFT::cfft2d(*(ap.aperture));
+    //#endif
     
     skyMuller(skyJonesBuf, shape, inStokes);
   }
