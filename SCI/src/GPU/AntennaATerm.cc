@@ -15,7 +15,7 @@ namespace casa{
   
   void AntennaATerm::initAP(ApertureCalcParams& ap)
   {
-    fftTime_p=0.0;
+    fftTime_p=beamCalcTime_p0.0;
 
     ap.oversamp = 1;
     ap.x0=-13.0; ap.y0=-13.0;
@@ -48,6 +48,7 @@ namespace casa{
       storeImg(name,*(ap_p.aperture));
       storeImg("pbimage.im",pbImage);
     }
+    cerr "ATerm timing breakup: CUFFT = " << fftTime_p << " BeamCalc::calculateAperture = " << beamCalcTime_p << endl;
   }
   
   void AntennaATerm::setApertureParams(ApertureCalcParams& ap,
@@ -101,7 +102,9 @@ namespace casa{
     apertureShape(0) = ap.nx;  apertureShape(1) = ap.ny;
     ap.aperture->resize(apertureShape);
     ap.aperture->set(0.0);
+    timer_p.mark();
     BeamCalc::Instance()->calculateAperture(&ap,inStokes);
+    beamCalcTime_p += timer_p.all();
     // {
     //   string name("aperture.im");
     //   storeImg(name,*(ap_p.aperture));
