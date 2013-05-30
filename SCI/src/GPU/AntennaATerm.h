@@ -6,6 +6,8 @@
 #include <casa/Arrays/Vector.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include "BeamCalc.h"
+#include <casa/OS/Timer.h>
+
 #ifndef SYNTHESIS_ANTENNAATERM_H
 #define SYNTHESIS_ANTENNAATERM_H
 
@@ -13,7 +15,7 @@ namespace casa{
   class AntennaATerm
   {
   public:
-    AntennaATerm () {initAP(ap_p);};
+    AntennaATerm, timer_p() () {initAP(ap_p);};
     ~AntennaATerm () {delete ap_p.aperture;};
     
     void initAP(ApertureCalcParams& ap);
@@ -55,6 +57,8 @@ namespace casa{
 				  IPosition& shape);
   private:
     ApertureCalcParams ap_p;
+    Timer timer_p;
+    Double fftTime_p;
   };
   
 };

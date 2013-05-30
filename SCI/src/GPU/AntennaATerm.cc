@@ -5,6 +5,8 @@
 #include <coordinates/Coordinates/LinearCoordinate.h>
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/Utils.h>
+#include <casa/OS/Timer.h>
+
 #include "cuda_calls.h"
 #include "/usr/local/cuda-5.5/include/cufft.h"
 
@@ -13,6 +15,8 @@ namespace casa{
   
   void AntennaATerm::initAP(ApertureCalcParams& ap)
   {
+    fftTime_p=0.0;
+
     ap.oversamp = 1;
     ap.x0=-13.0; ap.y0=-13.0;
     ap.dx=0.5; ap.dy=0.5;
@@ -185,9 +189,13 @@ namespace casa{
       int ret;
 
     //#ifdef CUDA
-    printf("CUFFT call start, NX=%d, NY=%d pointer=%p\n", NX, NY, pointer);
+    //printf("CUFFT call start, NX=%d, NY=%d pointer=%p\n", NX, NY, pointer);
+    cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << end; 
+    timer_p.mark();
     ret = call_cufft((cufftDoubleComplex*)pointer, NX, NY);
-    printf("CUFFT call ends\n");
+    fftTime_p += timer_p.all();
+    //printf("CUFFT call ends.  CYFFT Time = %lf\n", );
+    cerr <<< "CUFFT call ends.  CYFFT Time = " << fftTime_p << endl;
    // #else
     //LatticeFFT::cfft2d(*(ap.aperture));
     //#endif
