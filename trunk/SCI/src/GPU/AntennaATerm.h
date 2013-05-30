@@ -58,7 +58,7 @@ namespace casa{
   private:
     ApertureCalcParams ap_p;
     Timer timer_p;
-    Double fftTime_p;
+    Double fftTime_p, beamCalcTime_p;
   };
   
 };
