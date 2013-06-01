@@ -15,7 +15,7 @@ namespace casa{
   class AntennaATerm
   {
   public:
-    AntennaATerm, timer_p() () {initAP(ap_p);};
+    AntennaATerm(): timer_p(){initAP(ap_p);};
     ~AntennaATerm () {delete ap_p.aperture;};
     
     void initAP(ApertureCalcParams& ap);
