@@ -190,17 +190,14 @@ namespace casa{
       int NX = shape(0);
       int NY = shape(1);
       int ret;
-
     //#ifdef CUDA
-    //printf("CUFFT call start, NX=%d, NY=%d pointer=%p\n", NX, NY, pointer);
     cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
     timer_p.mark();
-    ret = call_cufft((cufftDoubleComplex*)pointer, NX, NY);
+    ret = call_cufft((cufftComplex*)pointer, NX, NY);
     fftTime_p += timer_p.all();
-    //printf("CUFFT call ends.  CYFFT Time = %lf\n", );
-    cerr << "CUFFT call ends.  CYFFT Time = " << fftTime_p << endl;
+    cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
    // #else
-    //LatticeFFT::cfft2d(*(ap.aperture));
+   // LatticeFFT::cfft2d(*(ap.aperture));
     //#endif
     
     skyMuller(skyJonesBuf, shape, inStokes);
