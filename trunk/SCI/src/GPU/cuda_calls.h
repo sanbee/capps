@@ -4,5 +4,5 @@
 namespace casa
 {
     //CUFFT Call replacing the FFT call in AntenaaAterm.cc file
-    int call_cufft(cufftDoubleComplex *, int  , int );
+    int call_cufft(cufftComplex *, int  , int );
 }
