@@ -122,7 +122,9 @@ CU_LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L/usr/local/lib -lcpgplot -lpgplot    \
 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
 	  $(WCSPKG)/libwcs.a                     
-	  
+
+ACC_FLAGS= -acc -Minfo=accel –ta=nvidia::sm_35
+PGCC=pgc++ $(ACC_FLAGS)
 
 #-------------------------------------------------------------------------------------------------
 # Variables that control the generic targets below
@@ -167,6 +169,9 @@ $(CAAPSLIBOBJS): %.o: %.cc
 
 $(OBJECTS): %.o: %.cc 
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
+
+WTerm.o: WTerm.cc 
+	 $(PGCC) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) WTerm.cc -o WTerm.o
 
 #$(OBJECTS): %.o: %.c 
 #	 $(PGC++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
