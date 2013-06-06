@@ -7,8 +7,8 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
 
-// #include "cuda_calls.h"
-// #include "/usr/local/cuda-5.5/include/cufft.h"
+#include "cuda_calls.h"
+#include "/usr/local/cuda-5.5/include/cufft.h"
 
 
 namespace casa{
