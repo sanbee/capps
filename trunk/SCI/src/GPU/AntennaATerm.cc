@@ -7,8 +7,8 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
 
-#include "cuda_calls.h"
-#include "/usr/local/cuda-5.5/include/cufft.h"
+// #include "cuda_calls.h"
+// #include "/usr/local/cuda-5.5/include/cufft.h"
 
 
 namespace casa{
@@ -193,19 +193,22 @@ namespace casa{
 
      int i;
 
+     Complex tmp=0.0;
      for(i=0;i<NX*NY ; i+=100)
-       cout << pointer[i] << endl;
-
-    //#ifdef CUDA
+       {
+	 if (pointer[i] > tmp) tmp=pointer[i];
+       }
+     cout << "Max = " << tmp << endl;
+    // //#ifdef CUDA
     cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
     timer_p.mark();
     ret = call_cufft((Complex *)pointer, NX, NY);
     fftTime_p += timer_p.all();
     cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
    // #else
-   // LatticeFFT::cfft2d(*(ap.aperture));
+   //     LatticeFFT::cfft2d(*(ap.aperture));
     //#endif
-    
+    skyJonesBuf.putStorage(pointer,dummy);
     skyMuller(skyJonesBuf, shape, inStokes);
   }
   
