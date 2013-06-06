@@ -1,22 +1,41 @@
 #include<cuda_runtime.h>
 #include <complex>
+#include <complex.h>
 #include "/usr/local/cuda-5.5/include/cufft.h"
+#include "AntennaATerm.h"
 
 namespace casa 
 {
     //CUFFT Call replacing the FFT call in AntenaaAterm.cc file
 
-    int call_cufft(cufftComplex *pointer, int  NX, int NY)
+    int call_cufft(Complex *h_pointer, int  NX, int NY)
     {
         printf("Inside Call_cuda.cu file\n");
         cufftHandle plan;
+        cufftComplex *d_pointer;
 
         printf("sizeof(cufftComplex) = %d NX=%d NY=%d\n", sizeof(cufftComplex), NX, NY);
-        cudaMalloc((void**)&pointer, sizeof(cufftComplex)*NX*(NY));
+
+         #if 0 
+        int i=0;
+
+        for(i=0;i<NX*NY;i+=100)
+             cout << h_pointer[i] << endl;
+        #endif
+
+
+        cudaMalloc((void**)&d_pointer, sizeof(cufftComplex)*NX*(NY));
         if (cudaGetLastError() != cudaSuccess){
             fprintf(stderr, "Cuda error: Failed to allocate\n");
             return 0;
         }
+       
+        cudaMemcpy(d_pointer, h_pointer, sizeof(cufftComplex)*NX*(NY), cudaMemcpyHostToDevice);
+        if (cudaGetLastError() != cudaSuccess){
+            fprintf(stderr, "Cuda error: Failed to allocate\n");
+            return 0;
+        }
+        
 
         /* Create a 2D FFT plan. */
         if (cufftPlan2d(&plan, NX, NY, CUFFT_C2C) != CUFFT_SUCCESS){
@@ -30,18 +49,20 @@ namespace casa
             return 0;
         }
 
-        if (cufftExecC2C(plan, (cufftComplex *)pointer, (cufftComplex *)pointer, CUFFT_FORWARD) != CUFFT_SUCCESS){
+        if (cufftExecC2C(plan, d_pointer, d_pointer, CUFFT_FORWARD) != CUFFT_SUCCESS){
             fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
             return 0;
         }
-        if (cudaDeviceSynchronize() != cudaSuccess){
-  	    fprintf(stderr, "Cuda error: Failed to synchronize\n");
-   	    return 0;
+        cudaMemcpy(h_pointer, d_pointer, sizeof(cufftComplex)*NX*(NY), cudaMemcpyDeviceToHost);
+        if (cudaGetLastError() != cudaSuccess){
+            fprintf(stderr, "Cuda error: Failed to allocate\n");
+            return 0;
         }
+       
         printf("After devicesync\n");
 #if 1
         cufftDestroy(plan);
-        cudaFree(pointer);
+        cudaFree(d_pointer);
 #endif
 
         return 0;

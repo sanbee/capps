@@ -190,10 +190,16 @@ namespace casa{
       int NX = shape(0);
       int NY = shape(1);
       int ret;
+
+     int i;
+
+     for(i=0;i<NX*NY ; i+=100)
+       cout << pointer[i] << endl;
+
     //#ifdef CUDA
     cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
     timer_p.mark();
-    ret = call_cufft((cufftComplex*)pointer, NX, NY);
+    ret = call_cufft((Complex *)pointer, NX, NY);
     fftTime_p += timer_p.all();
     cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
    // #else
