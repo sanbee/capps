@@ -16,11 +16,15 @@ namespace casa
 
         printf("sizeof(cufftComplex) = %d NX=%d NY=%d\n", sizeof(cufftComplex), NX, NY);
 
-         #if 0 
+        #if 0 
         int i=0;
 
-        for(i=0;i<NX*NY;i+=100)
-             cout << h_pointer[i] << endl;
+        Complex tmp=0.0;
+        for(i=0;i<NX*NY ; i+=100)
+        {
+             if (h_pointer[i] > tmp) tmp=h_pointer[i];
+        }
+        cout << "Max in cuda_calls= " << tmp << endl;
         #endif
 
 
@@ -44,7 +48,9 @@ namespace casa
         }
 
 
-        if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_NATIVE)!= CUFFT_SUCCESS){
+
+        //if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_NATIVE)!= CUFFT_SUCCESS){
+        if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_FFTW_PADDING)!= CUFFT_SUCCESS){
             fprintf(stderr, "CUFFT Error: Unable to set compatibility mode to native\n");
             return 0;
         }
@@ -64,6 +70,11 @@ namespace casa
         cufftDestroy(plan);
         cudaFree(d_pointer);
 #endif
+#if 0
+        int p;
+        for (p=0;p<NX*NY;p++)
+        cout << "FFTed Data by GPU = " << h_pointer[p] << endl;
+        #endif
 
         return 0;
     }
