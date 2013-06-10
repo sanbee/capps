@@ -6,10 +6,12 @@
 #include <coordinates/Coordinates/DirectionCoordinate.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
+#include <scimath/Mathematics/FFTServer.h>
 
+#ifdef cuda
 #include "cuda_calls.h"
 #include "/usr/local/cuda-5.5/include/cufft.h"
-
+#endif
 
 namespace casa{
   
@@ -196,20 +198,27 @@ namespace casa{
      Complex tmp=0.0;
      for(i=0;i<NX*NY ; i+=100)
        {
+	 //	 cout << pointer[i] << " ";
 	 if (pointer[i] > tmp) tmp=pointer[i];
        }
-     cout << "Max = " << tmp << endl;
-    // //#ifdef CUDA
-    cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
-    timer_p.mark();
-    ret = call_cufft((Complex *)pointer, NX, NY);
-    fftTime_p += timer_p.all();
-    cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
-   // #else
-   //     LatticeFFT::cfft2d(*(ap.aperture));
-    //#endif
-    skyJonesBuf.putStorage(pointer,dummy);
-    skyMuller(skyJonesBuf, shape, inStokes);
+     cout << endl << "Max = " << tmp << " Shape = " << shape << endl;
+     timer_p.mark();
+#ifdef cuda
+     cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
+     ret = call_cufft((Complex *)pointer, NX, NY);
+     cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
+#else
+       LatticeFFT::cfft2d(*(ap.aperture));
+#endif
+
+#ifdef cuda
+       FFTServer<Float, Complex> fftServer;
+       fftServer.flip(skyJonesBuf, False, False);
+#endif
+
+     fftTime_p += timer_p.all();
+     skyJonesBuf.putStorage(pointer,dummy);
+     skyMuller(skyJonesBuf, shape, inStokes);
   }
   
   void AntennaATerm::skyMuller(Array<Complex>& buf,
