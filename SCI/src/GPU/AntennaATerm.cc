@@ -204,6 +204,9 @@ namespace casa{
      cout << endl << "Max = " << tmp << " Shape = " << shape << endl;
      timer_p.mark();
 #ifdef cuda
+     FFTServer<Float, Complex> fftServer;
+     //     flip(skyJonesBuf, True, False);
+
      cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
      ret = call_cufft((Complex *)pointer, NX, NY);
      cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
@@ -212,7 +215,6 @@ namespace casa{
 #endif
 
 #ifdef cuda
-       FFTServer<Float, Complex> fftServer;
        fftServer.flip(skyJonesBuf, False, False);
 #endif
 
