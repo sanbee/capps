@@ -86,9 +86,11 @@ int main(int argc, char **argv[])
      //code needed for computing NX, NY and is "theCF" correct pointer passed here ?
      int flag = 0;
      int ret;
+     Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
+
      FFTServer<Float, Complex> fftServer;
-     ret = call_cufft((Complex *)theCF, NX, NY, flag);
-     fftServer.flip(skyJonesBuf, False, False);
+     ret = call_cufft((Complex *)cfBuf, NX, NY, flag);
+     fftServer.flip(cfBuf, False, False);
 #else
     LatticeFFT::cfft2d(theCF);
 #endif
@@ -119,9 +121,9 @@ int main(int argc, char **argv[])
 }
 
 
-#ifdef HAS_OMP
-#include <omp.h>
-#endif
+// #ifdef HAS_OMP
+// #include <omp.h>
+// #endif
 
   //
   //----------------------------------------------------------------------
@@ -175,9 +177,9 @@ int main(int argc, char **argv[])
     	cfShape[i]=func.shape()[i];
     convSize = cfShape[0];
 
-#ifdef HAS_OMP
-    Nth = max(omp_get_max_threads()-2,1);
-#endif
+// #ifdef HAS_OMP
+//     Nth = max(omp_get_max_threads()-2,1);
+// #endif
     
     Block<Int> maxR(Nth);
 
@@ -189,17 +191,17 @@ int main(int argc, char **argv[])
       {
 	    R0 = R1; R1 -= Nth;
 
-#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
-	    { 
-#pragma omp for
+// #pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
+// 	    { 
+// #pragma omp for
 	      for(R=R0;R>R1;R--)
 		{
-#ifdef HAS_OMP
-		  threadID=omp_get_thread_num();
-#endif
+// #ifdef HAS_OMP
+// 		  threadID=omp_get_thread_num();
+// #endif
 		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, threadID, R, maxR);
 		}
-	    }///omp 	    
+	      //	    }///omp 	    
 
 	    for (uInt th=0;th<Nth;th++)
 	      if (maxR[th] > 0)
