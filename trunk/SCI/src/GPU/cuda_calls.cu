@@ -8,24 +8,14 @@ namespace casa
 {
     //CUFFT Call replacing the FFT call in AntenaaAterm.cc file
 
-    int call_cufft(Complex *h_pointer, int  NX, int NY)
+    int call_cufft(Complex *h_pointer, int  NX, int NY, int flag)
     {
-        printf("Inside Call_cuda.cu file\n");
-        cufftHandle plan;
-        cufftComplex *d_pointer;
-
-        printf("sizeof(cufftComplex) = %d NX=%d NY=%d\n", sizeof(cufftComplex), NX, NY);
-
-        #if 0 
-        int i=0;
-
-        Complex tmp=0.0;
-        for(i=0;i<NX*NY ; i+=100)
+        if (flag == 1)
         {
-             if (h_pointer[i] > tmp) tmp=h_pointer[i];
+            cufftHandle plan;
         }
-        cout << "Max in cuda_calls= " << tmp << endl;
-        #endif
+
+        cufftComplex *d_pointer;
 
 
         cudaMalloc((void**)&d_pointer, sizeof(cufftComplex)*NX*(NY));
@@ -40,17 +30,18 @@ namespace casa
             return 0;
         }
         
-
-        /* Create a 2D FFT plan. */
-        if (cufftPlan2d(&plan, NX, NY, CUFFT_C2C) != CUFFT_SUCCESS){
-            fprintf(stderr, "CUFFT Error: Unable to create plan\n");
-            return 0;
+        if (flag == 1)
+        {
+            /* Create a 2D FFT plan. */
+            if (cufftPlan2d(&plan, NX, NY, CUFFT_C2C) != CUFFT_SUCCESS){
+                fprintf(stderr, "CUFFT Error: Unable to create plan\n");
+                return 0;
+            }
         }
 
 
 
-        //if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_NATIVE)!= CUFFT_SUCCESS){
-        if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_FFTW_PADDING)!= CUFFT_SUCCESS){
+        if (cufftSetCompatibilityMode(plan, CUFFT_COMPATIBILITY_NATIVE)!= CUFFT_SUCCESS){
             fprintf(stderr, "CUFFT Error: Unable to set compatibility mode to native\n");
             return 0;
         }
@@ -59,22 +50,18 @@ namespace casa
             fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
             return 0;
         }
+
         cudaMemcpy(h_pointer, d_pointer, sizeof(cufftComplex)*NX*(NY), cudaMemcpyDeviceToHost);
         if (cudaGetLastError() != cudaSuccess){
             fprintf(stderr, "Cuda error: Failed to allocate\n");
             return 0;
         }
        
-        printf("After devicesync\n");
-#if 1
+        if (flag == 0)
+        {
         cufftDestroy(plan);
+        }
         cudaFree(d_pointer);
-#endif
-#if 0
-        int p;
-        for (p=0;p<NX*NY;p++)
-        cout << "FFTed Data by GPU = " << h_pointer[p] << endl;
-        #endif
 
         return 0;
     }

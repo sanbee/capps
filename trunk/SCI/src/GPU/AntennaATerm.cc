@@ -194,22 +194,20 @@ namespace casa{
       int ret;
 
      int i;
+    
 
      Complex tmp=0.0;
      for(i=0;i<NX*NY ; i+=100)
        {
-	 //	 cout << pointer[i] << " ";
 	 if (pointer[i] > tmp) tmp=pointer[i];
        }
      cout << endl << "Max = " << tmp << " Shape = " << shape << endl;
+
      timer_p.mark();
 #ifdef cuda
+     int flag_fft = 1;
      FFTServer<Float, Complex> fftServer;
-     //     flip(skyJonesBuf, True, False);
-
-     cerr << "CUFFT call start, NX = " << NX << " NY = " << NY << " pointer = " << pointer << endl; 
-     ret = call_cufft((Complex *)pointer, NX, NY);
-     cerr << "CUFFT call ends.  CYFFT Time = \n" << fftTime_p << endl;
+     ret = call_cufft((Complex *)pointer, NX, NY, flag_fft);
 #else
        LatticeFFT::cfft2d(*(ap.aperture));
 #endif
@@ -219,6 +217,7 @@ namespace casa{
 #endif
 
      fftTime_p += timer_p.all();
+     cerr << "CUFFT call ends.  CUFFT Time = \n" << fftTime_p << endl;
      skyJonesBuf.putStorage(pointer,dummy);
      skyMuller(skyJonesBuf, shape, inStokes);
   }
