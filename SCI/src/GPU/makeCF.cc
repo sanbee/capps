@@ -82,7 +82,16 @@ int main(int argc, char **argv[])
     timeWTerm+=timer.all();
 
     timer.mark();
+#ifdef cuda
+     //code needed for computing NX, NY and is "theCF" correct pointer passed here ?
+     int flag = 0;
+     int ret;
+     FFTServer<Float, Complex> fftServer;
+     ret = call_cufft((Complex *)theCF, NX, NY, flag);
+     fftServer.flip(skyJonesBuf, False, False);
+#else
     LatticeFFT::cfft2d(theCF);
+#endif
     timeFFT+=timer.all();
 
     timer.mark();
@@ -260,8 +269,8 @@ int main(int argc, char **argv[])
     Int bot=(Int)(ConvFuncOrigin-sampling*xSupport-supportBuffer),//-convSampling/2, 
       top=(Int)(ConvFuncOrigin+sampling*xSupport+supportBuffer);//+convSampling/2;
     //    bot *= 2; top *= 2;
-    bot = max(0,bot);
-    top = min(top, func.shape()(0)-1);
+    bot = casa::max(0,bot);
+    top = casa::min(top, func.shape()(0)-1);
     
     Array<Complex> tmp;
     IPosition blc(4,bot,bot,0,0), trc(4,top,top,0,0);
