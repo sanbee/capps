@@ -4,6 +4,9 @@
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <casa/OS/Timer.h>
+#include "cuda_calls.h"
+
+#include <scimath/Mathematics/FFTServer.h>
 
 #define OVERSAMPLING 20
 #undef HAS_OMP
@@ -89,7 +92,7 @@ int main(int argc, char **argv[])
      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
 
      FFTServer<Float, Complex> fftServer;
-     ret = call_cufft((Complex *)cfBuf, NX, NY, flag);
+     ret = call_cufft(cfBuf, NX, NY, flag);
      fftServer.flip(cfBuf, False, False);
 #else
     LatticeFFT::cfft2d(theCF);
