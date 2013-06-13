@@ -92,7 +92,9 @@ int main(int argc, char **argv[])
      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
 
      FFTServer<Float, Complex> fftServer;
-     ret = call_cufft(cfBuf, NX, NY, flag);
+     Bool dummy;
+     Complex *cfBufPointer = cfBuf.getStorage(dummy);
+     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
      fftServer.flip(cfBuf, False, False);
 #else
     LatticeFFT::cfft2d(theCF);
