@@ -10,10 +10,10 @@ namespace casa
 
     int call_cufft(Complex *h_pointer, int  NX, int NY, int flag)
     {
-        if (flag == 1)
-        {
+        //if (flag == 1)
+        //{
             cufftHandle plan;
-        }
+        //}
 
         cufftComplex *d_pointer;
 
@@ -30,7 +30,7 @@ namespace casa
             return 0;
         }
         
-        if (flag == 1)
+        //if (flag == 1)
         {
             /* Create a 2D FFT plan. */
             if (cufftPlan2d(&plan, NX, NY, CUFFT_C2C) != CUFFT_SUCCESS){
@@ -57,7 +57,7 @@ namespace casa
             return 0;
         }
        
-        if (flag == 0)
+        //if (flag == 0)
         {
         cufftDestroy(plan);
         }
