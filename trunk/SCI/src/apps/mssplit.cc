@@ -89,7 +89,7 @@ void printInfo(MSSelection& msSelection)
 {
   cout << "Ant1         = " << msSelection.getAntenna1List() << endl;
   cout << "Ant2         = " << msSelection.getAntenna2List() << endl;
-  cout << "Baselines    = " << msSelection.getBaselineList() << endl;
+  //  cout << "Baselines    = " << msSelection.getBaselineList() << endl;
   cout << "Field        = " << msSelection.getFieldList()    << endl;
   cout << "SPW          = " << msSelection.getSpwList()      << endl;
   cout << "Chan         = " << msSelection.getChanList(NULL,1,True)     << endl;
@@ -148,8 +148,9 @@ int main(int argc, char **argv)
     
     MSInterface msInterface(ms);
     MSSelection msSelection;
-    MSSelectionLogError mssLE;
-    msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLE);
+    MSSelectionLogError mssLEA,mssLES;
+    msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
+    msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
     try
       {
 	// msSelection.reset(ms,MSSelection::PARSE_NOW,
