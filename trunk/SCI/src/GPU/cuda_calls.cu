@@ -1,10 +1,12 @@
-#include<cuda_runtime.h>
-#include <complex>
-#include <complex.h>
-#include "/usr/local/cuda-5.5/include/cufft.h"
+// -*- C -*-
+#include <cuda_runtime.h>
+//#include <complex>
+//#include <complex.h>
+#include "/home/tesla/cuda-5.0/include/cufft.h"
+//#include <cufft.h>
 #include "AntennaATerm.h"
 
-namespace casa 
+namespace casa
 {
     //CUFFT Call replacing the FFT call in AntenaaAterm.cc file
 
@@ -50,6 +52,8 @@ namespace casa
             fprintf(stderr, "CUFFT Error: Unable to execute plan\n");
             return 0;
         }
+
+	cudaThreadSynchronize();
 
         cudaMemcpy(h_pointer, d_pointer, sizeof(cufftComplex)*NX*(NY), cudaMemcpyDeviceToHost);
         if (cudaGetLastError() != cudaSuccess){

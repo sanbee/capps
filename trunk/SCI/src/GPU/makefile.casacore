@@ -15,7 +15,7 @@ ACC_FLAGS = -acc -ta=nvidia::cc3x -Minfo=accel
 
 
 
-CPPFLAGS = $(OPT) -Wno-deprecated                           \
+CPPFLAGS = $(OPT)                                           \
            $(DEFS64)                                        \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
@@ -38,9 +38,9 @@ CU_CPPFLAGS = $(OPT)                            \
 	   -DAIPS_AUTO_STL                                  \
 
 
-PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
-	  -DPYTHONVER=\"2.5\"                                               \
-	  -DPYTHONLIB=\"/export/home/langur/sbhatnag/casa_rnd/linux_gnu/lib:/export/home/langur/sbhatnag/casa_rnd/linux_gnu/libexec/python\"
+# PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
+# 	  -DPYTHONVER=\"2.5\" \
+# 	  -DPYTHONLIB=\"/export/home/langur/sbhatnag/casa_rnd/linux_gnu/lib:/export/home/langur/sbhatnag/casa_rnd/linux_gnu/libexec/python\"
 
 PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/include/boost_python -I$(USRLIB)/casapy/lib/python2.5/site-packages/numpy/core/include
 
@@ -53,12 +53,13 @@ INCL = -I.                                   \
        -I$(CASAROOT)/include/$(CASACODENAME) \
        -I$(CASAROOT)/code/include            \
        -I/usr/include/cfitsio                \
-       -I/usr/include/ATM                \
-       -I$(QT4HOME)/include                  \
+       -I/usr/include/ATM                    
+#       -I$(QT4HOME)/include                  \
        -I$(QT4HOME)/include/QtCore           \
        -I$(QT4HOME)/include/QtGui            \
        -I$(QT4HOME)/include/QtXml            \
-       -I$(QT4HOME)/include/qwt
+       -I$(QT4HOME)/include/qwt              \
+       -I$(INCLUDES_CUDA) 
 
 DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  -lcasaqt \
@@ -67,7 +68,8 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 
 
 SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
-CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls.o 
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls_new.o ./Utils.o
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o
 
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 		-lsynthesis -lcasadbus -laatm
@@ -80,10 +82,14 @@ CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images        \
             -lcasa_components -lcasa_coordinates -lcasa_lattices \
             -lcasa_fits -lcasa_measures \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
-            -lcasa_casa -lflagging -lcasaqt
+            -lcasa_casa 
+#-lflagging 
+#-lcasaqt
 
-CASALIBS = $(CORELIBS) $(SOLIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
-CUCASALIBS = $(CORELIBS) $(CUSOLIBS) $(CUSYNTHESISLIBS) $(DISPLAYLIBS)
+CASALIBS = $(CORELIBS) $(SOLIBS) $(SYNTHESISLIBS) 
+#$(DISPLAYLIBS)
+CUCASALIBS = $(CORELIBS) $(CUSOLIBS) $(CUSYNTHESISLIBS) 
+#$(DISPLAYLIBS)
 
 CAAPSLIBOBJS = casaChecks.o
 ifneq ($(strip $(SCILIBDIR)),)
@@ -99,29 +105,36 @@ UILIBS = $(CLHOME)/lib/libshccl.a                 \
 	 -lreadline -lhistory -ltermcap -lm -lfl -lc
 endif
 
+# LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+# 	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+# 	     -Wl,-rpath -Wl,$(QT4LIBD)
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
-	     -Wl,-rpath -Wl,$(QT4LIBD)
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(USRLIB)/casapy/lib:/usr/local/lib:
 
 CU_LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib 
 
+# LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+# 	  -L$(USRLIB)                            \
+# 	  -L$(QT4LIBD)                           \
+# 	  -lcfitsio -llapack -lblas              \
+# 	  -L/usr/local/lib -lcpgplot -lpgplot    \
+# 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
+# 	  $(WCSPKG)/libwcs.a                     \
+# 	  $(PGPLOTPKG)/libpgsbox.so              
+# 	  -lQtCore -lQtGui -lQtDBus -lQtDBus_debug -ldbus-c++-1 -lQtXml -lqwt -lgomp
+
 LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
-	  -L$(QT4LIBD)                           \
 	  -lcfitsio -llapack -lblas              \
-	  -L/usr/local/lib -lcpgplot -lpgplot    \
-	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
 	  $(WCSPKG)/libwcs.a                     \
-	  $(PGPLOTPKG)/libpgsbox.so              \
-	  -lQtCore -lQtGui -lQtDBus -lQtDBus_debug -ldbus-c++-1 -lQtXml -lqwt -lgomp
 
 CU_LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
 	  -lcfitsio -llapack -lblas              \
-	  -L/usr/local/lib -lcpgplot -lpgplot    \
-	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
 	  $(WCSPKG)/libwcs.a                     
+	  # -L/usr/local/lib -lcpgplot -lpgplot    \
+	  # -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
 
 ACC_FLAGS= -acc -Minfo=accel –ta=nvidia::sm_35
 PGCC=pgc++ $(ACC_FLAGS)
@@ -132,7 +145,7 @@ PGCC=pgc++ $(ACC_FLAGS)
 #
 # The list of source file names 
 #
-SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc 
+SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc tBusBW.cu
 SOURCE  = $(wildcard *.cc)
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
@@ -141,7 +154,7 @@ endif
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
 APPS    = $(patsubst %.cc,%,$(SOURCE))
-CUAPPS  = cumakeCF cuda_calls
+CUAPPS  = cumakeCF cuda_calls_new Utils cuUtils tBusBW
 #
 # The list object files derived from the list of application in $(APPS)
 #
@@ -168,25 +181,28 @@ $(CAAPSLIBOBJS): %.o: %.cc
 	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
 
 $(OBJECTS): %.o: %.cc 
-	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
+	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(INCLUDES_CUDA) $< -o $@
 
-WTerm.o: WTerm.cc 
-	 $(PGCC) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) WTerm.cc -o WTerm.o
+# WTerm.o: WTerm.cc 
+# 	 $(PGCC) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) WTerm.cc -o WTerm.o
 
-#$(OBJECTS): %.o: %.c 
-#	 $(PGC++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
+#$(OBJECTS): %.o: %.cc
+#	 $(C++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
 	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
 #        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
 
-$(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
-	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
-	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) $(CUDAFLAGS) -o $@
-#	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
+# $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
+# 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+# 	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) $(CUDAFLAGS) -o $@
+# #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 
-$(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
+$(APPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
 	 $(C++) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) -L $(CUDA_LIB_PATH) $(LDFLAGS_CUDA)\
+	 $(CUCASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
+$(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
+	 $(NVCC) $< $(CUDAFLAGS) $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) -L $(CUDA_LIB_PATH) $(LDFLAGS_CUDA)\
 	 $(CUCASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
 #
 #-------------------------------------------------------------------------------------------------

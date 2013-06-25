@@ -4,7 +4,9 @@
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <casa/OS/Timer.h>
-#include "cuda_calls.h"
+#ifdef cuda
+#include <cuda_calls.h>
+#endif
 
 #include <scimath/Mathematics/FFTServer.h>
 
@@ -17,7 +19,7 @@ using namespace casa;
 Bool resizeCF(Array<Complex>& func, Int& xSupport, Int& ySupport,
 	      const Float& sampling, const Complex& peak);
 
-int main(int argc, char **argv[])
+int main(int argc, char *argv[])
 {
   //
   // Set up the parameters required to compute the A- and the W-terms.
@@ -84,17 +86,28 @@ int main(int argc, char **argv[])
     theCF.put(cfBuf);
     timeWTerm+=timer.all();
 
-    timer.mark();
-#ifdef cuda
-     //code needed for computing NX, NY and is "theCF" correct pointer passed here ?
-     int flag = 0;
-     int ret;
      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
+    cerr << NX << " " << NY << " " << max(theCFMat) << endl;
+
+#ifdef cuda
+     Bool dummy;
+     int flag = 1,ret;
 
      FFTServer<Float, Complex> fftServer;
-     Bool dummy;
-     Complex *cfBufPointer = cfBuf.getStorage(dummy);
-     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
+     Complex *cfBufPointer = theCFMat.getStorage(dummy);
+     //     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
+
+
+     //     ret = call_cufft((cufftComplex*)cfBufPointer, NX, NY, flag);
+
+
+     //     theCFMat.putStorage(cfBufPointer,dummy);
+     //     fftServer.flip(cfBuf, False, False);
+
+     aat.cfft2d(theCF);
+
+     timer.mark();
+     theCF.get(cfBuf);
      fftServer.flip(cfBuf, False, False);
 #else
     LatticeFFT::cfft2d(theCF);
@@ -109,7 +122,7 @@ int main(int argc, char **argv[])
 
   //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
 
-  cerr << "Times: " << "ATerm: " << timeATerm << ", WTerm: " << timeWTerm << ", FFT: " << timeFFT << ", Resize: " << timeResize << endl;
+  cerr << "Times: " << "ATerm: " << timeATerm << ", WTerm: " << timeWTerm << ", Flip: " << timeFFT << ", Resize: " << timeResize << endl;
 
   //
   // Write out the CF.  Transform the image co-oridinates to uv-coordinates before saving.

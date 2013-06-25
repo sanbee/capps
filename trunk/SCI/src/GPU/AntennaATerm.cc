@@ -7,10 +7,12 @@
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
 #include <scimath/Mathematics/FFTServer.h>
+#include <cuLatticeFFT.h>
 
 #ifdef cuda
 #include "cuda_calls.h"
-#include "/usr/local/cuda-5.5/include/cufft.h"
+//#include "/usr/local/cuda-5.5/include/cufft.h"
+#include <cufft.h>
 #endif
 
 namespace casa{
@@ -189,8 +191,8 @@ namespace casa{
     // you can do that as follows:
       Bool dummy;
       Complex *pointer = skyJonesBuf.getStorage(dummy);
-      int NX = shape(0);
-      int NY = shape(1);
+      Int NX = shape(0);
+      Int NY = shape(1);
       int ret;
 
      int i;
@@ -203,22 +205,26 @@ namespace casa{
        }
      cout << endl << "Max = " << tmp << " Shape = " << shape << endl;
 
+     cufft_p.init(NX,NY);
      timer_p.mark();
 #ifdef cuda
      int flag_fft = 1;
      FFTServer<Float, Complex> fftServer;
-     ret = call_cufft((Complex *)pointer, NX, NY, flag_fft);
+     //     ret = call_cufft((Complex *)pointer, NX, NY, flag_fft);
+
+     //     ret = call_cufft((cufftComplex *)pointer, NX, NY, flag_fft);
+
+     cufft_p.cfft2d(*(ap.aperture));
+     ap.aperture->get(skyJonesBuf);
+     //     fftServer.flip(skyJonesBuf, False, False);
 #else
        LatticeFFT::cfft2d(*(ap.aperture));
 #endif
 
-#ifdef cuda
-       fftServer.flip(skyJonesBuf, False, False);
-#endif
 
      fftTime_p += timer_p.all();
-     cerr << "CUFFT call ends.  CUFFT Time = \n" << fftTime_p << endl;
-     skyJonesBuf.putStorage(pointer,dummy);
+     cerr << "CUFFT call ends.  CUFFT Time = " << fftTime_p << endl;
+     //     skyJonesBuf.putStorage(pointer,dummy);
      skyMuller(skyJonesBuf, shape, inStokes);
   }
   
