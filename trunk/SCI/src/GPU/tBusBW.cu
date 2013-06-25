@@ -117,8 +117,8 @@ int main(int argc, char **argv)
   // device buffer for the next FFT
   //
   Double tfft=0;
-  Int NFFT=2;
-  if (argc > 0) sscanf(argv[1],"%d",&NFFT);
+  Int NFFT=10;
+  if (argc > 1) sscanf(argv[1],"%d",&NFFT);
   int NPix=NX*NY;
   int *d_NPix=(int *)allocateDeviceBuffer(sizeof(int));
   sendBufferToDevice(d_NPix,&NPix,sizeof(int));
