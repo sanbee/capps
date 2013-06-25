@@ -7,6 +7,7 @@
 #include <synthesis/MSVis/VisBuffer.h>
 #include "BeamCalc.h"
 #include <casa/OS/Timer.h>
+#include <cuLatticeFFT.h>
 
 #ifndef SYNTHESIS_ANTENNAATERM_H
 #define SYNTHESIS_ANTENNAATERM_H
@@ -15,7 +16,7 @@ namespace casa{
   class AntennaATerm
   {
   public:
-    AntennaATerm(): timer_p(){initAP(ap_p);};
+    AntennaATerm(): timer_p(), cufft_p() {initAP(ap_p);};
     ~AntennaATerm () {delete ap_p.aperture;};
     
     void initAP(ApertureCalcParams& ap);
@@ -55,10 +56,13 @@ namespace casa{
 		Bool Square=False);
     CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
 				  IPosition& shape);
+
+    inline void cfft2d(Lattice<Complex>& cLattice) {cufft_p.cfft2d(cLattice);};
   private:
     ApertureCalcParams ap_p;
     Timer timer_p;
     Double fftTime_p, beamCalcTime_p;
+    cuLatticeFFT cufft_p;
   };
   
 };
