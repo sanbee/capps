@@ -13,6 +13,17 @@
 using namespace std;
 using namespace casa;
 
+__global__ void divide2(cufftComplex *d_buf, int *N)
+{
+  // Your code was just using blocks, that will be very inefficient.
+
+  int i = blockIdx.x * blockDim.x + threadIdx.x;
+
+  d_buf[i].x = __fdiv_rn(d_buf[i].x, N[0]);
+
+  d_buf[i].y = __fdiv_rn(d_buf[i].y, N[0]);
+}
+
 __global__ void divide(cufftComplex *d_buf, int *N)
 {
   d_buf[blockIdx.x].x = d_buf[blockIdx.x].x / N[0];
@@ -122,7 +133,13 @@ int main(int argc, char **argv)
       timer.mark();
       inPlaceCUFFTC2C(plan, (cufftComplex *)a_map, CUFFT_FORWARD);
       cudaThreadSynchronize();
-      //      if (!(i%2)) divide<<<NPix,1>>>(a_map,d_NPix);
+      if (!(i%2)) 
+	{
+	  int threadsPerBlock = (256); // This we can tune
+	  int numBlocks = ceil ( (NX*NY) / threadsPerBlock);
+	  divide2<<<numBlocks, threadsPerBlock>>>(a_map,d_NPix);
+	  //	  divide<<<NPix,1>>>(a_map,d_NPix);
+	}
       tfft+=timer.all();
     }
   cerr << "Time for FFT: Per FFT " << tfft/NFFT << " Total for " << NFFT << " FFTs " << tfft << endl;
