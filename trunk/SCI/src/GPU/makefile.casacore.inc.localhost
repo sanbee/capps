@@ -35,9 +35,9 @@ PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
-C++          = /usr/bin/g++
+C++          = /usr/bin/g++ -fopenmp
 PGC++          = /opt/pgi/linux86-64/13.5/bin/pgc++
-DEFS64       = -DAIPS_64B -DCASA_STANDALONE
+DEFS64       = -DAIPS_64B -DCASA_STANDALONE -DHAS_OMP
 #OPT64        = -m64
 #USRLIB       = /usr/lib64
 USRLIB       = 

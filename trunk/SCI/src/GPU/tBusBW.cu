@@ -42,7 +42,7 @@ int main(int argc, char **argv)
   cudaGetDeviceProperties(&prop, 0);
   if (prop.canMapHostMemory)
     {
-      cerr << "Yes!  Can map." << endl;
+      cerr << "Yes!  Can map host memory." << endl;
       //maphostmem=1;
     }
 
@@ -69,8 +69,7 @@ int main(int argc, char **argv)
   /* ((float *)h_buf)[100]=100.0; */
   /* ((float *)h_buf)[2]=200.0; */
   // ((float *)h_buf)[3]=0.0;
-  cerr << ((float *)h_buf)[100] << " " 
-       << endl;
+
   //
   //-----------------------------------------------
   // Allocate the buffer on the device
@@ -99,7 +98,6 @@ int main(int argc, char **argv)
   cufftHandle plan=0;
   timer.mark();
   makeCUFFTPlan(&plan, NX, NY, CUFFT_C2C);
-  cerr << "Plan id = " << plan << endl;
   t=timer.all();
   cerr << "Time for plan: " << t << endl;
   //
@@ -127,7 +125,7 @@ int main(int argc, char **argv)
     cudaHostGetDevicePointer(&a_map, h_buf, 0);
   else 
     a_map = d_buf;
-  cerr << "Value = " << ((float *)h_buf)[NX/2 * NY] << endl;
+  //  cerr << "Value = " << ((float *)h_buf)[NX/2 * NY] << endl;
   for(int i=0;i<NFFT;i++)
     {
       timer.mark();

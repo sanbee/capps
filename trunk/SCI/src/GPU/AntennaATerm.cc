@@ -47,11 +47,11 @@ namespace casa{
     regridAperture(skyCS, skyShape, pa, Freq, doSquint, bandID);
     pbImage.setCoordinateInfo(skyCS);
     fillPB(*(ap_p.aperture),pbImage);
-    {
-      string name("ftaperture.im");
-      storeImg(name,*(ap_p.aperture));
-      storeImg("pbimage.im",pbImage);
-    }
+    // {
+    //   string name("ftaperture.im");
+    //   storeImg(name,*(ap_p.aperture));
+    //   storeImg("pbimage.im",pbImage);
+    // }
     cerr << "ATerm timing breakup: CUFFT = " << fftTime_p << " BeamCalc::calculateAperture = " << beamCalcTime_p << endl;
   }
   
@@ -160,10 +160,10 @@ namespace casa{
     cerr << "Computing aperture @ " << ap_p.freq << " " << ap_p.pa << " " << ap_p.band << " " << skyShape << " " << uvIncr << endl;
     
     regridApertureEngine(ap_p,inStokes);
-    {
-      string name("aperture.im");
-      storeImg(name,*(ap_p.aperture));
-    }
+    // {
+    //   string name("aperture.im");
+    //   storeImg(name,*(ap_p.aperture));
+    // }
 
     if (!doSquint) removeSquint(ap_p);
     
@@ -208,15 +208,14 @@ namespace casa{
      cufft_p.init(NX,NY);
      timer_p.mark();
 #ifdef cuda
-     int flag_fft = 1;
      FFTServer<Float, Complex> fftServer;
-     //     ret = call_cufft((Complex *)pointer, NX, NY, flag_fft);
+     // int flag_fft = 1;
+     // ret = call_cufft((Complex *)pointer, NX, NY, flag_fft);
+     // ret = call_cufft((cufftComplex *)pointer, NX, NY, flag_fft);
 
-     //     ret = call_cufft((cufftComplex *)pointer, NX, NY, flag_fft);
-
+     //fftServer.flip(skyJonesBuf, True, False);
      cufft_p.cfft2d(*(ap.aperture));
-     ap.aperture->get(skyJonesBuf);
-     //     fftServer.flip(skyJonesBuf, False, False);
+     //fftServer.flip(skyJonesBuf, False, False);
 #else
        LatticeFFT::cfft2d(*(ap.aperture));
 #endif
