@@ -3,6 +3,7 @@
 #include <WTerm.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeFFT.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
 #ifdef cuda
 #include <cuda_calls.h>
@@ -11,7 +12,7 @@
 #include <scimath/Mathematics/FFTServer.h>
 
 #define OVERSAMPLING 20
-#undef HAS_OMP
+//#undef HAS_OMP
 
 using namespace std;
 using namespace casa;
@@ -33,11 +34,10 @@ int main(int argc, char *argv[])
   IPosition skyShape(4,2*1024,2*1024,1,1);
   Vector<Double> uvIncr(2,0.01);
   Int xSupport, ySupport;
-  Int wConvSize = 512,iw=200;
+  Int wConvSize = 1024,iw=700;
   Vector<Double> cellSize(2);cellSize=OVERSAMPLING*8*(M_PI/180.0)/3600;
   Double maxUVW = 0.25/cellSize(0);
   Double wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
-
   //
   // Allocate the buffers and make the co-ordinate systems.  Do the
   // latter by loading a image from the disk.
@@ -66,7 +66,17 @@ int main(int argc, char *argv[])
   aat.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
   aat.applyPB(thePB, pa,Freq, bandID, True);
   timeATerm+=timer.all();
+  //
+  // Make storage on the device to hold the PB and a buffer for the CF
+  //
+  Int nBytes_p=skyShape(0)*skyShape(1)*sizeof(cufftComplex);
 
+  {// The un-necessary flip....
+    Array<Complex>  tmp=thePB.get();
+    FFTServer<Float, Complex> fftServer;
+    fftServer.flip(tmp, True, False);
+    thePB.put(tmp);
+  }
   //
   // Apply the w-term to a buffer and then multiply that buffer with
   // the A-term. FFT of the resulting buffer is the CF.  Re-size the
@@ -79,10 +89,23 @@ int main(int argc, char *argv[])
     cfBuf=1.0;
     Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
     timer.mark();
-    wTerm.applySky(theCFMat, iw, cellSize, wScale, theCFMat.shape()(0));///4);
-    
+    Bool dummy0;
+    cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
+    Complex *ttc=(Complex *)tt;
+
+    cpu_wTermApplySky(tt, skyShape(0), skyShape(1), 32, iw, cellSize(0), wScale, 
+     		  theCFMat.shape()(0),False);
+
+    //    wTerm.applySky(theCFMat, iw, cellSize, wScale, theCFMat.shape()(0));///4);
+    theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
     cfBuf *= thePB.get();
     
+    
+    {//...and the un-necessary counter flip
+      FFTServer<Float, Complex> fftServer;
+      fftServer.flip(cfBuf, True, False);
+    }
+
     theCF.put(cfBuf);
     timeWTerm+=timer.all();
 
@@ -104,18 +127,22 @@ int main(int argc, char *argv[])
      //     theCFMat.putStorage(cfBufPointer,dummy);
      //     fftServer.flip(cfBuf, False, False);
 
+     // theCF.get(cfBuf);
+     // fftServer.flip(cfBuf, True, False);
+     // //    storeImg(String("theCF.im"),theCF);
+
      aat.cfft2d(theCF);
 
      timer.mark();
      theCF.get(cfBuf);
-     fftServer.flip(cfBuf, False, False);
+     fftServer.flip(cfBuf, True, False);
 #else
     LatticeFFT::cfft2d(theCF);
 #endif
     timeFFT+=timer.all();
 
-    timer.mark();
     cfBuf=theCF.get();
+    timer.mark();
     resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
     timeResize+=timer.all();
   }
@@ -139,16 +166,20 @@ int main(int argc, char *argv[])
 }
 
 
-// #ifdef HAS_OMP
-// #include <omp.h>
-// #endif
+#ifdef HAS_OMP
+#include <omp.h>
+#endif
 
   //
   //----------------------------------------------------------------------
   // A global method for use in OMP'ed findSupport() below
   //
-  void archPeak(const Float& threshold, const Int& origin, const Block<Int>& cfShape, const Complex* funcPtr, 
-		const Int& nCFS, const Int& PixInc,const Int& th, const Int& R, Block<Int>& maxR)
+// void archPeak(const Float& threshold, const Int& origin, const Block<Int>& cfShape, const Complex* funcPtr, 
+// 		const Int& nCFS, const Int& PixInc,const Int& th, const Int& R, 
+// 		Block<Int>& maxR)
+void archPeak(const Float& threshold, const Int& origin, const Int* cfShape, const Complex* funcPtr, 
+		const Int& nCFS, const Int& PixInc,const Int& th, const Int& R, 
+		Int* maxR)
   {
     Block<Complex> vals;
     Block<Int> ndx(nCFS);	ndx=0;
@@ -178,7 +209,7 @@ int main(int argc, char *argv[])
 	}
     //		th++;
   }
-  Bool findSupport(Array<Complex>& func, Float& threshold, 
+ Bool findSupport(Array<Complex>& func, Float& threshold, 
 		   Int& origin, Int& radius)
   {
     LogIO log_l(LogOrigin("AWConvFunc", "findSupport[R&D]"));
@@ -195,35 +226,48 @@ int main(int argc, char *argv[])
     	cfShape[i]=func.shape()[i];
     convSize = cfShape[0];
 
-// #ifdef HAS_OMP
-//     Nth = max(omp_get_max_threads()-2,1);
-// #endif
+#ifdef HAS_OMP
+     Nth = max(omp_get_max_threads()-2,1);
+     cerr << "Firing " << Nth << " threads." << endl;
+#endif
     
     Block<Int> maxR(Nth);
+    Int *maxR_p, *cfShape_p;
+
+    maxR_p=maxR.storage();
+    cfShape_p = cfShape.storage();
 
     funcPtr = func.getStorage(dummy);
 
     R1 = convSize/2-2;
-
+    radius=R1;
     while (R1 > 1)
       {
 	    R0 = R1; R1 -= Nth;
 
-// #pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(PixInc,maxR,cfShape,nCFS,funcPtr) num_threads(Nth)
-// 	    { 
-// #pragma omp for
-	      for(R=R0;R>R1;R--)
-		{
-// #ifdef HAS_OMP
-// 		  threadID=omp_get_thread_num();
-// #endif
-		  archPeak(threshold, origin, cfShape, funcPtr, nCFS, PixInc, threadID, R, maxR);
-		}
-	      //	    }///omp 	    
+#pragma omp parallel default(none) firstprivate(R0,R1)  private(R,threadID) shared(origin, threshold, PixInc,maxR_p ,cfShape_p,nCFS,funcPtr) num_threads(Nth)
+ 	    { 
+#pragma omp for
+		for(R=R0;R>R1;R--)
+		  {
+#ifdef HAS_OMP
+		    threadID=omp_get_thread_num();
+#endif
+		    archPeak(threshold, origin, cfShape_p, funcPtr, nCFS, PixInc, threadID, R, maxR_p);
+		  }
+		///#pragma omp barrier
+	    }///omp 	    
 
 	    for (uInt th=0;th<Nth;th++)
-	      if (maxR[th] > 0)
-		{found=True; radius=maxR[th]; return found;}
+	      {
+		if (maxR[th] > 0)
+		  {
+		    found=True; 
+		    if (maxR[th] < radius) radius=maxR[th]; 
+		  }
+	      }
+	    if (found) 
+		return found;
       }
     return found;
   }
@@ -248,7 +292,7 @@ int main(int argc, char *argv[])
     cerr << "Threshold = " << threshold << endl;
 
     //    threshold *= aTerm_p->getSupportThreshold();
-    threshold *= 1e-4;
+    threshold *= 1e-3;
     //    threshold *=  0.1;
     // if (aTerm_p->isNoOp()) 
     //   threshold *= 1e-3; // This is the threshold used in "standard" FTMchines
@@ -259,9 +303,13 @@ int main(int argc, char *argv[])
     //
     // Timer tim;
     // tim.mark();
+    Timer timer;
+    timer.mark();
     if (found = findSupport(func,threshold,convFuncOrigin,R))
       xSupport=ySupport=Int(0.5+Float(R)/sampling)+1;
+
     // tim.show("findSupport:");
+    cerr << "Time for findSupport = " << timer.all() << endl;
 
     if (xSupport*sampling > convFuncOrigin)
       {

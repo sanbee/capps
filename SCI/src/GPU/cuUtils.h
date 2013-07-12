@@ -14,6 +14,35 @@ namespace casa{
   cudaError freeHost(void* h_mem, memoryMode memMode);
   cudaError mallocHost(void** h_mem ,uInt memSize, memoryMode memMode, Bool wc);
   cudaError memCpy(void* sink, void* source, uInt memSize, cudaMemcpyKind direction, memoryMode memMode);
+  void wTermApplySky(cufftComplex* screen, const int& nx, const int& ny, const int& TILE_WIDTH,
+		     const double& wPixel,
+		     const float& sampling, 
+		     const double& wScale, 
+		     const int& inner,
+		     const bool& isNoOp);
+  void kernel_wTermApplySky(cufftComplex* screen, const int nx, const int ny, const int TILE_WIDTH,
+			    const double wPixel,
+			    const float sampling, 
+			    const double wScale, 
+			    const int inner,
+			    const bool isNoOp);
+  void cpu_wTermApplySky(cufftComplex* screen, const int nx, const int ny, const int TILE_WIDTH,
+			 const double wPixel,
+			 const float sampling, 
+			 const double wScale, 
+			 const int inner,
+			 const bool isNoOp);
+
+  __global__ void kernel_setBuf(cufftComplex *d_buf, const int& nx, const int& ny, cufftComplex& val);
+  void setBuf(cufftComplex *d_buf, const int nx, const int ny, const int TILE_WIDTH, cufftComplex val);
+
+
+  __global__ void kernel_mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, const int nx, const int ny, const int TILE_WIDTH);
+  void mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, const int& nx, const int& ny, const int TILE_WIDTH);
+
+
+
+  __global__ void  matrixMulCUDA(cufftComplex *A, cufftComplex *B, int wA, int wB);
 };
 
 #endif

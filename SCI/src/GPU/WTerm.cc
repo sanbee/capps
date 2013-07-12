@@ -51,7 +51,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	  {
 	    Double m=sampling(1)*Double(iy);
 	    Double msq=m*m;
-#pragma omp parallel default(none) firstprivate(msq,iy) shared(twoPiW,convSize) num_threads(Nth)
+#pragma omp parallel default(none) firstprivate(msq,iy) shared(sampling,twoPiW,convSize,screen) num_threads(Nth)
     {
 #pragma acc kernel
 #pragma omp for

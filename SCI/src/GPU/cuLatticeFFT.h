@@ -10,7 +10,7 @@ namespace casa{
   class cuLatticeFFT
   {
   public:
-    cuLatticeFFT(): timer_p() {cufftPlan_p=h_buf_Nx=h_buf_Ny=0; h_buf = d_buf = NULL;};
+    cuLatticeFFT(): timer_p() {cufftPlan_p=h_buf_Nx=h_buf_Ny=0; h_buf_p = d_buf_p = NULL;};
 
     void init(const Int& nx, const Int& ny, cufftType type=CUFFT_C2C);
 
@@ -21,10 +21,13 @@ namespace casa{
     {return setCompatibilityMode(cufftPlan_p, mode);}
 
     void cfft2d(Lattice<Complex> & cLattice, const Bool toFrequency=True);
+    void cfft2d(Lattice<Complex> & cLattice, cufftComplex *d_buf,
+		const Bool toFrequency);
+    void cfft2d(cufftComplex *d_buf, const Bool toFrequency=True);
 
   private:
     cufftHandle cufftPlan_p;
-    cufftComplex *h_buf, *d_buf;
+    cufftComplex *h_buf_p, *d_buf_p;
     Int h_buf_Nx, h_buf_Ny;
     Int nBytes_p;
     Timer timer_p;

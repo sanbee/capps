@@ -1784,7 +1784,7 @@ namespace casa{
       {
 	for(i = 0; i < nx; i++)
 	  {
-	    computePixelValues(ap, a, p, L0, Er, El, i,j,whichPoln);
+	    computePixelValues(ap, a, p, L0, Er, El, i,j,localWhichPoln);
 	  }
       }
     }
