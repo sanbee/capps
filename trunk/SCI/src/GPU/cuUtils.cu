@@ -195,12 +195,16 @@ namespace casa{
       if (rsq<1.0)
 	{
 	  double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-	  float re=screen[row*WIDTH+col].x,
-	    im=screen[row*WIDTH+col].y;
-	  float wre=cos(phase), wim=sin(phase);
 	  int tix=ix+convSize/2, tiy=iy+convSize/2;
-	  screen[tix*WIDTH+tiy].x=re*wre - im*wim;
-	  screen[tix*WIDTH+tiy].y=re*wim + im*wre;
+	  cufftComplex w;w.x=cos(phase); w.y=sin(phase);
+
+	  /* float wre=cos(phase), wim=sin(phase); */
+	  /* float re=screen[row*WIDTH+col].x, */
+	  /*   im=screen[row*WIDTH+col].y; */
+	  /* screen[tix*WIDTH+tiy].x=re*wre - im*wim; */
+	  /* screen[tix*WIDTH+tiy].y=re*wim + im*wre; */
+
+	  screen[tix*WIDTH+tiy] = cuCmulf(screen[tix*WIDTH+tiy], w);
 	}
 
 
