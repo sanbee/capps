@@ -96,6 +96,9 @@ int main(int argc, char *argv[])
   // following code in a loop over nWterms.
   //
   {
+    //
+    // Initialize the CF device buffer to complex unity
+    //
     cufftComplex unity; unity.x=1.0; unity.y=0.0;
     setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, unity);
 
@@ -105,13 +108,22 @@ int main(int argc, char *argv[])
     cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
     Complex *ttc=(Complex *)tt;
 
+    //
+    // Fill the CF device buffer with the W-term values
+    //
     wTermApplySky(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, iw, cellSize(0), wScale, 
     		  theCFMat.shape()(0),False);
 
-    getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
-    theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
-
+    //
+    // Multiply the A and W term device buffers
+    //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+    {
+      // Just for debugging, get the CFd_buf_p to the host, and write
+      // it down on the disk as an image.
+      getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
+      theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
+    }
 
     
     {//...and the un-necessary counter flip

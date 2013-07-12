@@ -187,9 +187,10 @@ namespace casa{
       int convSize = nx;
 
       double twoPiW=2.0*M_PI*double(wValue);
-
-      double m=sampling*double(row-inner/2); 
-      double l=sampling*double(col-inner/2);
+      
+      int ix=row-inner/2, iy=col-inner/2;
+      double m=sampling*double(ix);
+      double l=sampling*double(iy);
       double rsq=(l*l+m*m);
       if (rsq<1.0)
 	{
@@ -197,8 +198,9 @@ namespace casa{
 	  float re=screen[row*WIDTH+col].x,
 	    im=screen[row*WIDTH+col].y;
 	  float wre=cos(phase), wim=sin(phase);
-	  screen[row*WIDTH+col].x=re*wre - im*wim;
-	  screen[row*WIDTH+col].y=re*wim + im*wre;
+	  int tix=ix+convSize/2, tiy=iy+convSize/2;
+	  screen[tix*WIDTH+tiy].x=re*wre - im*wim;
+	  screen[tix*WIDTH+tiy].y=re*wim + im*wre;
 	}
 
 
