@@ -118,15 +118,15 @@ int main(int argc, char *argv[])
     // Multiply the A and W term device buffers
     //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
-    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+    //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     aat.cufft_p.cfft2d(CFd_buf_p);
+    flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     {
       // Just for debugging, get the CFd_buf_p to the host, and write
       // it down on the disk as an image.
       getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
       // flip(tt, skyShape(0), skyShape(1), TILE_WIDTH);
-      // flipSign(tt, skyShape(0), skyShape(1), TILE_WIDTH);
       cfBuf.putStorage(ttc,dummy0);
       theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
     }

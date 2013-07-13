@@ -302,19 +302,6 @@ namespace casa{
     //
     //--------------------------------------------
     //
-    void flipSign(cufftComplex *buf, const int nx, const int ny, const int TITLE_WIDTH)
-    {
-      for (int i=0; i<nx; i++)
-	for (int j=0; j<ny; j++)
-	  {
-	    float sign=powf(-1.0,i+j);
-	    buf[i + j*ny].x = buf[i + j*ny].x*sign;
-	    buf[i + j*ny].y = buf[i + j*ny].y*sign;
-	  }
-    }
-    //
-    //--------------------------------------------
-    //
     void cpuflip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
     {
       int cx=nx/2, cy=ny/2;
@@ -342,8 +329,6 @@ namespace casa{
     //
     __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
     {
-      int WIDTH=ny;
-      
       // calculate thread id
       unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
       unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
@@ -364,7 +349,9 @@ namespace casa{
 	  buf[i + j*ny] = tmp;
 	}
     }
-    
+    //
+    //--------------------------------------------
+    //
     void flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
     {
       dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
@@ -373,6 +360,34 @@ namespace casa{
       printf("%d %d %d\n",nx/TILE_WIDTH, ny/(2*TILE_WIDTH), TILE_WIDTH);
       kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
     }
+    //
+    //============================================
+    //--------------------------------------------
+    //
+    __global__ void kernel_flipSign(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    {
+      // calculate thread id
+      unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
+      unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
+
+      /* for (int i=0; i<nx; i++) */
+      /* 	for (int j=0; j<ny; j++) */
+	  {
+	    float sign=powf(-1.0,i+j);
+	    buf[i + j*ny].x = buf[i + j*ny].x*sign;
+	    buf[i + j*ny].y = buf[i + j*ny].y*sign;
+	  }
+    }
+    //
+    //--------------------------------------------
+    //
+    void flipSign(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    {
+      dim3 dimGrid ( nx/TILE_WIDTH , ny/TILE_WIDTH ,1 ) ;
+      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+      kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+    }
+    
     
     
   };
