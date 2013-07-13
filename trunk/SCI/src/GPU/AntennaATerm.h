@@ -58,11 +58,11 @@ namespace casa{
 				  IPosition& shape);
 
     inline void cfft2d(Lattice<Complex>& cLattice) {cufft_p.cfft2d(cLattice);};
+    cuLatticeFFT cufft_p;
   private:
     ApertureCalcParams ap_p;
     Timer timer_p;
     Double fftTime_p, beamCalcTime_p;
-    cuLatticeFFT cufft_p;
   };
   
 };

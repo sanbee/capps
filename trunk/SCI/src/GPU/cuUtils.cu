@@ -171,43 +171,44 @@ namespace casa{
       	    }
       	}
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //===========================================
+    //--------------------------------------------
+    //
     __global__ void kernel_wTermApplySky(cufftComplex* screen, const int nx, const int ny,
 					 const int TILE_WIDTH, const double wPixel,
 					 const float sampling, const double wScale, 
 					 const int inner,      const bool isNoOp)
     {
       int WIDTH=ny;
-
+      
       unsigned int col = TILE_WIDTH*blockIdx.x + threadIdx.x ;
       unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
       double wValue=(wPixel*wPixel)/wScale;
       int convSize = nx;
-
+      
       double twoPiW=2.0*M_PI*double(wValue);
       
       int ix=row-inner/2, iy=col-inner/2;
-      double m=sampling*double(ix);
-      double l=sampling*double(iy);
+      double m=sampling*double(ix), l=sampling*double(iy);
       double rsq=(l*l+m*m);
+      
       if (rsq<1.0)
 	{
 	  double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
 	  int tix=ix+convSize/2, tiy=iy+convSize/2;
 	  cufftComplex w;w.x=cos(phase); w.y=sin(phase);
-
+	  
 	  /* float wre=cos(phase), wim=sin(phase); */
 	  /* float re=screen[row*WIDTH+col].x, */
 	  /*   im=screen[row*WIDTH+col].y; */
 	  /* screen[tix*WIDTH+tiy].x=re*wre - im*wim; */
 	  /* screen[tix*WIDTH+tiy].y=re*wim + im*wre; */
-
+	  
 	  screen[tix*WIDTH+tiy] = cuCmulf(screen[tix*WIDTH+tiy], w);
 	}
-
-
+      
+      
       /* if (!isNoOp) */
       /* 	{ */
       /* 	  for (int iy=-inner/2;iy<inner/2;iy++)  */
@@ -231,9 +232,9 @@ namespace casa{
       /* 	    } */
       /* 	} */
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //--------------------------------------------
+    //
     void wTermApplySky(cufftComplex* screen,  const int& nx, const int& ny,
 		       const int& TILE_WIDTH, const double& wPixel,
 		       const float& sampling, const double& wScale, 
@@ -242,13 +243,14 @@ namespace casa{
       int WIDTH=ny;
       dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
       dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-
-     kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling, 
-			   wScale, inner,isNoOp);
+      
+      kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling, 
+						   wScale, inner,isNoOp);
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //===========================================
+    //--------------------------------------------
+    //
     __global__ void kernel_setBuf(cufftComplex *d_buf, const int nx, const int ny, 
 				  const int TILE_WIDTH, cufftComplex val)
     {
@@ -259,21 +261,22 @@ namespace casa{
       unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
       d_buf[row*WIDTH+col] = val;
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //--------------------------------------------
+    //
     void setBuf(cufftComplex *d_buf, const int nx, const int ny, 
 		const int TILE_WIDTH, cufftComplex val)
     {
       int WIDTH=ny;
       dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
       dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-
+      
       kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //===========================================
+    //--------------------------------------------
+    //
     __global__ void kernel_mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, 
 				  const int nx, const int ny, const int TILE_WIDTH)
     {
@@ -284,17 +287,92 @@ namespace casa{
       unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
       target_d_buf[row*WIDTH+col] = cuCmulf(target_d_buf[row*WIDTH+col], source_d_buf[row*WIDTH+col]);
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //--------------------------------------------
+    //
     void mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, 
 		const int& nx, const int& ny, const int TILE_WIDTH)
     {
       int WIDTH=ny;
       dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
       dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-
+      
       kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
     }
+    //
+    //--------------------------------------------
+    //
+    void flipSign(cufftComplex *buf, const int nx, const int ny, const int TITLE_WIDTH)
+    {
+      for (int i=0; i<nx; i++)
+	for (int j=0; j<ny; j++)
+	  {
+	    float sign=powf(-1.0,i+j);
+	    buf[i + j*ny].x = buf[i + j*ny].x*sign;
+	    buf[i + j*ny].y = buf[i + j*ny].y*sign;
+	  }
+    }
+    //
+    //--------------------------------------------
+    //
+    void cpuflip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    {
+      int cx=nx/2, cy=ny/2;
+      
+      for (int i=0; i<cx; i++)
+	for (int j=0; j< cy; j++)
+	  {
+	    cufftComplex tmp;
+	    tmp=buf[i+j*ny];
+	    buf[i+j*ny] = buf[cx+i + (cy+j)*ny];
+	    buf[cx+i + (cy+j)*ny] = tmp;
+	  }
+      for (int i=cx; i < nx; i++)
+	for (int j=0; j < cy; j++)
+	  {
+	    cufftComplex tmp;
+	    tmp=buf[i-cx +(j+cy)*ny];
+	    buf[i-cx +(j+cy)*ny] = buf[i + j*ny];
+	    buf[i + j*ny] = tmp;
+	  }
+    }
+    //
+    //===========================================
+    // Following is the GPU kernel equivalent of the cpuflip function
+    //
+    __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    {
+      int WIDTH=ny;
+      
+      // calculate thread id
+      unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
+      unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
+      
+      int cx=nx/2, cy=ny/2;
+      cufftComplex tmp;
+      
+      if (i < cx)
+	{
+	  tmp=buf[i+j*ny];
+	  buf[i+j*ny] = buf[cx+i + (cy+j)*ny];
+	  buf[cx+i + (cy+j)*ny] = tmp;
+	}
+      else
+	{
+	  tmp=buf[i-cx +(j+cy)*ny];
+	  buf[i-cx +(j+cy)*ny] = buf[i + j*ny];
+	  buf[i + j*ny] = tmp;
+	}
+    }
+    
+    void flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    {
+      dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
+      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+      
+      printf("%d %d %d\n",nx/TILE_WIDTH, ny/(2*TILE_WIDTH), TILE_WIDTH);
+      kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+    }
+    
     
   };

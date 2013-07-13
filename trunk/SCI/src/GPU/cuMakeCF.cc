@@ -117,57 +117,62 @@ int main(int argc, char *argv[])
     //
     // Multiply the A and W term device buffers
     //
+    mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+    aat.cufft_p.cfft2d(CFd_buf_p);
+    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     {
       // Just for debugging, get the CFd_buf_p to the host, and write
       // it down on the disk as an image.
       getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
+      // flip(tt, skyShape(0), skyShape(1), TILE_WIDTH);
+      // flipSign(tt, skyShape(0), skyShape(1), TILE_WIDTH);
+      cfBuf.putStorage(ttc,dummy0);
       theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
     }
-    mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
-
-
+    theCF.put(cfBuf);
 
 
     
-    {//...and the un-necessary counter flip
-      FFTServer<Float, Complex> fftServer;
-      fftServer.flip(cfBuf, True, False);
-    }
+//     {//...and the un-necessary counter flip
+//       FFTServer<Float, Complex> fftServer;
+//       fftServer.flip(cfBuf, True, False);
+//     }
 
-    theCF.put(cfBuf);
-    timeWTerm+=timer.all();
+//     theCF.put(cfBuf);
+//     timeWTerm+=timer.all();
 
-     Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
-    cerr << NX << " " << NY << " " << max(theCFMat) << endl;
+//      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
+//     cerr << NX << " " << NY << " " << max(theCFMat) << endl;
 
-#ifdef cuda
-     Bool dummy;
-     int flag = 1,ret;
+// #ifdef cuda
+//      Bool dummy;
+//      int flag = 1,ret;
 
-     FFTServer<Float, Complex> fftServer;
-     Complex *cfBufPointer = theCFMat.getStorage(dummy);
-     //     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
-
-
-     //     ret = call_cufft((cufftComplex*)cfBufPointer, NX, NY, flag);
+//      FFTServer<Float, Complex> fftServer;
+//      Complex *cfBufPointer = theCFMat.getStorage(dummy);
+//      //     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
 
 
-     //     theCFMat.putStorage(cfBufPointer,dummy);
-     //     fftServer.flip(cfBuf, False, False);
+//      //     ret = call_cufft((cufftComplex*)cfBufPointer, NX, NY, flag);
 
-     // theCF.get(cfBuf);
-     // fftServer.flip(cfBuf, True, False);
-     // //    storeImg(String("theCF.im"),theCF);
 
-     aat.cfft2d(theCF);
+//      //     theCFMat.putStorage(cfBufPointer,dummy);
+//      //     fftServer.flip(cfBuf, False, False);
 
-     timer.mark();
-     theCF.get(cfBuf);
-     fftServer.flip(cfBuf, True, False);
-#else
-    LatticeFFT::cfft2d(theCF);
-#endif
-    timeFFT+=timer.all();
+//      // theCF.get(cfBuf);
+//      // fftServer.flip(cfBuf, True, False);
+//      // //    storeImg(String("theCF.im"),theCF);
+
+//      aat.cfft2d(theCF);
+
+//      timer.mark();
+//      theCF.get(cfBuf);
+//      fftServer.flip(cfBuf, True, False);
+// #else
+//     LatticeFFT::cfft2d(theCF);
+// #endif
+//     timeFFT+=timer.all();
 
     cfBuf=theCF.get();
     timer.mark();

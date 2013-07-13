@@ -41,8 +41,14 @@ namespace casa{
   void mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, const int& nx, const int& ny, const int TILE_WIDTH);
 
 
+  void flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH);
+  __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH);
 
   __global__ void  matrixMulCUDA(cufftComplex *A, cufftComplex *B, int wA, int wB);
+
+  void flipSign(cufftComplex *buf, const int nx, const int ny, const int TITLE_WIDTH);
+
+
 };
 
 #endif
