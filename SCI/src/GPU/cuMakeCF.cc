@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
   // w-terms we need.
   //
   WTerm wTerm;
-  AntennaATerm aat;
+  AntennaATerm aTerm;
 
   //
   // Make storage on the device to hold the PB and a buffer for the CF
@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
   //
   Timer atimer;
   atimer.mark();
-  aat.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
-  aat.applyPB(thePB, pa,Freq, bandID, True);
+  aTerm.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
+  aTerm.applyPB(thePB, pa,Freq, bandID, True);
 
   {// The un-necessary flip....
     Array<Complex>  tmp=thePB.get();
@@ -113,6 +113,7 @@ int main(int argc, char *argv[])
   cudaEvent_t start, stop, wstart, wstop;
   float elapsedTime,welapsedTime;
 
+  cufftComplex unity; unity.x=1.0; unity.y=0.0;
   for (iw=iw0;iw<nW+iw0;iw++)
   {
     //
@@ -120,7 +121,6 @@ int main(int argc, char *argv[])
     //
     cudaEventCreate(&wstart);
     cudaEventRecord(wstart,0);
-    cufftComplex unity; unity.x=1.0; unity.y=0.0;
     setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, unity);
 
     // Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
     // Multiply the A and W term device buffers
     //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+
     cudaEventCreate(&wstop);
     cudaEventRecord(wstop,0);
     cudaEventSynchronize(wstop);
@@ -150,7 +151,7 @@ int main(int argc, char *argv[])
     cudaEventCreate(&start);
     cudaEventRecord(start,0);
 
-    aat.cufft_p.cfft2d(CFd_buf_p);
+    aTerm.cufft_p.cfft2d(CFd_buf_p);
     //    ffttime+=ffttimer.all();
 
     cudaEventCreate(&stop);
@@ -197,7 +198,7 @@ int main(int argc, char *argv[])
   {
     IPosition shape=cfBuf.shape();
     CoordinateSystem cfCS=theCF.coordinates();
-    CoordinateSystem uvCoord=aat.makeUVCoords(cfCS, shape);
+    CoordinateSystem uvCoord=aTerm.makeUVCoords(cfCS, shape);
     PagedImage<Complex> tmp(cfBuf.shape(), uvCoord, String("MyATerm.im"));
     tmp.put(cfBuf);
   }
