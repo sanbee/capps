@@ -357,7 +357,7 @@ namespace casa{
       dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
       dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
       
-      printf("%d %d %d\n",nx/TILE_WIDTH, ny/(2*TILE_WIDTH), TILE_WIDTH);
+      //      printf("%d %d %d\n",nx/TILE_WIDTH, ny/(2*TILE_WIDTH), TILE_WIDTH);
       kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
     }
     //

@@ -33,7 +33,7 @@ namespace casa{
     cfft2d(cLattice, d_buf_p, toFrequency);
     getBufferFromDevice(h_buf_p,d_buf_p,nBytes_p);
 
-    cerr << "cuLatticeFFT::cfft2d took " << timer_p.all() << "sec." << endl;
+    //    cerr << "cuLatticeFFT::cfft2d took " << timer_p.all() << "sec." << endl;
   }
   //
   // Use an externally supplied device buffer.  Leave the result in
