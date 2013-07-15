@@ -106,16 +106,20 @@ int main(int argc, char *argv[])
   //
   Int iw0=700;
   Timer wtimer,ffttimer;
-  Double ffttime=0;
+  Double ffttime=0,wtime=0;
+
   wtimer.mark();
-  cudaEvent_t start, stop;
-  float elapsedTime;
+
+  cudaEvent_t start, stop, wstart, wstop;
+  float elapsedTime,welapsedTime;
 
   for (iw=iw0;iw<nW+iw0;iw++)
   {
     //
     // Initialize the CF device buffer to complex unity
     //
+    cudaEventCreate(&wstart);
+    cudaEventRecord(wstart,0);
     cufftComplex unity; unity.x=1.0; unity.y=0.0;
     setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, unity);
 
@@ -134,6 +138,11 @@ int main(int argc, char *argv[])
     // Multiply the A and W term device buffers
     //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+    cudaEventCreate(&wstop);
+    cudaEventRecord(wstop,0);
+    cudaEventSynchronize(wstop);
+    cudaEventElapsedTime(&welapsedTime, wstart,wstop);
+    wtime += welapsedTime/1000.0;
     //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
 
 
@@ -175,6 +184,7 @@ int main(int argc, char *argv[])
   }
   cout << "Total time for " << nW << " CF computations (convolutions): " << wtimer.all() << " sec. Time per convolution = " << wtimer.all()*1000/nW  
        << " ms." << endl;
+  cout << "Total time for " << nW << " W-Terms  " << wtime << " sec.  Time per W-Term = " << wtime*1000/nW << " ms." << endl;
   cout << "Total time for " << nW << " cuFFT  " << ffttime << " sec.  Time per cuFFT = " << ffttime*1000/nW << " ms." << endl;
 
   //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
