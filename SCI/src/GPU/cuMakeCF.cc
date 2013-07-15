@@ -7,10 +7,14 @@
 #include <casa/OS/Timer.h>
 #ifdef cuda
 #include <cuda_calls.h>
+extern "C" {
+#include <cuda_runtime_api.h>
+};
 #endif
 
 #include <scimath/Mathematics/FFTServer.h>
 
+#define CONVSIZE (2*1024)
 #define OVERSAMPLING 20
 #define TILE_WIDTH 32
 //#undef HAS_OMP
@@ -32,13 +36,17 @@ int main(int argc, char *argv[])
   Float Freq = 1.4e9, pa=-1.2;
   Float sampling=OVERSAMPLING;
   Int bandID= BeamCalc::Instance()->getBandID(Freq,"EVLA");
-  IPosition skyShape(4,2*1024,2*1024,1,1);
+  IPosition skyShape(4,CONVSIZE,CONVSIZE,1,1);
   Vector<Double> uvIncr(2,0.01);
   Int xSupport, ySupport;
-  Int wConvSize = 1024,iw=700;
+  Int wConvSize = 1024,iw=700,nW=1024;
   Vector<Double> cellSize(2);cellSize=OVERSAMPLING*8*(M_PI/180.0)/3600;
   Double maxUVW = 0.25/cellSize(0);
   Double wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
+
+  if (argc > 1)
+    if (sscanf(argv[1],"%d",&nW) == EOF) nW=1024;
+
   //
   // Allocate the buffers and make the co-ordinate systems.  Do the
   // latter by loading a image from the disk.
@@ -60,19 +68,19 @@ int main(int argc, char *argv[])
   AntennaATerm aat;
 
   //
-  // Apply the A-term to a buffer and re-use this buffer with multiple
-  // w-terms.
-  //
-  timer.mark();
-  aat.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
-  aat.applyPB(thePB, pa,Freq, bandID, True);
-  timeATerm+=timer.all();
-  //
   // Make storage on the device to hold the PB and a buffer for the CF
   //
   Int nBytes_p=skyShape(0)*skyShape(1)*sizeof(cufftComplex);
   cufftComplex *Ad_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
   cufftComplex *CFd_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
+  //
+  // Apply the A-term to a buffer and re-use this buffer with multiple
+  // w-terms.
+  //
+  Timer atimer;
+  atimer.mark();
+  aat.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
+  aat.applyPB(thePB, pa,Freq, bandID, True);
 
   {// The un-necessary flip....
     Array<Complex>  tmp=thePB.get();
@@ -87,6 +95,7 @@ int main(int argc, char *argv[])
     cufftComplex *Ah_buf_p = (cufftComplex *)tmp.data();
     sendBufferToDevice(Ad_buf_p, Ah_buf_p, nBytes_p);
   }
+  timeATerm+=atimer.all();
   //
   // Apply the w-term to a buffer and then multiply that buffer with
   // the A-term. FFT of the resulting buffer is the CF.  Re-size the
@@ -95,6 +104,14 @@ int main(int argc, char *argv[])
   // For now, there is only one W-term.  Later we can put the
   // following code in a loop over nWterms.
   //
+  Int iw0=700;
+  Timer wtimer,ffttimer;
+  Double ffttime=0;
+  wtimer.mark();
+  cudaEvent_t start, stop;
+  float elapsedTime;
+
+  for (iw=iw0;iw<nW+iw0;iw++)
   {
     //
     // Initialize the CF device buffer to complex unity
@@ -102,83 +119,63 @@ int main(int argc, char *argv[])
     cufftComplex unity; unity.x=1.0; unity.y=0.0;
     setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, unity);
 
-    Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
-    timer.mark();
-    Bool dummy0;
-    cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
-    Complex *ttc=(Complex *)tt;
+    // Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
+    // Bool dummy0;
+    // cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
+    // Complex *ttc=(Complex *)tt;
 
     //
     // Fill the CF device buffer with the W-term values
     //
     wTermApplySky(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, iw, cellSize(0), wScale, 
-    		  theCFMat.shape()(0),False);
+    		  cfBuf.shape()(0),False);
 
     //
     // Multiply the A and W term device buffers
     //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
+
+
+    ffttimer.mark();
+    // cudaEventCreate(&start);
+    // cudaEventRecord(start,0);
+
     aat.cufft_p.cfft2d(CFd_buf_p);
+    ffttime+=ffttimer.all();
+
+    // cudaEventCreate(&stop);
+    // cudaEventRecord(stop,0);
+    // cudaEventSynchronize(stop);
+    // cudaEventElapsedTime(&elapsedTime, start,stop);
+    // ffttime+=elapsedTime;
+
     flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
-    {
-      // Just for debugging, get the CFd_buf_p to the host, and write
-      // it down on the disk as an image.
-      getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
-      // flip(tt, skyShape(0), skyShape(1), TILE_WIDTH);
-      cfBuf.putStorage(ttc,dummy0);
-      theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
-    }
-    theCF.put(cfBuf);
 
+    // {
+    //   Bool dummy0;
+    //   cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
+    //   Complex *ttc=(Complex *)tt;
+    //   // Just for debugging, get the CFd_buf_p to the host, and write
+    //   // it down on the disk as an image.
+    //   getBufferFromDevice(tt, CFd_buf_p, skyShape(0)*skyShape(1)*sizeof(cufftComplex));
+    //   // flip(tt, skyShape(0), skyShape(1), TILE_WIDTH);
 
-    
-//     {//...and the un-necessary counter flip
-//       FFTServer<Float, Complex> fftServer;
-//       fftServer.flip(cfBuf, True, False);
-//     }
+    //   cfBuf.putStorage(ttc,dummy0);
+    //   theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
+    // }
+    // theCF.put(cfBuf);
 
-//     theCF.put(cfBuf);
-//     timeWTerm+=timer.all();
-
-//      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
-//     cerr << NX << " " << NY << " " << max(theCFMat) << endl;
-
-// #ifdef cuda
-//      Bool dummy;
-//      int flag = 1,ret;
-
-//      FFTServer<Float, Complex> fftServer;
-//      Complex *cfBufPointer = theCFMat.getStorage(dummy);
-//      //     ret = call_cufft((Complex *)cfBufPointer, NX, NY, flag);
-
-
-//      //     ret = call_cufft((cufftComplex*)cfBufPointer, NX, NY, flag);
-
-
-//      //     theCFMat.putStorage(cfBufPointer,dummy);
-//      //     fftServer.flip(cfBuf, False, False);
-
-//      // theCF.get(cfBuf);
-//      // fftServer.flip(cfBuf, True, False);
-//      // //    storeImg(String("theCF.im"),theCF);
-
-//      aat.cfft2d(theCF);
-
-//      timer.mark();
-//      theCF.get(cfBuf);
-//      fftServer.flip(cfBuf, True, False);
-// #else
-//     LatticeFFT::cfft2d(theCF);
-// #endif
-//     timeFFT+=timer.all();
-
-    cfBuf=theCF.get();
-    timer.mark();
-    resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
-    timeResize+=timer.all();
+    // cfBuf=theCF.get();
+    // timer.mark();
+    // resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
+    // cerr << xSupport << " " << endl;
+    // timeResize+=timer.all();
   }
+  cout << "Total time for " << nW << " CF computations (convolutions): " << wtimer.all() << " sec. Time per convolution = " << wtimer.all()*1000/nW  
+       << " ms." << endl;
+  cout << "Total time for " << nW << " cuFFT  " << ffttime << " sec.  Time per cuFFT = " << ffttime*1000/nW << " ms." << endl;
 
   //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
 
@@ -364,6 +361,8 @@ void archPeak(const Float& threshold, const Int& origin, const Int* cfShape, con
     Int ConvFuncOrigin=func.shape()[0]/2;  // Conv. Func. is half that size of convSize
     
     Bool found = setUpCFSupport(func, xSupport, ySupport, sampling,peak);
+    
+    return True;
 
     //Int supportBuffer = aTerm_p->getOversampling()*2;
     Int supportBuffer = OVERSAMPLING*2;

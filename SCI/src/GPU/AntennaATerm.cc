@@ -222,7 +222,11 @@ namespace casa{
 
 
      fftTime_p += timer_p.all();
+#ifdef cuda
      cerr << "CUFFT call ends.  CUFFT Time = " << fftTime_p << endl;
+#else
+     cerr << "LatticeFFT call ends.  LatticeFFT Time = " << fftTime_p << endl;
+#endif
      //     skyJonesBuf.putStorage(pointer,dummy);
      skyMuller(skyJonesBuf, shape, inStokes);
   }

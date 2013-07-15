@@ -34,10 +34,14 @@ int main(int argc, char *argv[])
   IPosition skyShape(4,2*1024,2*1024,1,1);
   Vector<Double> uvIncr(2,0.01);
   Int xSupport, ySupport;
-  Int wConvSize = 1024,iw=700;
+  Int wConvSize = 1024,iw=700,nW=1024;
   Vector<Double> cellSize(2);cellSize=OVERSAMPLING*8*(M_PI/180.0)/3600;
   Double maxUVW = 0.25/cellSize(0);
   Double wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
+
+  if (argc > 1)
+    if (sscanf(argv[1],"%d",&nW) == EOF) nW=1024;
+
   //
   // Allocate the buffers and make the co-ordinate systems.  Do the
   // latter by loading a image from the disk.
@@ -85,19 +89,22 @@ int main(int argc, char *argv[])
   // For now, there is only one W-term.  Later we can put the
   // following code in a loop over nWterms.
   //
+  Int iw0=700;
+  Timer wtimer;
+  wtimer.mark();
+  for(iw=iw0;iw<nW+iw0;iw++)
   {
     cfBuf=1.0;
     Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
     timer.mark();
     Bool dummy0;
     cufftComplex *tt=(cufftComplex *)cfBuf.getStorage(dummy0);
-    Complex *ttc=(Complex *)tt;
-
+    //    Complex *ttc=(Complex *)tt;
     cpu_wTermApplySky(tt, skyShape(0), skyShape(1), 32, iw, cellSize(0), wScale, 
      		  theCFMat.shape()(0),False);
 
     //    wTerm.applySky(theCFMat, iw, cellSize, wScale, theCFMat.shape()(0));///4);
-    theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
+    //    theCF.put(cfBuf); storeImg(String("theCF.w.im"),theCF);
     cfBuf *= thePB.get();
     
     
@@ -110,7 +117,7 @@ int main(int argc, char *argv[])
     timeWTerm+=timer.all();
 
      Int NX=theCFMat.shape()(0), NY=theCFMat.shape()(1);
-    cerr << NX << " " << NY << " " << max(theCFMat) << endl;
+     //    cerr << NX << " " << NY << " " << max(theCFMat) << endl;
 
 #ifdef cuda
      Bool dummy;
@@ -141,11 +148,13 @@ int main(int argc, char *argv[])
 #endif
     timeFFT+=timer.all();
 
-    cfBuf=theCF.get();
-    timer.mark();
-    resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
-    timeResize+=timer.all();
+    // cfBuf=theCF.get();
+    // timer.mark();
+    // resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
+    // timeResize+=timer.all();
   }
+
+  cout << "Total time for " << nW << " CF computations: " << wtimer.all() << " " << wtimer.all()/nW << endl;
 
   //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
 
