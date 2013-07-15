@@ -137,18 +137,18 @@ int main(int argc, char *argv[])
     //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
 
 
-    ffttimer.mark();
-    // cudaEventCreate(&start);
-    // cudaEventRecord(start,0);
+    //    ffttimer.mark();
+    cudaEventCreate(&start);
+    cudaEventRecord(start,0);
 
     aat.cufft_p.cfft2d(CFd_buf_p);
-    ffttime+=ffttimer.all();
+    //    ffttime+=ffttimer.all();
 
-    // cudaEventCreate(&stop);
-    // cudaEventRecord(stop,0);
-    // cudaEventSynchronize(stop);
-    // cudaEventElapsedTime(&elapsedTime, start,stop);
-    // ffttime+=elapsedTime;
+    cudaEventCreate(&stop);
+    cudaEventRecord(stop,0);
+    cudaEventSynchronize(stop);
+    cudaEventElapsedTime(&elapsedTime, start,stop);
+    ffttime+=elapsedTime/1000.0;
 
     flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
