@@ -5,10 +5,13 @@
 #include <lattices/Lattices/LatticeFFT.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
+
+
 #ifdef cuda
 #include <cuda_calls.h>
 extern "C" {
 #include <cuda_runtime_api.h>
+#include <cuda_profiler_api.h>
 };
 #endif
 
@@ -17,6 +20,9 @@ extern "C" {
 #define CONVSIZE (2*1024)
 #define OVERSAMPLING 20
 #define TILE_WIDTH 32
+
+#define DO_PROFILE
+
 //#undef HAS_OMP
 
 using namespace std;
@@ -79,6 +85,7 @@ int main(int argc, char *argv[])
   //
   Timer atimer;
   atimer.mark();
+  //  cudaProfilerStart();
   aTerm.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
   aTerm.applyPB(thePB, pa,Freq, bandID, True);
 
@@ -95,6 +102,8 @@ int main(int argc, char *argv[])
     cufftComplex *Ah_buf_p = (cufftComplex *)tmp.data();
     sendBufferToDevice(Ad_buf_p, Ah_buf_p, nBytes_p);
   }
+  //  cudaProfilerStop();
+
   timeATerm+=atimer.all();
   //
   // Apply the w-term to a buffer and then multiply that buffer with
@@ -110,8 +119,10 @@ int main(int argc, char *argv[])
 
   wtimer.mark();
 
+#ifdef DO_PROFILE
   cudaEvent_t start, stop, wstart, wstop;
   float elapsedTime,welapsedTime;
+#endif
 
   cufftComplex unity; unity.x=1.0; unity.y=0.0;
   for (iw=iw0;iw<nW+iw0;iw++)
@@ -119,8 +130,10 @@ int main(int argc, char *argv[])
     //
     // Initialize the CF device buffer to complex unity
     //
+#ifdef DO_PROFILE
     cudaEventCreate(&wstart);
     cudaEventRecord(wstart,0);
+#endif
     setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH, unity);
 
     // Matrix<Complex> theCFMat(cfBuf.nonDegenerate()); 
@@ -139,26 +152,32 @@ int main(int argc, char *argv[])
     //
     mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
 
+#ifdef DO_PROFILE
     cudaEventCreate(&wstop);
     cudaEventRecord(wstop,0);
     cudaEventSynchronize(wstop);
     cudaEventElapsedTime(&welapsedTime, wstart,wstop);
     wtime += welapsedTime/1000.0;
+#endif
     //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
 
 
+#ifdef DO_PROFILE
     //    ffttimer.mark();
     cudaEventCreate(&start);
     cudaEventRecord(start,0);
+#endif
 
     aTerm.cufft_p.cfft2d(CFd_buf_p);
     //    ffttime+=ffttimer.all();
 
+#ifdef DO_PROFILE
     cudaEventCreate(&stop);
     cudaEventRecord(stop,0);
     cudaEventSynchronize(stop);
     cudaEventElapsedTime(&elapsedTime, start,stop);
     ffttime+=elapsedTime/1000.0;
+#endif
 
     flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
     flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
@@ -183,6 +202,7 @@ int main(int argc, char *argv[])
     // cerr << xSupport << " " << endl;
     // timeResize+=timer.all();
   }
+#ifdef DO_PROFILE
   cout << "Total time for " << nW << " CF computations (convolutions): " << wtimer.all() << " sec. Time per convolution = " << wtimer.all()*1000/nW  
        << " ms." << endl;
   cout << "Total time for " << nW << " W-Terms  " << wtime << " sec.  Time per W-Term = " << wtime*1000/nW << " ms." << endl;
@@ -191,7 +211,7 @@ int main(int argc, char *argv[])
   //  cerr << "xSupport = " << xSupport << " " << cfBuf.shape() << endl;
 
   cerr << "Times: " << "ATerm: " << timeATerm << ", WTerm: " << timeWTerm << ", Flip: " << timeFFT << ", Resize: " << timeResize << endl;
-
+#endif
   //
   // Write out the CF.  Transform the image co-oridinates to uv-coordinates before saving.
   //
