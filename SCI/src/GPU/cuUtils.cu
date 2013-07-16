@@ -5,6 +5,11 @@
 #include <math.h>
 #include <cuUtils.h>
 
+#define USE_AUTO 
+#undef USE_AUTO 
+#define GRIDSIZE 2048
+#define BLOCKSIZE 32
+
 namespace casa{
   //
   //--------------------------------------------
@@ -119,9 +124,9 @@ namespace casa{
       
       return cudaSuccess;
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //--------------------------------------------
+    //
     cudaError
       memCpy(void* sink, void* source, uint memSize, cudaMemcpyKind direction, memoryMode memMode)
     {
@@ -131,11 +136,11 @@ namespace casa{
       /* else { */
       /*   return cudaMemcpy( sink, source, memSize, direction); */
       /* } */
-        return cudaMemcpy( sink, source, memSize, direction);
+      return cudaMemcpy( sink, source, memSize, direction);
     }
-  //
-  //--------------------------------------------
-  //
+    //
+    //--------------------------------------------
+    //
     void cpu_wTermApplySky(cufftComplex* screen, const int nx, const int ny,
 			   const int TILE_WIDTH, const double wPixel,
 			   const float sampling, const double wScale, 
@@ -144,7 +149,7 @@ namespace casa{
       double wValue=(wPixel*wPixel)/wScale;
       double twoPiW=2.0*M_PI*double(wValue);
       int convSize = nx;
-
+      
       if (!isNoOp)
       	{
       	  for (int iy=-inner/2;iy<inner/2;iy++)
@@ -240,12 +245,23 @@ namespace casa{
 		       const float& sampling, const double& wScale, 
 		       const int& inner,      const bool& isNoOp)
     {
-      int WIDTH=ny;
-      dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-      
-      kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling, 
-						   wScale, inner,isNoOp);
+#ifdef USE_AUTO
+      {
+	int WIDTH=ny;
+	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
+	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	
+	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling,
+						     wScale, inner,isNoOp);
+      }
+#else
+      {
+	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
+	dim3 dimBlock( BLOCKSIZE,1,1);
+	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling, 
+						     wScale, inner,isNoOp);
+      }
+#endif
     }
     //
     //===========================================
@@ -267,11 +283,22 @@ namespace casa{
     void setBuf(cufftComplex *d_buf, const int nx, const int ny, 
 		const int TILE_WIDTH, cufftComplex val)
     {
-      int WIDTH=ny;
-      dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-      
-      kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
+#ifdef USE_AUTO
+      {
+	int WIDTH=ny;
+	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
+	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	
+	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
+      }
+#else
+      {
+	dim3 dimGrid ( GRIDSIZE ,1 ,1 ) ;
+	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
+	
+	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
+      }
+#endif
     }
     //
     //===========================================
@@ -293,11 +320,22 @@ namespace casa{
     void mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, 
 		const int& nx, const int& ny, const int TILE_WIDTH)
     {
-      int WIDTH=ny;
-      dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-      
-      kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
+#ifdef USE_AUTO
+      {
+	int WIDTH=ny;
+	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
+	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	
+	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
+      }
+#else
+      {
+	dim3 dimGrid ( GRIDSIZE, 1 ,1 ) ;
+	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
+	
+	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
+      }
+#endif
     }
     //
     //--------------------------------------------
@@ -354,11 +392,21 @@ namespace casa{
     //
     void flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
     {
-      dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
-      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-      
-      //      printf("%d %d %d\n",nx/TILE_WIDTH, ny/(2*TILE_WIDTH), TILE_WIDTH);
-      kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+#ifdef USE_AUTO
+      {
+	dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
+	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	
+	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+      }
+#else
+      {
+	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
+	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
+	
+	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+      }
+#endif
     }
     //
     //============================================
@@ -369,25 +417,33 @@ namespace casa{
       // calculate thread id
       unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
       unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
-
+      
       /* for (int i=0; i<nx; i++) */
       /* 	for (int j=0; j<ny; j++) */
-	  {
-	    float sign=powf(-1.0,i+j);
-	    buf[i + j*ny].x = buf[i + j*ny].x*sign;
-	    buf[i + j*ny].y = buf[i + j*ny].y*sign;
-	  }
+      {
+	float sign=powf(-1.0,i+j);
+	buf[i + j*ny].x = buf[i + j*ny].x*sign;
+	buf[i + j*ny].y = buf[i + j*ny].y*sign;
+      }
     }
     //
     //--------------------------------------------
     //
     void flipSign(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
     {
-      dim3 dimGrid ( nx/TILE_WIDTH , ny/TILE_WIDTH ,1 ) ;
-      dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-      kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+#ifdef USE_AUTO
+      {
+	dim3 dimGrid ( nx/TILE_WIDTH , ny/TILE_WIDTH ,1 ) ;
+	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+      }
+#else
+      {
+	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
+	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
+	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+      }
+#endif
     }
-    
-    
     
   };
