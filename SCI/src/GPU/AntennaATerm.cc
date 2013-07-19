@@ -107,6 +107,7 @@ namespace casa{
     ap.aperture->resize(apertureShape);
     ap.aperture->set(0.0);
     timer_p.mark();
+    ap.Ad_buf = Ad_buf_p;
     BeamCalc::Instance()->calculateAperture(&ap,inStokes);
     beamCalcTime_p += timer_p.all();
     // {

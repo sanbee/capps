@@ -16,10 +16,11 @@ namespace casa{
   class AntennaATerm
   {
   public:
-    AntennaATerm(): timer_p(), cufft_p() {initAP(ap_p);};
+    AntennaATerm(): timer_p(), cufft_p(), Ad_buf_p(NULL) {initAP(ap_p);};
     ~AntennaATerm () {delete ap_p.aperture;};
     
     void initAP(ApertureCalcParams& ap);
+    void setDeviceBuffer(Complex* d_buf) {Ad_buf_p = d_buf;};
     void applyPB(ImageInterface<Complex>& pbImage, 
 		 Float pa, Float Freq,
 		 //const VisBuffer& vb, 
@@ -63,6 +64,7 @@ namespace casa{
     ApertureCalcParams ap_p;
     Timer timer_p;
     Double fftTime_p, beamCalcTime_p;
+    Complex *Ad_buf_p;
   };
   
 };
