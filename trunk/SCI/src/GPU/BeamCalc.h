@@ -34,10 +34,18 @@
 #include <casa/Exceptions.h>
 #include <casa/Logging/LogIO.h>
 
+//#define cuda_kernel
+
+#ifdef cuda_kernel
+#include <cuUtils.h>
+#include <myComplex.h>
+#endif
+
 namespace casa
 {
 
 #define MAXGEOM 2000
+  //#define Complex cuComplex
 
   typedef struct 	/* all dimensions in meters, GHz */
   {
@@ -78,6 +86,7 @@ namespace casa
     Double pa;			/* Parallactic angle, radians */
     Double freq;			/* GHz */
     Int band;
+    Complex* Ad_buf;
   } ApertureCalcParams;
 
   /*
@@ -209,11 +218,39 @@ namespace casa
     Int calculateAperture(ApertureCalcParams *ap);
     Int calculateAperture(ApertureCalcParams *ap, const Int& whichStokes);
 
+    Ray* trace(const calcAntenna *a, Double x, Double y, const Pathology *p);
+    void deleteRay(Ray *ray);
+    Int legplanewaveblock(const calcAntenna *a, Double x, Double y);
+    Int legplanewaveblock2(const calcAntenna *a, const Ray *ray);
+    Int legsphericalwaveblock(const calcAntenna *a, const Ray *ray);
+    Double dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+		    const Ray *ray3, const Pathology *p);
+
+    Double dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
+		  const Ray *ray3, const Pathology *p);
+
+    Double Raylen(const Ray *ray);
+    Double feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p);
+
+    void tracepol(Complex *E0, const Ray *ray, Complex *E1);
+
+
+
   protected:
     BeamCalc();
     
   private:
 
+#ifdef cuda_kernel
+  void engine_computeBeamPixelValues(const ApertureCalcParams *ap, 
+				     const calcAntenna *a, const Pathology *p,
+				     const Double L0,
+				     Complex *Er, Complex *El,
+				     const Int i, const Int j,
+				     const Int nx, const Int ny,
+				     const Int whichStokes,
+				     const Int& TILE_WIDTH=1);
+#endif
   void computePixelValues(const ApertureCalcParams *ap, const calcAntenna *a, const Pathology *p,
 			  const Double &L0, Complex *Er, Complex *El, 
 			  const Int &i, const Int &j);
@@ -222,7 +259,8 @@ namespace casa
 			  const Double &L0,
 			  Complex *Er, Complex *El,
 			  const Int &i, const Int &j,
-			  const Int& whichStokes);
+			  const Int& whichStokes,
+			  const Int& TILE_WIDTH=1);
     //normalizes a "vector" of 3 Doubles in the vector sense
     inline void norm3(Double *v)
     {
@@ -267,8 +305,6 @@ namespace casa
 
     Ray* newRay(const Double *sub);
 
-    void deleteRay(Ray *ray);
-
     Pathology* newPathology();
 
     Pathology* newPathologyfromApertureCalcParams(ApertureCalcParams *ap);
@@ -277,13 +313,6 @@ namespace casa
 
     void normvec(const Double *a, const Double *b, Double *c);
 
-    Double dAdOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
-		    const Ray *ray3, const Pathology *p);
-
-    Double dOmega(const calcAntenna *a, const Ray *ray1, const Ray *ray2,
-		  const Ray *ray3, const Pathology *p);
-
-    Double Raylen(const Ray *ray);
 
     void Pathologize(Double *sub, const Pathology *p);
 
@@ -297,17 +326,6 @@ namespace casa
 
     Double feedfunc(const calcAntenna *a, Double theta);
 
-    Double feedgain(const calcAntenna *a, const Ray *ray, const Pathology *p);
-
-    Ray* trace(const calcAntenna *a, Double x, Double y, const Pathology *p);
-
-    void tracepol(Complex *E0, const Ray *ray, Complex *E1);
-
-    Int legplanewaveblock(const calcAntenna *a, Double x, Double y);
-
-    Int legplanewaveblock2(const calcAntenna *a, const Ray *ray);
-
-    Int legsphericalwaveblock(const calcAntenna *a, const Ray *ray);
 
     void copyBeamCalcGeometry(BeamCalcGeometry* to, BeamCalcGeometry* from);
 
@@ -331,6 +349,15 @@ namespace casa
 
   };
   
+#ifdef cuda_kernel
+  __global__ void kernel_computePixelValues(BeamCalc* beamCalc, const ApertureCalcParams *ap, 
+					    const calcAntenna *a, const Pathology *p,
+					    const double L0,
+					    Complex *Er, Complex *El,
+					    const int i, const int j,
+					    const int whichStokes,
+					    const int TILE_WIDTH=1);
+#endif
 };
 
 #endif

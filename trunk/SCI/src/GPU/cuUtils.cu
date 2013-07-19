@@ -6,9 +6,9 @@
 #include <cuUtils.h>
 
 #define USE_AUTO 
-#undef USE_AUTO 
-#define GRIDSIZE 2048
-#define BLOCKSIZE 32
+//#undef USE_AUTO 
+#define BLOCKSIZE 128
+#define GRIDSIZE (2048*2048/128)
 
 namespace casa{
   //
@@ -142,9 +142,10 @@ namespace casa{
     //--------------------------------------------
     //
     void cpu_wTermApplySky(cufftComplex* screen, const int nx, const int ny,
-			   const int TILE_WIDTH, const double wPixel,
-			   const float sampling, const double wScale, 
-			   const int inner,      const bool isNoOp)
+			   const int tileWidthX, const int tileWidthY, 
+			   const double wPixel,  const float sampling, 
+			   const double wScale,  const int inner,      
+			   const bool isNoOp)
     {
       double wValue=(wPixel*wPixel)/wScale;
       double twoPiW=2.0*M_PI*double(wValue);
@@ -180,85 +181,62 @@ namespace casa{
     //===========================================
     //--------------------------------------------
     //
-    __global__ void kernel_wTermApplySky(cufftComplex* screen, const int nx, const int ny,
-					 const int TILE_WIDTH, const double wPixel,
+    __global__ void kernel_wTermApplySky(cufftComplex* screen, 
+					 cufftComplex* aTerm, 
+					 const int nx, const int ny,
+					 const int tileWidthX, const int tileWidthY, 
+					 const double wPixel,
 					 const float sampling, const double wScale, 
 					 const int inner,      const bool isNoOp)
     {
-      int WIDTH=ny;
-      
-      unsigned int col = TILE_WIDTH*blockIdx.x + threadIdx.x ;
-      unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
-      double wValue=(wPixel*wPixel)/wScale;
-      int convSize = nx;
-      
-      double twoPiW=2.0*M_PI*double(wValue);
-      
+      unsigned int col = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int row = tileWidthY*blockIdx.y + threadIdx.y ;
+      int originx=nx/2, originy=ny/2, tix, tiy;
       int ix=row-inner/2, iy=col-inner/2;
+      tix=ix+originx; tiy=iy+originy;
+      
+      
       double m=sampling*double(ix), l=sampling*double(iy);
       double rsq=(l*l+m*m);
-      
+
       if (rsq<1.0)
 	{
-	  double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
-	  int tix=ix+convSize/2, tiy=iy+convSize/2;
-	  cufftComplex w;w.x=cos(phase); w.y=sin(phase);
-	  
-	  /* float wre=cos(phase), wim=sin(phase); */
-	  /* float re=screen[row*WIDTH+col].x, */
-	  /*   im=screen[row*WIDTH+col].y; */
-	  /* screen[tix*WIDTH+tiy].x=re*wre - im*wim; */
-	  /* screen[tix*WIDTH+tiy].y=re*wim + im*wre; */
-	  
-	  screen[tix*WIDTH+tiy] = cuCmulf(screen[tix*WIDTH+tiy], w);
+	  double wValue=(wPixel*wPixel)/wScale;
+	  double phase=2.0*M_PI*double(wValue)*(sqrt(1.0-rsq)-1.0);
+	  cufftComplex w; __sincosf(phase, &(w.y),&(w.x));
+	  screen[tix*ny+tiy] = cuCmulf(w,aTerm[tix*ny+tiy]);
+	  //screen[tix*ny+tiy] = w;
 	}
-      
-      
-      /* if (!isNoOp) */
-      /* 	{ */
-      /* 	  for (int iy=-inner/2;iy<inner/2;iy++)  */
-      /* 	    { */
-      /* 	      double m=sampling*double(iy); */
-      /* 	      double msq=m*m; */
-      /* 	      for (int ix=-inner/2;ix<inner/2;ix++)  */
-      /* 		{ */
-      /* 		  double l=sampling*double(ix); */
-      /* 		  double rsq=l*l+msq; */
-      /* 		  if(rsq<1.0)  */
-      /* 		    { */
-      /* 		      double phase=twoPiW*(sqrt(1.0-rsq)-1.0); */
-      /* 		      float re=screen[ix+convSize/2 + (iy+convSize/2)*ny].x, */
-      /* 			im=screen[ix+convSize/2 + (iy+convSize/2)*ny].y; */
-      /* 		      float wre=cos(phase), wim=sin(phase); */
-      /* 		      screen[ix+convSize/2 + (iy+convSize/2)*ny].x=re*wre - im*wim; */
-      /* 		      screen[ix+convSize/2 + (iy+convSize/2)*ny].y=re*wim + im*wre; */
-      /* 		    } */
-      /* 		} */
-      /* 	    } */
-      /* 	} */
+      else
+	{
+	  screen[tix*ny+tiy] = make_cuFloatComplex(0.0,0.0);
+	}
     }
     //
     //--------------------------------------------
     //
-    void wTermApplySky(cufftComplex* screen,  const int& nx, const int& ny,
-		       const int& TILE_WIDTH, const double& wPixel,
+    void wTermApplySky(cufftComplex* screen,  
+		       cufftComplex* aTerm,  
+		       const int& nx, const int& ny,
+		       const int tileWidthX, const int tileWidthY, 
+		       const double& wPixel,
 		       const float& sampling, const double& wScale, 
 		       const int& inner,      const bool& isNoOp)
     {
 #ifdef USE_AUTO
       {
 	int WIDTH=ny;
-	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	dim3 dimGrid ( WIDTH/tileWidthX , WIDTH/tileWidthY ,1 ) ;
+	dim3 dimBlock( tileWidthX, tileWidthY, 1 ) ;
 	
-	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling,
+	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, aTerm, nx, ny, tileWidthX, tileWidthY,wPixel, sampling,
 						     wScale, inner,isNoOp);
       }
 #else
       {
 	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
 	dim3 dimBlock( BLOCKSIZE,1,1);
-	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, nx, ny, TILE_WIDTH,wPixel, sampling, 
+	kernel_wTermApplySky <<<dimGrid,dimBlock>>> (screen, aTerm, nx, ny, tileWidthX, tileWidthY,wPixel, sampling, 
 						     wScale, inner,isNoOp);
       }
 #endif
@@ -268,35 +246,37 @@ namespace casa{
     //--------------------------------------------
     //
     __global__ void kernel_setBuf(cufftComplex *d_buf, const int nx, const int ny, 
-				  const int TILE_WIDTH, cufftComplex val)
+				  const int tileWidthX, const int tileWidthY, 
+				  cufftComplex val)
     {
       int WIDTH=ny;
       
       // calculate thread id
-      unsigned int col = TILE_WIDTH*blockIdx.x + threadIdx.x ;
-      unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
+      unsigned int col = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int row = tileWidthY*blockIdx.y + threadIdx.y ;
       d_buf[row*WIDTH+col] = val;
     }
     //
     //--------------------------------------------
     //
     void setBuf(cufftComplex *d_buf, const int nx, const int ny, 
-		const int TILE_WIDTH, cufftComplex val)
+		const int tileWidthX, const int tileWidthY, 
+		cufftComplex val)
     {
 #ifdef USE_AUTO
       {
 	int WIDTH=ny;
-	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	dim3 dimGrid ( WIDTH/tileWidthX , WIDTH/tileWidthY ,1 ) ;
+	dim3 dimBlock( tileWidthX, tileWidthY, 1 ) ;
 	
-	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
+	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,tileWidthX, tileWidthY,val);
       }
 #else
       {
 	dim3 dimGrid ( GRIDSIZE ,1 ,1 ) ;
 	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
 	
-	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,TILE_WIDTH,val);
+	kernel_setBuf<<<dimGrid,dimBlock>>> ( d_buf,nx,ny,tileWidthX, tileWidthY,val);
       }
 #endif
     }
@@ -305,42 +285,42 @@ namespace casa{
     //--------------------------------------------
     //
     __global__ void kernel_mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, 
-				  const int nx, const int ny, const int TILE_WIDTH)
+				  const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       int WIDTH=ny;
       
       // calculate thread id
-      unsigned int col = TILE_WIDTH*blockIdx.x + threadIdx.x ;
-      unsigned int row = TILE_WIDTH*blockIdx.y + threadIdx.y ;
+      unsigned int col = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int row = tileWidthY*blockIdx.y + threadIdx.y ;
       target_d_buf[row*WIDTH+col] = cuCmulf(target_d_buf[row*WIDTH+col], source_d_buf[row*WIDTH+col]);
     }
     //
     //--------------------------------------------
     //
     void mulBuf(cufftComplex *target_d_buf, const cufftComplex* source_d_buf, 
-		const int& nx, const int& ny, const int TILE_WIDTH)
+		const int& nx, const int& ny, const int tileWidthX, const int tileWidthY)
     {
 #ifdef USE_AUTO
       {
 	int WIDTH=ny;
-	dim3 dimGrid ( WIDTH/TILE_WIDTH , WIDTH/TILE_WIDTH ,1 ) ;
-	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	dim3 dimGrid ( WIDTH/tileWidthX , WIDTH/tileWidthY ,1 ) ;
+	dim3 dimBlock( tileWidthX, tileWidthY, 1 ) ;
 	
-	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
+	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,tileWidthX, tileWidthY);
       }
 #else
       {
 	dim3 dimGrid ( GRIDSIZE, 1 ,1 ) ;
 	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
 	
-	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,TILE_WIDTH);
+	kernel_mulBuf<<<dimGrid,dimBlock>>>(target_d_buf, source_d_buf, nx,ny,tileWidthX, tileWidthY);
       }
 #endif
     }
     //
     //--------------------------------------------
     //
-    void cpuflip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    void cpuflip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       int cx=nx/2, cy=ny/2;
       
@@ -365,11 +345,11 @@ namespace casa{
     //===========================================
     // Following is the GPU kernel equivalent of the cpuflip function
     //
-    __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       // calculate thread id
-      unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
-      unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
+      unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
       
       int cx=nx/2, cy=ny/2;
       cufftComplex tmp;
@@ -390,21 +370,21 @@ namespace casa{
     //
     //--------------------------------------------
     //
-    void flip(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    void flip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
 #ifdef USE_AUTO
       {
-	dim3 dimGrid ( nx/TILE_WIDTH , ny/(2*TILE_WIDTH) ,1 ) ;
-	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
+	dim3 dimGrid ( nx/tileWidthX , ny/(2*tileWidthY) ,1 ) ;
+	dim3 dimBlock( tileWidthX, tileWidthY, 1 ) ;
 	
-	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,tileWidthX, tileWidthY);
       }
 #else
       {
 	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
 	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
 	
-	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+	kernel_flip<<<dimGrid,dimBlock>>>(buf, nx,ny,tileWidthX, tileWidthY);
       }
 #endif
     }
@@ -412,16 +392,15 @@ namespace casa{
     //============================================
     //--------------------------------------------
     //
-    __global__ void kernel_flipSign(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    __global__ void kernel_flipSign(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       // calculate thread id
-      unsigned int i = TILE_WIDTH*blockIdx.x + threadIdx.x ;
-      unsigned int j = TILE_WIDTH*blockIdx.y + threadIdx.y ;
-      
-      /* for (int i=0; i<nx; i++) */
-      /* 	for (int j=0; j<ny; j++) */
+      unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
+      float sign;
       {
-	float sign=powf(-1.0,i+j);
+	//	sign=pow(-1.0,i+j);
+	if ((i+j)%2 == 0) sign=1.0; else sign=-1.0;
 	buf[i + j*ny].x = buf[i + j*ny].x*sign;
 	buf[i + j*ny].y = buf[i + j*ny].y*sign;
       }
@@ -429,19 +408,19 @@ namespace casa{
     //
     //--------------------------------------------
     //
-    void flipSign(cufftComplex *buf, const int nx, const int ny, const int TILE_WIDTH)
+    void flipSign(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
 #ifdef USE_AUTO
       {
-	dim3 dimGrid ( nx/TILE_WIDTH , ny/TILE_WIDTH ,1 ) ;
-	dim3 dimBlock( TILE_WIDTH, TILE_WIDTH, 1 ) ;
-	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+	dim3 dimGrid ( nx/tileWidthX , ny/tileWidthY ,1 ) ;
+	dim3 dimBlock( tileWidthY, tileWidthY, 1 ) ;
+	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,tileWidthX, tileWidthY);
       }
 #else
       {
 	dim3 dimGrid ( GRIDSIZE , 1 ,1 ) ;
 	dim3 dimBlock( BLOCKSIZE, 1, 1 ) ;
-	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,TILE_WIDTH);
+	kernel_flipSign<<<dimGrid,dimBlock>>>(buf, nx,ny,tileWidthX, tileWidthY);
       }
 #endif
     }

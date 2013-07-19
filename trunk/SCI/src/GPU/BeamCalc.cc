@@ -1797,11 +1797,12 @@ namespace casa{
   }
 
   void BeamCalc::computePixelValues(const ApertureCalcParams *ap, 
-				     const calcAntenna *a, const Pathology *p,
-				     const Double &L0,
-				     Complex *Er, Complex *El,
-				     const Int &i, const Int &j,
-				     const Int& whichPoln)
+				    const calcAntenna *a, const Pathology *p,
+				    const Double &L0,
+				    Complex *Er, Complex *El,
+				    const Int &i, const Int &j,
+				    const Int& whichPoln,
+				    const Int& tileWidth)
   {
     Complex fp, Exr, Eyr, Exl, Eyl;
     //    Complex Er[3], El[3];
