@@ -376,36 +376,57 @@ namespace casa{
     // This therefore effectively combines the flipSign() kernel in flip() kernel itself (i.e., flipSign() does not
     // need to be envoked).  This saves ~15% in run-time.
     //
+#define FLIPSIGN(i,j,ny,val) ({if (((i)+(j))%2 != 0) {(val[(i)+(j)*(ny)]).x *=-1.0; (val[(i)+(j)*(ny)]).y *= -1.0;}})
     __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       // calculate thread id
       unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
       unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
-      int cx=nx/2, cy=ny/2;
-      __shared__ cufftComplex tmp;
+      unsigned int cx=nx/2, cy=ny/2;
       cuComplex sign=make_cuFloatComplex(1.0,0.0);
-      
+
+      __shared__ cufftComplex tmp;
+
       if (i < cx)
 	{
 	  if (((cx+i)+(cy+j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
 	  tmp=cuCmulf(buf[i+j*ny],sign);
-	  tmp=buf[i+j*ny];
-
-	  if (((i)+(j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  
+	  if ((i+j)%2 == 0) sign.x=1.0; else sign.x = -1.0;
 	  buf[i+j*ny] = cuCmulf(buf[cx+i + (cy+j)*ny],sign);
 
 	  buf[cx+i + (cy+j)*ny] = tmp;
-	  //	  if (((cx+i)+(cy+j))%2 != 0) {buf[cx+i + (cy+j)*ny].x *=-1.0; buf[cx+i + (cy+j)*ny].y *= -1.0;}
+
+	  /* The commented out code below is cleaner code, but which
+	     runs ~10% slower!!!  Don't understand why. */
+
+	  /* tmp=buf[i+j*ny]; */
+	  /* buf[i+j*ny] = buf[cx+i + (cy+j)*ny]; */
+	  /* FLIPSIGN(i,j,ny,buf); */
+	  /* tx=cx+i; ty=cy+j; */
+	  /* buf[tx + ty*ny] = tmp; */
+	  /* FLIPSIGN(tx, ty,ny, buf); */
 	}
       else
 	{
-	  if (((i)+(j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  if ((i+j)%2 == 0) sign.x=1.0; else sign.x = -1.0;
 	  tmp=cuCmulf(buf[i-cx +(j+cy)*ny],sign);
 
 	  if (((i-cx)+(j+cy))%2 == 0) sign.x=1.0; else sign.x = -1.0;
 	  buf[i-cx +(j+cy)*ny] = cuCmulf(buf[i + j*ny],sign);
-
+	    
 	  buf[i + j*ny] = tmp;
+
+	  /* The commented out code below is cleaner code, but which
+	     runs ~10% slower!!!  Don't understand why. */
+
+	  /* unsigned int tx,ty; */
+	  /* tx=i-cx; ty=j+cy; */
+	  /* tmp=buf[tx +ty*ny]; */
+	  /* buf[i-cx +(j+cy)*ny] = buf[i + j*ny]; */
+	  /* FLIPSIGN(tx, ty,ny, buf); */
+	  /* buf[i + j*ny] = tmp; */
+	  /* FLIPSIGN(i,j,ny,buf); */
 	}
     }
     //
