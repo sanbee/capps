@@ -14,7 +14,7 @@ namespace casa{
   cudaError freeHost(void* h_mem, memoryMode memMode);
   cudaError mallocHost(void** h_mem ,uInt memSize, memoryMode memMode, Bool wc);
   cudaError memCpy(void* sink, void* source, uInt memSize, cudaMemcpyKind direction, memoryMode memMode);
-  void wTermApplySky(cufftComplex* screen, cufftComplex* aTerm,
+  void wTermApplySky(cufftComplex* screen, const cufftComplex* aTerm,
 		     const int& nx, const int& ny, 
 		     const int tileWidthX, const int tileWidthY,
 		     const double& wPixel,
@@ -52,8 +52,5 @@ namespace casa{
   __global__ void  matrixMulCUDA(cufftComplex *A, cufftComplex *B, int wA, int wB);
 
   void flipSign(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY);
-
-
 };
-
 #endif

@@ -70,6 +70,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
 CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls_new.o ./Utils.o
 CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o ./cuConvolver.o
 
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 		-lsynthesis -lcasadbus -laatm
@@ -145,7 +146,7 @@ PGCC=pgc++ $(ACC_FLAGS)
 #
 # The list of source file names 
 #
-SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc cuMakeCF.cc tBusBW.cu 
+SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc cuMakeCF.cc cuMakeCF2.cc tBusBW.cu 
 SOURCE  = $(wildcard *.cc)
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
@@ -154,7 +155,7 @@ endif
 # The list of applications to be built derived from the list of source files in $(SOURCE)
 #
 APPS    = $(patsubst %.cc,%,$(SOURCE))
-CUAPPS  = cuda_calls_new Utils cuUtils tBusBW 
+CUAPPS  = cuda_calls_new Utils cuUtils tBusBW cuBeamCalc
 #
 # The list object files derived from the list of application in $(APPS)
 #

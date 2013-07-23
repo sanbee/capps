@@ -1,11 +1,11 @@
 #include <casa/aips.h>
 #include <AntennaATerm.h>
-#include <WTerm.h>
+#include <cuWTerm.h>
 #include <images/Images/PagedImage.h>
 #include <lattices/Lattices/LatticeFFT.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <casa/OS/Timer.h>
-
+#include <cuConvolver.h>
 
 #ifdef cuda
 #include <cuda_calls.h>
@@ -86,10 +86,13 @@ int main(int argc, char *argv[])
   // w-terms we need.
   //
   cuLatticeFFT cuLatFFT;
-  cuLatFFT.init(skyShape(0), skyShape(1));
-  WTerm wTerm;
   AntennaATerm aTerm(&cuLatFFT);
+  cuConvolver cuConv(&cuLatFFT);
+  cuWTerm cuWTerm;
 
+  cuLatFFT.init(skyShape(0), skyShape(1));
+  cuWTerm.setParams(skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy,
+		  cellSize(0), wScale, cfBuf.shape()(0));
   //
   // Make storage on the device to hold the PB and a buffer for the CF
   //
@@ -135,104 +138,14 @@ int main(int argc, char *argv[])
   // following code in a loop over nWterms.
   //
   Int iw0=700;
-  Timer wtimer,ffttimer;
   Double ffttime=0,wtime=0,fliptime=0;
 
-  wtimer.mark();
-
-#ifdef DO_PROFILE
-  cudaEvent_t start, stop, wstart, wstop;
-  float elapsedTime,welapsedTime;
-#endif
-
-  cufftComplex unity; unity.x=1.0; unity.y=0.0;
   for (iw=iw0;iw<nW+iw0;iw++)
   {
-    //
-    // Initialize the CF device buffer to complex unity
-    //
-#ifdef DO_PROFILE
-    cudaEventCreate(&wstart);
-    cudaEventRecord(wstart,0);
-#endif
-    //    setBuf(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy, unity);
-
-    //
-    // Fill the CF device buffer with the W-term values
-    //
-    wTermApplySky(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), 
-		  TILE_WIDTHx, TILE_WIDTHy, 
-		  iw, cellSize(0), wScale, 
-    		  cfBuf.shape()(0),False);
-    //
-    // Multiply the A and W term device buffers
-    //
-    //    mulBuf(CFd_buf_p, Ad_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
-    //    storeDeviceBuf(theCF, CFd_buf_p, String("wTerm.im"));
-
-#ifdef DO_PROFILE
-    cudaEventCreate(&wstop);
-    cudaEventRecord(wstop,0);
-    cudaEventSynchronize(wstop);
-    cudaEventElapsedTime(&welapsedTime, wstart,wstop);
-    wtime += welapsedTime/1000.0;
-#endif
-    //    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTH);
-
-
-#ifdef DO_PROFILE
-    //    ffttimer.mark();
-    cudaEventCreate(&start);
-    cudaEventRecord(start,0);
-#endif
-
-    //    aTerm.cufft_p->cfft2d(CFd_buf_p);
-    cuLatFFT.cfft2d(CFd_buf_p);
-
-    //    ffttime+=ffttimer.all();
-
-#ifdef DO_PROFILE
-    cudaEventCreate(&stop);
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsedTime, start,stop);
-    ffttime+=elapsedTime/1000.0;
-#endif
-
-#ifdef DO_PROFILE
-    //    ffttimer.mark();
-    cudaEventCreate(&start);
-    cudaEventRecord(start,0);
-#endif
-    //    flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
-
-    flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
-#ifdef DO_PROFILE
-    cudaEventCreate(&stop);
-    cudaEventRecord(stop,0);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&elapsedTime, start,stop);
-    fliptime+=elapsedTime/1000.0;
-#endif
-
-
-    // theCF.put(cfBuf);
-    
-    // cfBuf=theCF.get();
-    // timer.mark();
-    // resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
-    // cerr << xSupport << " " << endl;
-    // timeResize+=timer.all();
+    cuWTerm.setWPixel(iw);
+    cuConv.convolve(Ad_buf_p, CFd_buf_p, cuWTerm,
+		  skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
   }
-
-#ifdef DO_PROFILE
-  cout << "Total time for " << nW << " CF computations (convolutions): " << wtimer.all() << " sec. Time per convolution = " 
-       << wtimer.all()*1000/nW  << " ms." << endl;
-  cout << "Total time for " << nW << " W-Terms  " << wtime << " sec.  Time per W-Term = " << wtime*1000/nW << " ms." << endl;
-  cout << "Total time for " << nW << " Flips " << fliptime << " sec.  Time per Flip  = " << fliptime*1000/nW << " ms." << endl;
-  cout << "Total time for " << nW << " cuFFT  " << ffttime << " sec.  Time per cuFFT = " << ffttime*1000/nW << " ms." << endl;
-  cerr << "Times: " << "ATerm: " << timeATerm << ", WTerm: " << timeWTerm << ", Flip: " << timeFFT << ", Resize: " << timeResize << endl;
-#endif
 
   //
   // Write out the CF.  Transform the image co-oridinates to uv-coordinates before saving.

@@ -3,6 +3,21 @@
 
 namespace casa{
 
+  cuLatticeFFT& cuLatticeFFT::operator=(const cuLatticeFFT& other)
+  {
+    if(this!=&other) 
+      {
+	cufftPlan_p = other.cufftPlan_p;
+	// h_buf_p = other.h_buf_p;
+	// d_buf_p = other_d_buf_p
+	h_buf_Nx = other.h_buf_Nx;
+	h_buf_Ny = other.h_buf_Ny;
+	nBytes_p = other.nBytes_p;
+	timer_p = other.timer_p;
+      }
+    return *this;
+  }
+
   void cuLatticeFFT::init(const Int& nx, const Int& ny, cufftType type)
   {
     if ((h_buf_Nx != nx) || (h_buf_Ny != ny))

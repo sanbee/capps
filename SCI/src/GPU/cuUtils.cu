@@ -1,9 +1,13 @@
 // -*- C -*-
 #include <cuda_runtime.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <Utils.h>
 #include <math.h>
 #include <cuUtils.h>
+/* #include <cuWTerm.h> */
+/* #include <thrust/host_vector.h> */
+/* #include <thrust/device_vector.h> */
 
 #define USE_AUTO 
 //#undef USE_AUTO 
@@ -182,7 +186,7 @@ namespace casa{
     //--------------------------------------------
     //
     __global__ void kernel_wTermApplySky(cufftComplex* screen, 
-					 cufftComplex* aTerm, 
+					 const cufftComplex* aTerm, 
 					 const int nx, const int ny,
 					 const int tileWidthX, const int tileWidthY, 
 					 const double wPixel,
@@ -216,7 +220,7 @@ namespace casa{
     //--------------------------------------------
     //
     void wTermApplySky(cufftComplex* screen,  
-		       cufftComplex* aTerm,  
+		       const cufftComplex* aTerm,  
 		       const int& nx, const int& ny,
 		       const int tileWidthX, const int tileWidthY, 
 		       const double& wPixel,
@@ -385,7 +389,7 @@ namespace casa{
       unsigned int cx=nx/2, cy=ny/2;
       cuComplex sign=make_cuFloatComplex(1.0,0.0);
 
-      __shared__ cufftComplex tmp;
+      cufftComplex tmp;
 
       if (i < cx)
 	{
@@ -486,5 +490,5 @@ namespace casa{
       }
 #endif
     }
-    
+
   };

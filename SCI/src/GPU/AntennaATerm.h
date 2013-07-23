@@ -16,7 +16,7 @@ namespace casa{
   class AntennaATerm
   {
   public:
-    AntennaATerm(): timer_p(), cufft_p(), Ad_buf_p(NULL) {initAP(ap_p);};
+    AntennaATerm(cuLatticeFFT* cuLFFT): timer_p(), cufft_p(cuLFFT), Ad_buf_p(NULL) {initAP(ap_p);};
     ~AntennaATerm () {delete ap_p.aperture;};
     
     void initAP(ApertureCalcParams& ap);
@@ -58,8 +58,8 @@ namespace casa{
     CoordinateSystem makeUVCoords(CoordinateSystem& imageCoordSys,
 				  IPosition& shape);
 
-    inline void cfft2d(Lattice<Complex>& cLattice) {cufft_p.cfft2d(cLattice);};
-    cuLatticeFFT cufft_p;
+    inline void cfft2d(Lattice<Complex>& cLattice) {cufft_p->cfft2d(cLattice);};
+    cuLatticeFFT *cufft_p;
   private:
     ApertureCalcParams ap_p;
     Timer timer_p;
