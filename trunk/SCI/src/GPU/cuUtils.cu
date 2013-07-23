@@ -323,21 +323,35 @@ namespace casa{
     void cpuflip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       int cx=nx/2, cy=ny/2;
+      //      cuComplex sign=make_cuFloatComplex(1.0,0.0);
       
       for (int i=0; i<cx; i++)
 	for (int j=0; j< cy; j++)
 	  {
 	    cufftComplex tmp;
+	    // if (((cx+i)+(cy+j))%2 == 0) sign.x = -1.0; else sign.x = 1.0;
+	    //tmp=cuCmulf(buf[i+j*ny],sign);
 	    tmp=buf[i+j*ny];
+
+	    //if (((i)+(j))%2 == 0) sign.x = -1.0;  else sign.x = 1.0;
+	    //buf[i+j*ny] = cuCmulf(buf[cx+i + (cy+j)*ny],sign);
 	    buf[i+j*ny] = buf[cx+i + (cy+j)*ny];
+
 	    buf[cx+i + (cy+j)*ny] = tmp;
 	  }
       for (int i=cx; i < nx; i++)
 	for (int j=0; j < cy; j++)
 	  {
 	    cufftComplex tmp;
+
+	    /* if (((i-cx)+(j+cy))%2 == 0) sign.x = -1.0; else sign.x = 1.0; */
+	    /* tmp=cuCmulf(buf[i-cx +(j+cy)*ny],sign); */
 	    tmp=buf[i-cx +(j+cy)*ny];
+
+	    /* if (((i)+(j))%2 == 0) sign.x = -1.0; else sign.x = 1.0; */
+	    /* buf[i-cx +(j+cy)*ny] = cuCmulf(buf[i + j*ny],sign); */
 	    buf[i-cx +(j+cy)*ny] = buf[i + j*ny];
+
 	    buf[i + j*ny] = tmp;
 	  }
     }
@@ -345,25 +359,52 @@ namespace casa{
     //===========================================
     // Following is the GPU kernel equivalent of the cpuflip function
     //
+    //  +--------------------+
+    //  |         :          |
+    //  |         :          |
+    //  |    1    :     2    |
+    //  |         :          |
+    //  |....................|
+    //  |         :          |
+    //  |    4    :     3    |
+    //  |         :          |
+    //  |         :          |
+    //  +--------------------+
+    //
+    // This function copies data from quadrant 1 to 3 (and from 3 to 1) and 4 to 2 (and from 2 to 4).
+    // While copying, it also now flips the sign of the pixel values if the target pixel (i,j) satisfies (i+j)%2 != 0.
+    // This therefore effectively combines the flipSign() kernel in flip() kernel itself (i.e., flipSign() does not
+    // need to be envoked).  This saves ~15% in run-time.
+    //
     __global__ void kernel_flip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
       // calculate thread id
       unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
       unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
-      
       int cx=nx/2, cy=ny/2;
-      cufftComplex tmp;
+      __shared__ cufftComplex tmp;
+      cuComplex sign=make_cuFloatComplex(1.0,0.0);
       
       if (i < cx)
 	{
+	  if (((cx+i)+(cy+j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  tmp=cuCmulf(buf[i+j*ny],sign);
 	  tmp=buf[i+j*ny];
-	  buf[i+j*ny] = buf[cx+i + (cy+j)*ny];
+
+	  if (((i)+(j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  buf[i+j*ny] = cuCmulf(buf[cx+i + (cy+j)*ny],sign);
+
 	  buf[cx+i + (cy+j)*ny] = tmp;
+	  //	  if (((cx+i)+(cy+j))%2 != 0) {buf[cx+i + (cy+j)*ny].x *=-1.0; buf[cx+i + (cy+j)*ny].y *= -1.0;}
 	}
       else
 	{
-	  tmp=buf[i-cx +(j+cy)*ny];
-	  buf[i-cx +(j+cy)*ny] = buf[i + j*ny];
+	  if (((i)+(j))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  tmp=cuCmulf(buf[i-cx +(j+cy)*ny],sign);
+
+	  if (((i-cx)+(j+cy))%2 == 0) sign.x=1.0; else sign.x = -1.0;
+	  buf[i-cx +(j+cy)*ny] = cuCmulf(buf[i + j*ny],sign);
+
 	  buf[i + j*ny] = tmp;
 	}
     }
@@ -399,7 +440,7 @@ namespace casa{
       unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
       float sign;
       {
-	//	sign=pow(-1.0,i+j);
+	//	sign=__pow(-1.0,(float)(i+j));
 	if ((i+j)%2 == 0) sign=1.0; else sign=-1.0;
 	buf[i + j*ny].x = buf[i + j*ny].x*sign;
 	buf[i + j*ny].y = buf[i + j*ny].y*sign;

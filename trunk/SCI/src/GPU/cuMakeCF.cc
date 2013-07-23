@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     cudaEventCreate(&start);
     cudaEventRecord(start,0);
 #endif
-    flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
+    //    flipSign(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
     flip(CFd_buf_p, skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
 #ifdef DO_PROFILE
     cudaEventCreate(&stop);
