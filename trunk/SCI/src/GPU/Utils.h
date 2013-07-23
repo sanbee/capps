@@ -5,6 +5,7 @@
 namespace casa{
   enum memoryMode { PINNED, PAGEABLE };
 
+  void * allocateHostBuffer(int N);
   void * allocateDeviceBuffer(int N);
   int sendBufferToDevice(void *d_buf, void *h_buf, int N);
   int getBufferFromDevice(void *h_buf, void *d_buf, int N);

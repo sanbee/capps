@@ -206,7 +206,7 @@ namespace casa{
        }
      cout << endl << "Max = " << tmp << " Shape = " << shape << endl;
 
-     cufft_p.init(NX,NY);
+     cufft_p->init(NX,NY);
      timer_p.mark();
 #ifdef cuda
      FFTServer<Float, Complex> fftServer;
@@ -215,7 +215,7 @@ namespace casa{
      // ret = call_cufft((cufftComplex *)pointer, NX, NY, flag_fft);
 
      //fftServer.flip(skyJonesBuf, True, False);
-     cufft_p.cfft2d(*(ap.aperture));
+     cufft_p->cfft2d(*(ap.aperture));
      //fftServer.flip(skyJonesBuf, False, False);
 #else
        LatticeFFT::cfft2d(*(ap.aperture));

@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
   IPosition skyShape(4,2*1024,2*1024,1,1);
   Vector<Double> uvIncr(2,0.01);
   Int xSupport, ySupport;
-  Int wConvSize = 1024,iw=700,nW=1024;
+  Int wConvSize = 1024,iw=70000,nW=1024;
   Vector<Double> cellSize(2);cellSize=OVERSAMPLING*8*(M_PI/180.0)/3600;
   Double maxUVW = 0.25/cellSize(0);
   Double wScale=Float((wConvSize-1)*(wConvSize-1))/maxUVW;
@@ -89,7 +89,8 @@ int main(int argc, char *argv[])
   // For now, there is only one W-term.  Later we can put the
   // following code in a loop over nWterms.
   //
-  Int iw0=700;
+  nW=1;
+  Int iw0=10000;
   Timer wtimer;
   wtimer.mark();
   for(iw=iw0;iw<nW+iw0;iw++)
@@ -148,10 +149,10 @@ int main(int argc, char *argv[])
 #endif
     timeFFT+=timer.all();
 
-    // cfBuf=theCF.get();
-    // timer.mark();
-    // resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
-    // timeResize+=timer.all();
+    cfBuf=theCF.get();
+    timer.mark();
+    resizeCF(cfBuf, xSupport, ySupport, sampling, 0.0);
+    timeResize+=timer.all();
   }
 
   cout << "Total time for " << nW << " CF computations: " << wtimer.all() << " " << wtimer.all()/nW << endl;
