@@ -198,9 +198,9 @@ namespace casa{
       int originx=nx/2, originy=ny/2, tix, tiy;
       int ix=row-inner/2, iy=col-inner/2;
       tix=ix+originx; tiy=iy+originy;
-      __shared__ float twoPI;
-      twoPI=__fmul_rn(2.0,M_PI);
-      
+      __shared__ float twoPiW;
+      twoPiW=__fmul_rn(2.0,M_PI);
+
       float m=sampling*float(ix), l=sampling*float(iy);
       float rsq=(l*l+m*m);
       /* float m=__fmul_rn(sampling,float(ix)), l=__fmul_rn(sampling,float(iy)); */
@@ -210,8 +210,9 @@ namespace casa{
 	{
 	  // wValue = wPixel*wPixel/wScale
 	  float wValue=__fdividef((wPixel*wPixel),wScale);
+	  twoPiW = __fmul_rn(twoPiW, wValue);
 	  // phase = twoPiW*(sqrt(1.0-rsq)-1.0);
-	  float phase=__fmul_rn(twoPI,__fmul_rn(float(wValue),(__fsqrt_rn(1.0-rsq)-1.0)));
+	  float phase=__fmul_rn(twoPiW,__fmul_rn(float(wValue),(__fsqrt_rn(1.0-rsq)-1.0)));
 	  cufftComplex w; __sincosf(phase, &(w.y),&(w.x));
 	  screen[tix*ny+tiy] = cuCmulf(w,aTerm[tix*ny+tiy]);
 	  //screen[tix*ny+tiy] = w;
