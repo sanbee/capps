@@ -75,8 +75,13 @@ int main(int argc, char *argv[])
   PagedImage<Complex> thisAVGPB("./TemplateATerm_2_0.im");
   //TempImage<Complex> theCF(thisAVGPB.shape(), thisAVGPB.coordinates());
   TempImage<Complex> theCF(skyShape,thisAVGPB.coordinates());
-  TempImage<Complex> thePB(skyShape,thisAVGPB.coordinates());
   Array<Complex> cfBuf=theCF.get();
+  //
+  // Make storage on the device to hold the PB and a buffer for the CF
+  //
+  Int nBytes_p=skyShape(0)*skyShape(1)*sizeof(cufftComplex);
+  cufftComplex *Ad_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
+  cufftComplex *CFd_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
 
   //
   // Setup the WTerm and ATerm objects.
@@ -90,16 +95,11 @@ int main(int argc, char *argv[])
   cuConvolver cuConv(&cuLatFFT);
   cuWTerm cuWTerm;
 
+  aTerm.setDeviceBuffer((Complex *)Ad_buf_p);
+
   cuLatFFT.init(skyShape(0), skyShape(1));
   cuWTerm.setParams(skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy,
 		  cellSize(0), wScale, cfBuf.shape()(0));
-  //
-  // Make storage on the device to hold the PB and a buffer for the CF
-  //
-  Int nBytes_p=skyShape(0)*skyShape(1)*sizeof(cufftComplex);
-  cufftComplex *Ad_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
-  cufftComplex *CFd_buf_p = (cufftComplex *) allocateDeviceBuffer(nBytes_p);
-  aTerm.setDeviceBuffer((Complex *)Ad_buf_p);
   //
   // Apply the A-term to a buffer and re-use this buffer with multiple
   // w-terms.
@@ -107,12 +107,15 @@ int main(int argc, char *argv[])
   Timer atimer;
   atimer.mark();
   //  cudaProfilerStart();
-  aTerm.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
-  aTerm.applyPB(thePB, pa,Freq, bandID, True);
+  {
+    TempImage<Complex> thePB(skyShape,thisAVGPB.coordinates());
+    
+    aTerm.setApertureParams(pa, Freq, bandID, skyShape, uvIncr);
+    aTerm.applyPB(thePB, pa,Freq, bandID, True);
 
-  {// The un-necessary flip....
     Array<Complex>  tmp=thePB.get();
     FFTServer<Float, Complex> fftServer;
+    // The un-necessary flip....
     fftServer.flip(tmp, True, False);
     thePB.put(tmp);
 
@@ -143,6 +146,8 @@ int main(int argc, char *argv[])
   for (iw=iw0;iw<nW+iw0;iw++)
   {
     cuWTerm.setWPixel(iw);
+    // Compute FFT(Ad_buf_p x cuWTerm).  Return the result in
+    // CFd_buf_p.  
     cuConv.convolve(Ad_buf_p, CFd_buf_p, cuWTerm,
 		  skyShape(0), skyShape(1), TILE_WIDTHx, TILE_WIDTHy);
   }
