@@ -198,15 +198,20 @@ namespace casa{
       int originx=nx/2, originy=ny/2, tix, tiy;
       int ix=row-inner/2, iy=col-inner/2;
       tix=ix+originx; tiy=iy+originy;
+      __shared__ float twoPI;
+      twoPI=__fmul_rn(2.0,M_PI);
       
-      
-      double m=sampling*double(ix), l=sampling*double(iy);
-      double rsq=(l*l+m*m);
+      float m=sampling*float(ix), l=sampling*float(iy);
+      float rsq=(l*l+m*m);
+      /* float m=__fmul_rn(sampling,float(ix)), l=__fmul_rn(sampling,float(iy)); */
+      /* float rsq=__fadd_rn(__fmul_rn(l,l),__fmul_rn(m,m)); */
 
       if (rsq<1.0)
 	{
-	  double wValue=(wPixel*wPixel)/wScale;
-	  double phase=2.0*M_PI*double(wValue)*(sqrt(1.0-rsq)-1.0);
+	  // wValue = wPixel*wPixel/wScale
+	  float wValue=__fdividef((wPixel*wPixel),wScale);
+	  // phase = twoPiW*(sqrt(1.0-rsq)-1.0);
+	  float phase=__fmul_rn(twoPI,__fmul_rn(float(wValue),(__fsqrt_rn(1.0-rsq)-1.0)));
 	  cufftComplex w; __sincosf(phase, &(w.y),&(w.x));
 	  screen[tix*ny+tiy] = cuCmulf(w,aTerm[tix*ny+tiy]);
 	  //screen[tix*ny+tiy] = w;
@@ -433,11 +438,45 @@ namespace casa{
 	  /* FLIPSIGN(i,j,ny,buf); */
 	}
     }
+//buf, 4,4,2,2
+__global__ void kernel_newflip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
+    {
+      // calculate thread id
+      unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
+      unsigned int j = tileWidthY*blockIdx.y + threadIdx.y ;
+      
+      int cx=nx/2, cy=ny/2;
+      cufftComplex tmp;
+
+      if (i < cx  && j <cy) 
+        {
+          //printf("i=%d, j=%d, tmp=%d, buf[%d]=%d\n", i,j, tmp, (cx+i + (cy+j)*ny), buf[cx+i + (cy+j)*ny]);
+          tmp=buf[i+j*ny];
+          buf[i+j*ny] = buf[cx+i + (cy+j)*ny];
+          buf[cx+i + (cy+j)*ny] = tmp;
+        }
+      else if (j < cy)
+        {
+          //printf("i=%d, j=%d, cx=%d cy=%d nx=%d ny=%d\n",i,j,cx,cy,nx,ny);
+          //printf("i=%d, j=%d, buf[%d]=%d buf_s[%d]=%d\n", i,j, (i-cx + (cy+j)*ny),buf[i-cx+(cy+j)*ny],(i + j*ny), buf[i + j*ny]);
+          tmp=buf[i-cx +(j+cy)*ny];
+          buf[i-cx +(j+cy)*ny] = buf[i + j*ny];
+          buf[i + j*ny] = tmp;
+        }
+    }
+    //
+    //--------------------------------------------
+    //
     //
     //--------------------------------------------
     //
     void flip(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
+      /* dim3 dimGrid ( (nx/tileWidthX) , (ny/tileWidthY) ,1 ) ; */
+      /* dim3 dimBlock( tileWidthX, tileWidthY, 1 ) ; */
+
+      /* kernel_newflip<<<dimGrid,dimBlock>>>(buf, nx,ny,tileWidthX, tileWidthY); */
+
 #ifdef USE_AUTO
       {
 	dim3 dimGrid ( nx/tileWidthX , ny/(2*tileWidthY) ,1 ) ;
