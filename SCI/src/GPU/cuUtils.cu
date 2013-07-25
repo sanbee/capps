@@ -195,6 +195,10 @@ namespace casa{
     {
       unsigned int col = tileWidthX*blockIdx.x + threadIdx.x ;
       unsigned int row = tileWidthY*blockIdx.y + threadIdx.y ;
+
+      /* for (col=blockIdx.x * tileWidthX + threadIdx.x; col < nx; col +=tileWidthX * gridDim.x) */
+      /* 	for (row=blockIdx.y * tileWidthY + threadIdx.y; row < ny; row +=tileWidthY * gridDim.y) */
+	  {
       int originx=nx/2, originy=ny/2, tix, tiy;
       int ix=row-inner/2, iy=col-inner/2;
       tix=ix+originx; tiy=iy+originy;
@@ -208,11 +212,13 @@ namespace casa{
 
       if (rsq<1.0)
 	{
-	  // wValue = wPixel*wPixel/wScale
+	  //	  float wValue = wPixel*wPixel/wScale;
 	  float wValue=__fdividef((wPixel*wPixel),wScale);
 	  twoPiW = __fmul_rn(twoPiW, wValue);
-	  // phase = twoPiW*(sqrt(1.0-rsq)-1.0);
-	  float phase=__fmul_rn(twoPiW,__fmul_rn(float(wValue),(__fsqrt_rn(1.0-rsq)-1.0)));
+	  //	  float phase = twoPiW*(sqrt(1.0-rsq)-1.0);
+	  float phase=__fmul_rn(twoPiW,
+				(__fsqrt_rn(1.0-rsq)-1.0)
+				);
 	  cufftComplex w; __sincosf(phase, &(w.y),&(w.x));
 	  screen[tix*ny+tiy] = cuCmulf(w,aTerm[tix*ny+tiy]);
 	  //screen[tix*ny+tiy] = w;
@@ -221,6 +227,7 @@ namespace casa{
 	{
 	  screen[tix*ny+tiy] = make_cuFloatComplex(0.0,0.0);
 	}
+	  }
     }
     //
     //--------------------------------------------
