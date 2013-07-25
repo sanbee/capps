@@ -511,8 +511,8 @@ int main(int argc, char **argv)
 			applyPointingOffsets,//Def=True
 			applyPointingCorrections,//Def=true
 			cfcache,          //Def=""
-			rotpainc,
-			paInc,            // Def=4.0
+			rotpainc,        // Def=5.0
+			paInc,            // Def=360.0
 			pblimit,           // Def=0.05
 			freqinterpmethod,
 			imageTileSizeInPix,
