@@ -4,14 +4,14 @@
 #include <ms/MeasurementSets/MSSelection.h>
 #include <ms/MeasurementSets/MSSelectionError.h>
 #include <ms/MeasurementSets/MSSelection.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <synthesis/MSVis/VisSet.h>
+#include <synthesis/MSVis/VisSetUtil.h>
 //#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <cl.h>
 #include <clinteract.h>
-#include <xmlcasa/Quantity.h>
+//#include <xmlcasa/Quantity.h>
 #include <casa/OS/Directory.h>
 
 using namespace std;
@@ -48,7 +48,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
-	Int& interactive,Long& cache)
+	Int& interactive,Long& cache,	
+	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams)
 {
   if (!restart)
     {
@@ -104,19 +105,35 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchPoints["pbwproject"]=watchedKeys;	
 	watchPoints["pbmosaic"]=watchedKeys;	
 
+	watchedKeys.resize(13);
+	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
+	watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
+	watchedKeys[4]="rotpainc";      watchedKeys[5]="psterm";
+	watchedKeys[6]="aterm";         watchedKeys[7]="wbawp";
+	watchedKeys[8]="mterm";         watchedKeys[9]="conjbeams";     
+	watchedKeys[10]="pointingtable";watchedKeys[11]="applyoffsets";	
+	watchedKeys[12]="dopbcorr";
+	watchPoints["awproject"]=watchedKeys;
+
 	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
 	i=1;clgetIValp("facets",facets,i);
 	i=1;clgetIValp("wplanes",wplanes,i);  
+	i=1;clgetBValp("psterm",psterm,i);  
+	i=1;clgetBValp("aterm",aterm,i);  
+	i=1;clgetBValp("mterm",mterm,i);  
+	i=1;clgetBValp("wbawp",wbawp,i);  
+	i=1;clgetBValp("conjbeams",conjbeams,i);  
+	i=1;clgetFValp("rotpainc",rotpainc,i);  
 	
 // 	CleaMap(watchPoints);
 // 	watchedKeys.resize(1);
 // 	watchedKeys[0]="pointingtable";
 // 	watchPoints["1"]=watchedKeys;
+	i=1;clgetFValp("painc",paInc,i);  
 	i=1;clgetIValp("applyoffsets",applyOffsets,i);
 	i=1;clgetIValp("dopbcorr",dopbcorr,i);  
 	i=1;clgetSValp("pointingtable",pointingTable,i);  
 	i=1;clgetSValp("cfcache",cfcache,i);  
-	i=1;clgetFValp("painc",paInc,i);  
 
 	i=1;clgetSValp("algorithm",algo,i);
 	
@@ -195,9 +212,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	options[0]="uniform";options[1]="natural";options[2]="briggs";
 	clSetOptions("weighting",options);
 
-	options.resize(4);
+	options.resize(5);
 	options[0]="ft";options[1]="wproject";options[2]="pbwproject";
-	options[3]="pbmosaic";
+	options[3]="pbmosaic"; options[4]="awproject";
 	clSetOptions("ftmachine",options);
 
 	options.resize(4);
@@ -286,16 +303,18 @@ int main(int argc, char **argv)
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, 
-    applyOffsets=0,dopbcorr=1;
+    applyOffsets=0,dopbcorr=1, psterm=1, aterm=1, mterm=1, wbawp=1, conjbeams=1;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
+  Bool psterm_b=True, aterm_b=True, mterm_b=True, wbawp_b=True, conjbeams_b=True;
   Float gain,threshold;
   Vector<String> models, restoredImgs, residuals,masks;
   String complist,operation;
   MSSelection msSelection;
 
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
+  Float rotpainc=5.0;
   Int stopLargeNegatives=2, stopPointMode = -1, interactive=0;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
@@ -317,7 +336,7 @@ int main(int argc, char **argv)
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,masks,complist,algo,taql,
-     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache);
+     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b);
 
   if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -423,9 +442,10 @@ int main(int argc, char **argv)
 			 casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
 			 casa::Quantity(0,"km/s"),
 			 spwid,
-			 casa::Quantity(0,"Hz"),
-			 facets,
-			 casa::Quantity(0,"m"));
+			 facets// ,
+			 // casa::Quantity(0,"Hz"),
+			 // casa::Quantity(0,"m")
+			 );
       /*
       casaMode="channel";
       cout << datastart << " " << datanchan << endl;
@@ -462,8 +482,10 @@ int main(int argc, char **argv)
       //  False,//mosaic, // Def=false
       //  False //async // Def=false
       //		    );
+      Float cyclemaxpsffraction=0.8;
       imager.setmfcontrol(cycleFactor,
 			  cycleSpeedup,
+			  cyclemaxpsffraction,
 			  stopLargeNegatives, 
 			  stopPointMode,
 			  scaleType,
@@ -473,20 +495,30 @@ int main(int argc, char **argv)
       MPosition mlocation;
       //mpFromString(mlocation, location);
       if (cache <= 0) cache=nx*ny*2;
+      const String& freqinterpmethod="linear";
+      const Int imageTileSizeInPix=0;
+      const Bool singleprecisiononly=False;
+      const Int numthreads=-1;
       imager.setoptions(ftmac,            //Def="ft"
 			cache,            // Def=4194304
 			16,               // tile Def=16
 			"sf",             // gridfunction Def="sf"
 			mlocation,        // Def=""
 			padding,          // Def=1.0
-			usemodelcol,
+			//			usemodelcol,
 			wPlanes,
 			pointingTable,    //epjTableName
 			applyPointingOffsets,//Def=True
 			applyPointingCorrections,//Def=true
 			cfcache,          //Def=""
+			rotpainc,
 			paInc,            // Def=4.0
-			pblimit           // Def=0.05
+			pblimit,           // Def=0.05
+			freqinterpmethod,
+			imageTileSizeInPix,
+			singleprecisiononly,
+			numthreads,
+			psterm_b, aterm_b, mterm_b, wbawp_b,conjbeams_b
 			);
       Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
       if (operation=="clean")
