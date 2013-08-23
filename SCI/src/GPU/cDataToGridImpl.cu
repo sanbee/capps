@@ -6,14 +6,27 @@
 namespace casa{
 
 template <class T>
-__global__ void cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
-				   VBStore* vbs, Matrix<Double> *sumwt,
-				   const Bool dopsf,
-				   const Int* polMap_ptr, const Int *chanMap_ptr,
-				   const Double *uvwScale_ptr, const Double *offset_ptr,
-				   const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
-				   )
+__global__ void kernel_cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
+					  VBStore* vbs, Matrix<Double> *sumwt,
+					  const Bool dopsf,
+					  const Int* polMap_ptr, const Int *chanMap_ptr,
+					  const Double *uvwScale_ptr, const Double *offset_ptr,
+					  const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
+					  )
 {
+};
+
+template <class T>
+void cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
+					  VBStore* vbs, Matrix<Double> *sumwt,
+					  const Bool dopsf,
+					  const Int* polMap_ptr, const Int *chanMap_ptr,
+					  const Double *uvwScale_ptr, const Double *offset_ptr,
+					  const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
+					  )
+{
+  kernel_cuDataToGridImpl_p<<<200,100>>>(gridStore, gridShape, vbs, sumwt, dopsf, polMap_ptr, chanMap_ptr,
+			    uvwScale_ptr, offset_ptr, dphase_ptr, XThGrid, YThGrid);
 };
 
 template <class T>

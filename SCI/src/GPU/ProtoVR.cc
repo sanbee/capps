@@ -399,7 +399,7 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
 
-	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    cuDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 	    // dcomplexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
@@ -462,7 +462,7 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
 
-	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    cuDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 	    // complexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
