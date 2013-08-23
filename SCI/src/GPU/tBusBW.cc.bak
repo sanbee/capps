@@ -1,0 +1,100 @@
+#include <cuda_runtime.h>
+#include <complex.h>
+#include <cufft.h>
+#include <stdlib.h>
+#include <Utils.h>
+
+#include <casa/aips.h>
+#include <Utils.h>
+#include <casa/OS/Timer.h>
+#include <iostream>
+
+using namespace std;
+using namespace casa;
+
+__global__ void divide(cufftComplex *d_buf, double N)
+{
+  d_buf[blockIdx.x] = d_buf[blockIdx.x] / N;
+}
+
+int main(int argc, char **argv)
+{
+  Timer timer;
+  int NX=1024*5, NY = 1024*5, N=NX*NY*sizeof(cufftComplex);
+  void *h_buf;
+  Double t=0;
+  //
+  //-----------------------------------------------
+  //
+  timer.mark();
+  h_buf = (void *)malloc(N);
+  cerr << "Host allocation time: " << timer.all() << endl;
+  ((float *)h_buf)[100]=100.0;
+  // ((float *)h_buf)[2]=100.0;
+  // ((float *)h_buf)[3]=0.0;
+  cerr << ((float *)h_buf)[100] << " " 
+       << endl;
+  //
+  //-----------------------------------------------
+  //
+  cufftComplex *d_buf;
+  timer.mark();
+  d_buf=(cufftComplex *)allocateDeviceBuffer(N);
+  t=timer.all();
+  cerr << "Device allocation time: " << t << endl;
+  //
+  //-----------------------------------------------
+  //
+  timer.mark();
+  sendBufferToDevice(d_buf, h_buf, N);
+  t=timer.all();
+  cerr << "Send to device time: " << t << endl;
+  cerr << "Send bandwidth for " << N << " bytes: " << N/t << endl;
+  //
+  //-----------------------------------------------
+  //
+  cufftHandle plan=0;
+  timer.mark();
+  makeCUFFTPlan(&plan, NX, NY, CUFFT_C2C);
+  cerr << "Plan id = " << plan << endl;
+  t=timer.all();
+  cerr << "Time for plan: " << t << endl;
+  //
+  //-----------------------------------------------
+  //
+  timer.mark();
+  setCompatibilityMode(plan, CUFFT_COMPATIBILITY_NATIVE);
+  t=timer.all();
+  cerr << "Time for setting compatibility mode: " << t << endl;
+  //
+  //-----------------------------------------------
+  //
+  Double tfft=0;
+  Int NFFT=10, NPix=NX*NY;
+  for(int i=0;i<NFFT;i++)
+    {
+      timer.mark();
+      inPlaceCUFFTC2C(plan, (cufftComplex *)d_buf, CUFFT_FORWARD);
+      divide<<<N,1>>>(d_buf,NPix);
+      tfft+=timer.all();
+    }
+  cerr << "Time for FFT: " << tfft/NFFT << endl;
+  //
+  //-----------------------------------------------
+  //
+  timer.mark();
+  getBufferFromDevice(h_buf, d_buf, N);
+  t=timer.all();
+  cerr << ((float *)h_buf)[0] << " " 
+       << ((float *)h_buf)[1] << " " 
+       << ((float *)h_buf)[2] << " " 
+       << ((float *)h_buf)[3] << " " 
+       << endl;
+
+  cerr << "Get from device time: " << t << endl;
+  cerr << "Get bandwidth for " << N << " bytes: " << N/t << endl;
+
+
+  //  cudaMalloc((void**)&d_buf, N);
+  //  cudaMemcpy(d_buf, h_buf, N, cudaMemcpyHostToDevice);
+}
