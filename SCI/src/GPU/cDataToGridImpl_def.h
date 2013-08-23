@@ -8,15 +8,34 @@
   //
 
   template
-  void cDataToGridImpl_p(Complex* gridStore, Int* gridShape, VBStore& vbs,
-			 Matrix<Double>& sumwt, const Bool& dopsf,
+  __global__ void cuDataToGridImpl_p(Complex* gridStore, Int* gridShape, VBStore* vbs,
+				     Matrix<Double>* sumwt, 
+				     const Bool dopsf,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr,
+				     Int XThGrid=0, Int YThGrid=0
+				     );
+  template
+  __global__ void cuDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore* vbs,
+				     Matrix<Double>* sumwt, 
+				     const Bool dopsf ,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr,
+				     Int XThGrid=0, Int YThGrid=0
+				     );
+
+  template
+  void cDataToGridImpl_p(Complex* gridStore, Int* gridShape, VBStore* vbs,
+			 Matrix<Double>* sumwt, const Bool dopsf,
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
 			 const Double *dphase_ptr,
 			 Int XThGrid=0, Int YThGrid=0);
   template
-  void cDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore& vbs,
-			 Matrix<Double>& sumwt, const Bool& dopsf,
+  void cDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore* vbs,
+			 Matrix<Double>* sumwt, const Bool dopsf,
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
 			 const Double *dphase_ptr,Int XThGrid=0, Int YThGrid=0);

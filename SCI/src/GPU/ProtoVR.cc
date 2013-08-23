@@ -27,6 +27,7 @@
 //# $Id$
 
 #include <synthesis/TransformMachines/SynthesisError.h>
+#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
@@ -36,7 +37,7 @@
 #include <iostream>
 #include <typeinfo>
 #include <iomanip>
-#include <synthesis/TransformMachines/FortranizedLoops.h>
+//#include <synthesis/TransformMachines/FortranizedLoops.h>
 #ifdef HAS_OMP
 #include <omp.h>
 #endif
@@ -50,6 +51,22 @@ namespace casa{
   // Template instantiations for re-sampling onto a double precision
   // or single precision grid.
   //
+  // void ProtoVR::copy(const VisibilityResamplerBase& other)
+  // {
+  //   other.copy(other
+  //   SynthesisUtils::SETVEC(uvwScale_p, other.uvwScale_p);
+  //   SynthesisUtils::SETVEC(offset_p, other.offset_p);
+  //   SynthesisUtils::SETVEC(dphase_p, other.dphase_p);
+  //   SynthesisUtils::SETVEC(chanMap_p, other.chanMap_p);
+  //   SynthesisUtils::SETVEC(polMap_p, other.polMap_p);
+  //   SynthesisUtils::SETVEC(spwChanFreq_p, other.spwChanFreq_p);
+  //   SynthesisUtils::SETVEC(spwChanConjFreq_p, other.spwChanConjFreq_p);
+  //   SynthesisUtils::SETVEC(cfMap_p, other.cfMap_p);
+  //   SynthesisUtils::SETVEC(conjCFMap_p, other.conjCFMap_p);
+  //   //    vbRow2CFMap_p.assign(other.vbRow2CFMap_p);
+  //   convFuncStore_p = other.convFuncStore_p;
+  // }
+
   template 
   void ProtoVR::addTo4DArray(DComplex *store,
 				      const Int*  iPos, 
@@ -367,7 +384,13 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       // Loop over all the grid partitions
       //
 
-#pragma omp parallel shared(gridCoords) num_threads(Nth)
+      Int *polMap_ptr=polMap_p.getStorage(Dummy),
+	*chanMap_ptr = chanMap_p.getStorage(Dummy);
+      Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
+	*offset_ptr=offset_p.getStorage(Dummy), 
+	*dphase_ptr=dphase_p.getStorage(Dummy);
+
+#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
       {
 	Matrix<Double> tmpSumWt(sumwt.shape());
 #pragma omp for
@@ -375,7 +398,17 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	  {
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
-	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
+
+	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    // dcomplexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    // 			polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    // 			dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+			    
+
+
+	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
 // #ifdef HAS_OMP
 // 	    threadID=omp_get_thread_num();
 // #endif
@@ -414,7 +447,13 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       // Loop over all the grid partitions
       //
 
-#pragma omp parallel shared(gridCoords) num_threads(Nth)
+      Int *polMap_ptr=polMap_p.getStorage(Dummy),
+	*chanMap_ptr = chanMap_p.getStorage(Dummy);
+      Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
+	*offset_ptr=offset_p.getStorage(Dummy), 
+	*dphase_ptr=dphase_p.getStorage(Dummy);
+
+#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
       {
 	Matrix<Double> tmpSumWt(sumwt.shape());
 #pragma omp for
@@ -422,7 +461,18 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	  {
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
-	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
+
+	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    // complexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    // 		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    // 		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+
+
+
+
+	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
 // #ifdef HAS_OMP
 // 	    threadID=omp_get_thread_num();
 // #endif

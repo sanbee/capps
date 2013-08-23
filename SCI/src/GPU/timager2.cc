@@ -400,8 +400,10 @@ int main(int argc, char **argv)
       // and DComplexGridder typedefs from cDataToGridImpl.h has all
       // the information needed to pick up the correct instantiation
       // of cDataToGridImpl_p.
-      ComplexGridder fC = cDataToGridImpl_p;
-      DComplexGridder fD = cDataToGridImpl_p;
+      // ComplexGridder fC = cDataToGridImpl_p;
+      // DComplexGridder fD = cDataToGridImpl_p;
+      ComplexGridder fC = cuDataToGridImpl_p;
+      DComplexGridder fD = cuDataToGridImpl_p;
       Imager imager;
       imager.setGridder(fC, fD);
       
