@@ -32,6 +32,7 @@
 #include <synthesis/TransformMachines/CFStore.h>
 #include <synthesis/TransformMachines/VBStore.h>
 #include <synthesis/TransformMachines/VisibilityResampler.h>
+#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include <synthesis/MSVis/VisBuffer.h>
 #include <casa/Arrays/Array.h>
 #include <casa/Arrays/Vector.h>
@@ -50,6 +51,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;};
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~ProtoVR()                                         {};
+
+    void setGridder(ComplexGridder fC, DComplexGridder fD) 
+    {
+      complexGridder_ptr=fC; dcomplexGridder_ptr=fD;
+      cerr << "fC = " << &complexGridder_ptr << " fD = " << &dcomplexGridder_ptr << endl;
+    };
 
     virtual VisibilityResamplerBase* clone()
     {return new ProtoVR(*this);}
@@ -381,6 +388,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 			  const Vector<Int>& convOrigin,
     // 			  const Double& cfRefFreq,
     // 			  const Double& imRefFreq);
+    ComplexGridder complexGridder_ptr; 
+    DComplexGridder dcomplexGridder_ptr;
   };
 }; //# NAMESPACE CASA - END
 

@@ -1,3 +1,4 @@
+// -*- C++ -*-
 //#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include "cDataToGridImpl.h"
 #include <typeinfo>
@@ -5,9 +6,20 @@
 namespace casa{
 
 template <class T>
+__global__ void cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
+				   VBStore* vbs, Matrix<Double> *sumwt,
+				   const Bool dopsf,
+				   const Int* polMap_ptr, const Int *chanMap_ptr,
+				   const Double *uvwScale_ptr, const Double *offset_ptr,
+				   const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
+				   )
+{
+};
+
+template <class T>
 void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
-		       VBStore& vbs, Matrix<Double>& sumwt,
-		       const Bool& dopsf,
+		       VBStore* vbs, Matrix<Double>* sumwt,
+		       const Bool dopsf,
 		       const Int* polMap_ptr, const Int *chanMap_ptr,
 		       const Double *uvwScale_ptr, const Double *offset_ptr,
 		       const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0)
@@ -34,48 +46,48 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
   Complex norm;
   Int cfShape[4];
   Bool Dummy;
-  Bool * flagCube_ptr=vbs.flagCube_p.getStorage(Dummy);
-  Bool * rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);
-  Float * imgWts_ptr = vbs.imagingWeight_p.getStorage(Dummy);
-  Complex * visCube_ptr = vbs.visCube_p.getStorage(Dummy);
-  Double *sumWt_ptr=sumwt.getStorage(Dummy);
+  Bool * flagCube_ptr=vbs->flagCube_p.getStorage(Dummy);
+  Bool * rowFlag_ptr = vbs->rowFlag_p.getStorage(Dummy);
+  Float * imgWts_ptr = vbs->imagingWeight_p.getStorage(Dummy);
+  Complex * visCube_ptr = vbs->visCube_p.getStorage(Dummy);
+  Double *sumWt_ptr=sumwt->getStorage(Dummy);
 
   //  Vector<Double> pointingOffset(cfb.getPointingOffset());
-  // Double *pointingOffset_ptr=vbs.cfBSt_p.pointingOffset,
+  // Double *pointingOffset_ptr=vbs->cfBSt_p.pointingOffset,
   //   *cached_PointingOffset_ptr=cached_PointingOffset_p.getStorage(Dummy);
-  Double *pointingOffset_ptr=vbs.cfBSt_p.pointingOffset,
+  Double *pointingOffset_ptr=vbs->cfBSt_p.pointingOffset,
     *cached_PointingOffset_ptr=NULL;
 
-  Int vbSpw=vbs.spwID_p;
+  Int vbSpw=vbs->spwID_p;
     
 
-  rbeg = vbs.beginRow_p;
-  rend = vbs.endRow_p;
+  rbeg = vbs->beginRow_p;
+  rend = vbs->endRow_p;
   
   nx=gridShape[0]; ny=gridShape[1];
   nGridPol=gridShape[2]; nGridChan=gridShape[3];
   Bool gDummy;
   
-  Double *freq=vbs.freq_p.getStorage(Dummy);
+  Double *freq=vbs->freq_p.getStorage(Dummy);
   
   cacheAxisIncrements(gridShape, gridInc_l);
 
-  nCFFreq = vbs.cfBSt_p.shape[0]; // shape[0]: nChan, shape[1]: nW, shape[2]: nPol
-  nw = vbs.cfBSt_p.shape[1];
+  nCFFreq = vbs->cfBSt_p.shape[0]; // shape[0]: nChan, shape[1]: nW, shape[2]: nPol
+  nw = vbs->cfBSt_p.shape[1];
 
   iloc[0]=iloc[1]=iloc[2]=iloc[3]=0;
-  Int nDataChan=vbs.nDataChan_p,
-    nDataPol = vbs.nDataPol_p;
-  accumCFs=vbs.accumCFs_p;
+  Int nDataChan=vbs->nDataChan_p,
+    nDataPol = vbs->nDataPol_p;
+  accumCFs=vbs->accumCFs_p;
   if (accumCFs)
     {
-      startChan = vbs.startChan_p;
-      endChan = vbs.endChan_p;
+      startChan = vbs->startChan_p;
+      endChan = vbs->endChan_p;
     }
   else 
     {
       startChan = 0;
-      endChan = vbs.nDataChan_p;
+      endChan = vbs->nDataChan_p;
     }
 
 
@@ -98,26 +110,26 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 		  
 		  if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
 		    {
-		      Double dataWVal = vbs.vb_p->uvw()(irow)(2);
+		      Double dataWVal = vbs->vb_p->uvw()(irow)(2);
 		      
-		      Int wndx = (int)(sqrt(vbs.cfBSt_p.wIncr*abs(dataWVal*freq[ichan]/C::c)));
+		      Int wndx = (int)(sqrt(vbs->cfBSt_p.wIncr*abs(dataWVal*freq[ichan]/C::c)));
 		      
 		      Int cfFreqNdx;
-		      if (vbs.conjBeams_p) cfFreqNdx = vbs.cfBSt_p.conjFreqNdxMap[vbSpw][ichan];
-		      else cfFreqNdx = vbs.cfBSt_p.freqNdxMap[vbSpw][ichan];
+		      if (vbs->conjBeams_p) cfFreqNdx = vbs->cfBSt_p.conjFreqNdxMap[vbSpw][ichan];
+		      else cfFreqNdx = vbs->cfBSt_p.freqNdxMap[vbSpw][ichan];
 		      
 		      Float s;
-		      s=vbs.cfBSt_p.CFBStorage->sampling;
-		      support[0]=vbs.cfBSt_p.CFBStorage->xSupport;
-		      support[1]=vbs.cfBSt_p.CFBStorage->ySupport;
+		      s=vbs->cfBSt_p.CFBStorage->sampling;
+		      support[0]=vbs->cfBSt_p.CFBStorage->xSupport;
+		      support[1]=vbs->cfBSt_p.CFBStorage->ySupport;
 		      
 		      sampling[0] = sampling[1] = SynthesisUtils::nint(s);
 		      
-		      const Double *uvw_ptr=vbs.uvw_p.getStorage(Dummy);
+		      const Double *uvw_ptr=vbs->uvw_p.getStorage(Dummy);
 			// *uvwScale_ptr=uvwScale_p.getStorage(Dummy),
 			// *offset_ptr=offset_p.getStorage(Dummy);;
 		      
-		      csgrid(pos,loc,off, phasor, irow, vbs.uvw_p, dphase_ptr[irow], freq[ichan], 
+		      csgrid(pos,loc,off, phasor, irow, vbs->uvw_p, dphase_ptr[irow], freq[ichan], 
 			    uvwScale_ptr, offset_ptr, sampling);
 		      
 		      Float cfblc[2], cftrc[2];
@@ -173,14 +185,14 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 				      // for (uInt mRow=0;mRow<conjMNdx[ipol].nelements(); mRow++) 
 				      // for (uInt mRow=0;mRow<vbs.cfBSt_p.conjMuellerElementsIndex[ipol].nelements(); mRow++) 
 				      Bool foundCFPeak=False;
-				      for (uInt mRow=0;mRow<vbs.cfBSt_p.nMueller; mRow++) 
+				      for (uInt mRow=0;mRow<vbs->cfBSt_p.nMueller; mRow++) 
 					{
 					  Complex* convFuncV;
 					  // CUWORK:  Essentially CFC.getCellPtr(FNDX, WNDX, POLNDX)
 					  // CUWORK: CFC wrapper
 					  convFuncV=cgetConvFunc_p(cfShape, vbs, dataWVal, cfFreqNdx, wndx, 
-								  vbs.cfBSt_p.muellerElementsIndex,
-								  vbs.cfBSt_p.conjMuellerElementsIndex, ipol,  mRow);
+								  vbs->cfBSt_p.muellerElementsIndex,
+								  vbs->cfBSt_p.conjMuellerElementsIndex, ipol,  mRow);
 					  
 					  convOrigin[0]=cfShape[0]/2;
 					  convOrigin[1]=cfShape[1]/2;
@@ -197,7 +209,7 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 					  
 					  if (finitePointingOffsets && !psfOnly)
 					    ccachePhaseGrad_g(cached_PhaseGrad_ptr, cachedPhaseGradNX, cachedPhaseGradNY,	
-							     cached_PointingOffset_ptr, pointingOffset_ptr, cfShape, convOrigin);//, cfRefFreq);//, vbs.imRefFreq());
+							     cached_PointingOffset_ptr, pointingOffset_ptr, cfShape, convOrigin);//, cfRefFreq);//, vbs->imRefFreq());
 					  
 					  cacheAxisIncrements(cfShape, cfInc_l);
 					  //cerr << gridShape[0] << " " << gridShape[1] << " " << gridInc_p[0] << " " << gridInc_p[0] << endl;
@@ -209,8 +221,8 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 								   finitePointingOffsets,psfOnly,foundCFPeak);
 					}
 				      
-				      //sumwt(targetIMPol,targetIMChan) += vbs.imagingWeight_p(ichan, irow);//*abs(norm);
-				      //cerr << sumwt << " " << targetIMPol << " " << targetIMChan << " " << vbs.imagingWeight_p(ichan, irow) << " " << abs(norm) << endl;
+				      //sumwt(targetIMPol,targetIMChan) += vbs->imagingWeight_p(ichan, irow);//*abs(norm);
+				      //cerr << sumwt << " " << targetIMPol << " " << targetIMChan << " " << vbs->imagingWeight_p(ichan, irow) << " " << abs(norm) << endl;
 				      // Int dx=abs(itrc[0]-iblc[0]+1), dy=abs(itrc[1]-iblc[1]+1);
 				      // Float cfPixArea = (float)square(abs(support[0]-support[1]+1));
 				      
@@ -275,15 +287,15 @@ void csgrid(Double pos[2], Int loc[3], Double off[3], Complex& phasor,
 //
 //---------------------------------------------------------------------------------
 //
-Bool ccomputeSupport(const VBStore& vbs, const Int& XThGrid, const Int& YThGrid,
+Bool ccomputeSupport(const VBStore* vbs, const Int& XThGrid, const Int& YThGrid,
 		    const Int support[2], const Float sampling[2],
 		    const Double pos[2], const Int loc[3],
 		    Float iblc[2], Float itrc[2])
 {
   //    Int sup[2] = {support[0]*sampling[0], support[1]*sampling[1]};
   Int sup[2] = {support[0], support[1]};
-  Int blc[2] = {vbs.BLCXi(XThGrid, YThGrid), vbs.BLCYi(XThGrid, YThGrid)};
-  Int trc[2] = {vbs.TRCXi(XThGrid, YThGrid), vbs.TRCYi(XThGrid, YThGrid)};
+  Int blc[2] = {vbs->BLCXi(XThGrid, YThGrid), vbs->BLCYi(XThGrid, YThGrid)};
+  Int trc[2] = {vbs->TRCXi(XThGrid, YThGrid), vbs->TRCYi(XThGrid, YThGrid)};
 
   Float vblc[2]={pos[0]-sup[0],pos[1]-sup[1]}, vtrc[2]={pos[0]+sup[0],pos[1]+sup[1]};
   if (SynthesisUtils::checkIntersection(blc,trc,vblc,vtrc))
@@ -296,7 +308,7 @@ Bool ccomputeSupport(const VBStore& vbs, const Int& XThGrid, const Int& YThGrid,
 //
 //---------------------------------------------------------------------------------
 //
-Complex* cgetConvFunc_p(Int cfShape[4], VBStore& vbs,
+Complex* cgetConvFunc_p(Int cfShape[4], VBStore* vbs,
 			Double& wVal, Int& fndx, Int& wndx,
 			Int **mNdx, Int  **conjMNdx,
 			Int& ipol, uInt& mRow)
@@ -309,7 +321,7 @@ Complex* cgetConvFunc_p(Int cfShape[4], VBStore& vbs,
   if (wVal > 0.0) polNdx=mNdx[ipol][mRow];
   else            polNdx=conjMNdx[ipol][mRow];
   
-  tcfc=vbs.cfBSt_p.getCFB(fndx,wndx,polNdx);
+  tcfc=vbs->cfBSt_p.getCFB(fndx,wndx,polNdx);
   
   tt=tcfc->CFCStorage;
   cfShape[0]=tcfc->shape[0];

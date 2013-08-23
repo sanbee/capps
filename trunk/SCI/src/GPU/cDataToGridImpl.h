@@ -7,9 +7,29 @@
 namespace casa { //# NAMESPACE CASA - BEGIN
 
 
+  typedef void (*ComplexGridder)(Complex* gridStore, Int* gridShape, VBStore* vbs,
+				  Matrix<Double>* sumwt, const Bool dopsf,
+				  const Int* polMap_ptr, const Int *chanMap_ptr,
+				  const Double *uvwScale_ptr, const Double *offset_ptr,
+				  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+  typedef void (*DComplexGridder)(DComplex* gridStore, Int* gridShape, VBStore* vbs,
+				  Matrix<Double>* sumwt, const Bool dopsf,
+				  const Int* polMap_ptr, const Int *chanMap_ptr,
+				  const Double *uvwScale_ptr, const Double *offset_ptr,
+				  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+
   template <class T>
-  void cDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore& vbs,
-			 Matrix<Double>& sumwt, const Bool& dopsf,
+  __global__ void cuDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore* vbs,
+				     Matrix<Double>* sumwt, 
+				     const Bool dopsf ,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
+				     );
+
+  template <class T>
+  void cDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore* vbs,
+			 Matrix<Double>* sumwt, const Bool dopsf,
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
 			 const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0);
@@ -19,12 +39,12 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      const Double& freq, const Double* scale, const Double* offset,
 	      const Float sampling[2]);
 
-  Bool ccomputeSupport(const VBStore& vbs, const Int& XThGrid, const Int& YThGrid,
+  Bool ccomputeSupport(const VBStore* vbs, const Int& XThGrid, const Int& YThGrid,
 		       const Int support[2], const Float sampling[2],
 		       const Double pos[2], const Int loc[3],
 		       Float iblc[2], Float itrc[2]);
 
-  Complex* cgetConvFunc_p(Int cfShape[4], VBStore& vbs, Double& wVal, Int& fndx, 
+  Complex* cgetConvFunc_p(Int cfShape[4], VBStore* vbs, Double& wVal, Int& fndx, 
 			  Int& wndx, Int **mNdx, Int  **conjMNdx,Int& ipol, uInt& mRow);
 
 
