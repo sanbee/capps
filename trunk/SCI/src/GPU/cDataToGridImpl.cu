@@ -50,10 +50,10 @@ void cDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 		       const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0)
 {
   //LogIO log_l(LogOrigin("ProtoVR[R&D]","DataToGridImpl_p"));
-  //Complex tmp;
-  //Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(tmp));
 
-  //cerr << "cuisGridSinglePrecision = " << isGridSinglePrecision << endl;
+  // Complex tmp;
+  // Bool isGridSinglePrecision=(typeid(gridStore[0]) == typeid(tmp));
+  // cerr << "cuisGridSinglePrecision = " << isGridSinglePrecision << endl;
 
 
   Int nGridPol, nGridChan, nx, ny, nw, nCFFreq;
