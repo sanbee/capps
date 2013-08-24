@@ -2,6 +2,7 @@
 //#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include "cDataToGridImpl.h"
 #include <typeinfo>
+#include <stdio.h>
 
 namespace casa{
 
@@ -14,6 +15,7 @@ __global__ void kernel_cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elem
 					  const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
 					  )
 {
+  printf("SubGrid: %d %d\n", blockIdx.x, blockIdx.y);
 };
 
 template <class T>
@@ -25,8 +27,18 @@ void cuDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
 					  const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
 					  )
 {
-  kernel_cuDataToGridImpl_p<<<200,100>>>(gridStore, gridShape, vbs, sumwt, dopsf, polMap_ptr, chanMap_ptr,
-			    uvwScale_ptr, offset_ptr, dphase_ptr, XThGrid, YThGrid);
+  Int NB=10, NT=5;
+  dim3 dimBlock ( NB, NB, 1 ) ;
+  dim3 dimThread( NT, NT, 1 ) ;
+
+  kernel_cuDataToGridImpl_p<<<dimBlock,dimThread>>>(gridStore, gridShape, vbs, sumwt, dopsf, polMap_ptr, chanMap_ptr,
+						    uvwScale_ptr, offset_ptr, dphase_ptr, XThGrid, YThGrid);
+  cudaError_t err=cudaGetLastError();
+  if (err != cudaSuccess)
+    {
+      cerr << "###Cuda error: Failed to run the kernel " << cudaGetErrorString (err) << endl;
+      exit(0);
+    }
 };
 
 template <class T>

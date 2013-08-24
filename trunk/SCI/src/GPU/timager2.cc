@@ -1,3 +1,5 @@
+#include <cuda_runtime.h>
+
 #include <stdlib.h>
 #include <casa/aips.h>
 #include <ms/MeasurementSets/MSSelection.h>
@@ -359,6 +361,15 @@ int main(int argc, char **argv)
   Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
+
+  //  cudaSetDevice(0);
+  cudaDeviceSynchronize();
+  if (cudaGetLastError() != cudaSuccess)
+    {
+      cerr << "###Cuda error: Failed to initialize" << endl;
+      return 0;
+    }
+
  RENTER:// UI re-entry point.
   MSName=timeStr=antStr=uvDistStr=cfcache=complist=pointingTable="";
   //
@@ -400,12 +411,14 @@ int main(int argc, char **argv)
       // and DComplexGridder typedefs from cDataToGridImpl.h has all
       // the information needed to pick up the correct instantiation
       // of cDataToGridImpl_p.
+
       // ComplexGridder fC = cDataToGridImpl_p;
       // DComplexGridder fD = cDataToGridImpl_p;
-      ComplexGridder fC = cuDataToGridImpl_p;
-      DComplexGridder fD = cuDataToGridImpl_p;
+      // ComplexGridder fC = cuDataToGridImpl_p;
+      // DComplexGridder fD = cuDataToGridImpl_p;
+
       Imager imager;
-      imager.setGridder(fC, fD);
+      //      imager.setGridder(fC, fD);
       
       String AMSName(MSName),diskCacheDir(cfcache);
       //
