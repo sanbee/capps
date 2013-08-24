@@ -14,7 +14,7 @@
 				     const Int* polMap_ptr, const Int *chanMap_ptr,
 				     const Double *uvwScale_ptr, const Double *offset_ptr,
 				     const Double *dphase_ptr,
-				     Int XThGrid=0, Int YThGrid=0
+				     Int XThGrid, Int YThGrid
 				     );
   template
   void cuDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore* vbs,
@@ -23,7 +23,7 @@
 				     const Int* polMap_ptr, const Int *chanMap_ptr,
 				     const Double *uvwScale_ptr, const Double *offset_ptr,
 				     const Double *dphase_ptr,
-				     Int XThGrid=0, Int YThGrid=0
+				     Int XThGrid, Int YThGrid
 				     );
   template
   __global__ void kernel_cuDataToGridImpl_p(Complex* gridStore, Int* gridShape, VBStore* vbs,
@@ -32,7 +32,7 @@
 				     const Int* polMap_ptr, const Int *chanMap_ptr,
 				     const Double *uvwScale_ptr, const Double *offset_ptr,
 				     const Double *dphase_ptr,
-				     Int XThGrid=0, Int YThGrid=0
+				     Int XThGrid, Int YThGrid
 				     );
   template
   __global__ void kernel_cuDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore* vbs,
@@ -41,7 +41,7 @@
 				     const Int* polMap_ptr, const Int *chanMap_ptr,
 				     const Double *uvwScale_ptr, const Double *offset_ptr,
 				     const Double *dphase_ptr,
-				     Int XThGrid=0, Int YThGrid=0
+				     Int XThGrid, Int YThGrid
 				     );
 
   template
@@ -50,13 +50,13 @@
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
 			 const Double *dphase_ptr,
-			 Int XThGrid=0, Int YThGrid=0);
+			 Int XThGrid, Int YThGrid);
   template
   void cDataToGridImpl_p(DComplex* gridStore, Int* gridShape, VBStore* vbs,
 			 Matrix<Double>* sumwt, const Bool dopsf,
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
-			 const Double *dphase_ptr,Int XThGrid=0, Int YThGrid=0);
+			 const Double *dphase_ptr,Int XThGrid, Int YThGrid);
   
 
   template
