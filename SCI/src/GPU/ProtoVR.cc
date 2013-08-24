@@ -27,7 +27,8 @@
 //# $Id$
 
 #include <synthesis/TransformMachines/SynthesisError.h>
-#include <synthesis/TransformMachines/cDataToGridImpl.h>
+//#include <synthesis/TransformMachines/cDataToGridImpl.h>
+#include "cDataToGridImpl.h"
 #include <synthesis/TransformMachines/ProtoVR.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
