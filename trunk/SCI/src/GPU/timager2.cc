@@ -363,13 +363,14 @@ int main(int argc, char **argv)
   Vector<String> fluxScale; fluxScale.resize(0);
 
   //  cudaSetDevice(0);
+  cerr << "###Info: Initializing CUDA device...";
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess)
     {
       cerr << "###Cuda error: Failed to initialize" << endl;
       return 0;
     }
-
+  cerr << "done." << endl;
  RENTER:// UI re-entry point.
   MSName=timeStr=antStr=uvDistStr=cfcache=complist=pointingTable="";
   //
