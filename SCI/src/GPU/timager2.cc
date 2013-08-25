@@ -366,10 +366,8 @@ int main(int argc, char **argv)
   cerr << "###Info: Initializing CUDA device...";
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess)
-    {
-      cerr << "###Cuda error: Failed to initialize" << endl;
-      return 0;
-    }
+      throw(AipsError("Cuda error:  Failed to initialize"));
+
   cerr << "done." << endl;
  RENTER:// UI re-entry point.
   MSName=timeStr=antStr=uvDistStr=cfcache=complist=pointingTable="";
@@ -450,8 +448,8 @@ int main(int argc, char **argv)
       //      cerr << datanchan << " " << datastart << " " << datastep << endl; 
 
       if (mode=="continuum") {casaMode="mfs";imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
-      else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
+      else if (mode=="pseudo") {}
       else throw(AipsError("Incorrect setting for keyword \"mode\".  "));
 
       if (!exprNode.isNull())
@@ -528,28 +526,6 @@ int main(int argc, char **argv)
 			 casa::Quantity(0,"Hz"),   // Rest frequency (we don't care yet)
 			 casa::MFrequency::LSRK,   // Rest freq. frame
 			 casa::Quantity(0,"m"));   // Distance (==> not in the near field)
-      /*
-      imager.setimage(nx,ny,
-		      casa::Quantity((Double)cellx,"arcsec"),
-		      casa::Quantity((Double)celly,"arcsec"),
-		      stokes,                      // Def="I"
-		      doshift,                     // Def=false
-		      mphaseCenter,                //Def= "00h 90d"
-		      casa::Quantity(0,"arcsec"),  //shiftx, // Def=0arcsec
-		      casa::Quantity(0,"arcsec"),  //shifty, // Def=0arcsec
-		      casaMode,                    // Def="mfs"
-		      imnchan,//datanchan[0],      // Def=1
-		      imstart,//datastart[0],      // Def=0
-		      imstep,//datanchan[0],       // Def=1
-		      casa::Quantity(0,"km/s"),    //mstart, // Def=0 km/s
-		      casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
-		      spwid,                       // Def=Vector<Int>(1,0)
-		      //		      fieldid[0],                  // Def=0
-		      0,
-		      facets,                      // Def=1
-		      casa::Quantity(0,"m")        //distance // Def=0m
-		      );
-*/
       if (operation != "predict")
 	imager.weight(wtType,                        // Def="natural"
 		      rmode,                         // Def="none"
@@ -557,10 +533,7 @@ int main(int argc, char **argv)
 		      robust,    // Def=0
 		      casa::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
 		      0);        
-      //  npixels, // Def=0
-      //  False,//mosaic, // Def=false
-      //  False //async // Def=false
-      //		    );
+
       imager.setmfcontrol(cycleFactor,
 			  cycleSpeedup,
 			  cycleMaxPSFFraction,
@@ -577,23 +550,7 @@ int main(int argc, char **argv)
       const Int imageTileSizeInPix=0;
       const Bool singleprecisiononly=False;
       const Int numthreads=-1;
-      /*
-      imager.setoptions(ftmac,            //Def="ft"
-			cache,            // Def=4194304
-			16,               // tile Def=16
-			"sf",             // gridfunction Def="sf"
-			mlocation,        // Def=""
-			padding,          // Def=1.0
-			usemodelcol,
-			wPlanes,
-			pointingTable,    //epjTableName
-			applyPointingOffsets,//Def=True
-			applyPointingCorrections,//Def=true
-			cfcache,          //Def=""
-			paInc,            // Def=4.0
-			pblimit           // Def=0.05
-			);
-      */
+
       imager.setoptions(ftmac,            //Def="ft"
 			cache,            // Def=4194304
 			16,               // tile Def=16
