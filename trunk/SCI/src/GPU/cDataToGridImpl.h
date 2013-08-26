@@ -18,6 +18,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Double *uvwScale_ptr, const Double *offset_ptr,
 				  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
+  void cuBlank();
+
   template <class T>
   void cuDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore* vbs,
 				     Matrix<Double>* sumwt, 
