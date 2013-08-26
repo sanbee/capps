@@ -21,6 +21,20 @@ namespace casa{
   //
   //--------------------------------------------
   //
+  cudaError allocateDeviceCFBStruct(CFBStruct **buf)
+  {
+    return cudaSuccess;
+  }
+  //
+  //--------------------------------------------
+  //
+  cudaError freeDeviceCFBStruct(CFBStruct **buf)
+  {
+    return cudaSuccess;
+  }
+  //
+  //--------------------------------------------
+  //
   void * allocateDeviceBuffer(int N)
   {
     void *d_buf;
@@ -32,6 +46,17 @@ namespace casa{
       }
     
     return d_buf;
+  }
+  //
+  //--------------------------------------------
+  //
+  int freeDeviceBuffer(void *dPtr)
+  {
+    cudaFree(dPtr);
+    if (cudaGetLastError() != cudaSuccess)
+      fprintf(stderr, "Cuda error: Failed to free\n");
+
+    return cudaGetLastError();
   }
   //
   //--------------------------------------------
@@ -199,6 +224,7 @@ namespace casa{
       unsigned int col = tileWidthX*blockIdx.x + threadIdx.x ;
       unsigned int row = tileWidthY*blockIdx.y + threadIdx.y ;
 
+      //      printf("wTerm %d %d\n",col,row);
       __shared__ float twoPiW;
       twoPiW=__fmul_rn(2.0,M_PI);
       int originx=nx/2, originy=ny/2, tix, tiy;

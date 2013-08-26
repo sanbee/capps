@@ -1,4 +1,6 @@
 #include <cufft.h>
+#include <synthesis/TransformMachines/VBStore.h>
+
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -6,6 +8,7 @@ namespace casa{
   enum memoryMode { PINNED, PAGEABLE };
 
   void * allocateDeviceBuffer(int N);
+  int freeDeviceBuffer(void *p);
   int sendBufferToDevice(void *d_buf, void *h_buf, int N);
   int getBufferFromDevice(void *h_buf, void *d_buf, int N);
   int makeCUFFTPlan(cufftHandle *plan, int NX, int NY, cufftType type /*CUFFT_C2C*/);
@@ -14,6 +17,13 @@ namespace casa{
   cudaError freeHost(void* h_mem, memoryMode memMode);
   cudaError mallocHost(void** h_mem ,uInt memSize, memoryMode memMode, Bool wc);
   cudaError memCpy(void* sink, void* source, uInt memSize, cudaMemcpyKind direction, memoryMode memMode);
+
+  cudaError allocateDeviceCFBStruct(CFBStruct **buf);
+  cudaError freeDeviceCFBStruct(CFBStruct **buf);
+
+
+
+
   void wTermApplySky(cufftComplex* screen, const cufftComplex* aTerm,
 		     const int& nx, const int& ny, 
 		     const int tileWidthX, const int tileWidthY,

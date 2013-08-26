@@ -45,10 +45,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class ProtoVR: public VisibilityResampler
   {
   public: 
-    ProtoVR(): VisibilityResampler(),
-		      cached_phaseGrad_p(),
-                      cached_PointingOffset_p()
-    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;};
+    ProtoVR():VisibilityResampler(), cached_phaseGrad_p(), cached_PointingOffset_p(), vbStore_p()
+    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;vbStore_p.init();};
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~ProtoVR()                                         {};
 
@@ -257,7 +255,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int gridInc_p[4], cfInc_p[4];
     Matrix<Complex> cached_phaseGrad_p;
     Vector<Double> cached_PointingOffset_p;
-
+    VBStore vbStore_p;
 
     Bool computeSupport(const VBStore& vbs, 
 			const Int& XThGrid, const Int& YThGrid,

@@ -29,7 +29,9 @@
 #include <synthesis/TransformMachines/SynthesisError.h>
 //#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include "cDataToGridImpl.h"
+#include "cuUtils.h"
 #include <synthesis/TransformMachines/ProtoVR.h>
+//#include "ProtoVR.h"
 #include <synthesis/TransformMachines/Utils.h>
 #include <coordinates/Coordinates/SpectralCoordinate.h>
 #include <coordinates/Coordinates/CoordinateSystem.h>
@@ -400,9 +402,12 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
 
-	    cuDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+			       polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+			       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+
+	    //cuBlank();
+
 	    // dcomplexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    // 			polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    // 			dphase_ptr, gridCoords(i,0), gridCoords(i,1));
@@ -463,9 +468,12 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
 
-	    cuDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+
+	    // cuBlank();
+
 	    // complexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    // 		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    // 		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
@@ -918,5 +926,52 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
   //     cerr << irow << " " << vbs.uvw_p(0,irow) << " " << vbs.uvw_p(1,irow) << " " << vbs.uvw_p(2,irow) << endl;
   //   }
   // exit(0);
+
+  //  cerr << vbStore_p.dataShape.product() << " " << vbs.dataShape.product() << endl;
+  vbStore_p.spwID_p     = vbs.spwID_p;
+  vbStore_p.beginRow_p  = vbs.beginRow_p;
+  vbStore_p.endRow_p    = vbs.endRow_p;
+  vbStore_p.nDataChan_p = vbs.nDataChan_p;
+  vbStore_p.nDataPol_p  = vbs.nDataPol_p;
+  vbStore_p.accumCFs_p  = vbs.accumCFs_p;
+  vbStore_p.conjBeams_p = vbs.conjBeams_p;
+  vbStore_p.startChan_p = vbs.startChan_p;
+  vbStore_p.endChan_p   = vbs.endChan_p;
+
+  if (vbStore_p.dataShape.product() < vbs.dataShape.product())
+    {
+      vbStore_p.dataShape = vbs.dataShape;
+      if (vbStore_p.visCube_dptr!=NULL)
+	{
+	  freeDeviceBuffer((void *)vbStore_p.visCube_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.flagCube_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.rowFlag_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.uvw_mat_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.imagingWeight_mat_dptr);
+
+	  freeDeviceBuffer((void *)vbStore_p.BLCXi_mat_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.BLCYi_mat_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.TRCXi_mat_dptr);
+	  freeDeviceBuffer((void *)vbStore_p.TRCYi_mat_dptr);
+	  freeDeviceCFBStruct(&vbStore_p.cfBStr_dptr);
+	}
+
+      vbStore_p.visCube_dptr = (Complex *)allocateDeviceBuffer(shp.product()*sizeof(Complex));
+      vbStore_p.flagCube_dptr = (Bool *)allocateDeviceBuffer(vbs.flagCube_p.shape().product()*sizeof(Bool));
+      vbStore_p.rowFlag_dptr = (Bool *)allocateDeviceBuffer(vbs.rowFlag_p.shape().product()*sizeof(Bool));
+      vbStore_p.uvw_mat_dptr = (Double *)allocateDeviceBuffer(vbs.uvw_p.shape().product()*sizeof(Double));
+      vbStore_p.imagingWeight_mat_dptr = (Float *)allocateDeviceBuffer(vbs.imagingWeight_p.shape().product()*sizeof(Float));
+
+
+      vbStore_p.BLCXi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.BLCXi.shape().product()*sizeof(uInt));
+      vbStore_p.BLCYi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.BLCYi.shape().product()*sizeof(uInt));
+      vbStore_p.TRCXi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.TRCXi.shape().product()*sizeof(uInt));
+      vbStore_p.TRCYi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.TRCYi.shape().product()*sizeof(uInt));
+
+      allocateDeviceCFBStruct(&vbStore_p.cfBStr_dptr);
+
+      cerr << "Device pointer = " << vbStore_p.visCube_dptr << " " << N*sizeof(Complex) << " " << shp(0) << " " << shp(1) << " " << shp(2) << endl;
+    }
+
 }
 };// end namespace casa
