@@ -129,6 +129,20 @@ namespace casa{
 				    Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr,
 				    Bool finitePointingOffset,
 				    Bool doPSFOnly, Bool& foundCFPeak);
+    template
+    void ProtoVR::cudaDataToGridImpl_p(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+				     const Bool dopsf,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+
+    template
+    void ProtoVR::cudaDataToGridImpl_p(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+				     const Bool dopsf,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+
   // template
   // void ProtoVR::accumulateFromGrid(Complex& nvalue, const DComplex* __restrict__& grid, 
   // 					  Vector<Int>& iGrdPos,
@@ -378,18 +392,18 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	}
       //      Timer timer;
 
-#ifdef HAS_OMP
-      Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
-#endif
+// #ifdef HAS_OMP
+//       Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
+// #endif
 
 //      timer.mark();
       //
       // Loop over all the grid partitions
       //
 
-      Int *polMap_ptr=polMap_p.getStorage(Dummy),
+      const Int *polMap_ptr=polMap_p.getStorage(Dummy),
 	*chanMap_ptr = chanMap_p.getStorage(Dummy);
-      Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
+      const Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
 	*offset_ptr=offset_p.getStorage(Dummy), 
 	*dphase_ptr=dphase_p.getStorage(Dummy);
 
@@ -400,18 +414,97 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       for (Int i=0;i<NBlocks;i++)
 	  {
 	    tmpSumWt=0.0;
+	    //-------------------------------------------------------------------------
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
+	    //-------------------------------------------------------------------------
+	    // cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    // 		       polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    // 		       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 
-	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-			       polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-			       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    //-------------------------------------------------------------------------
+	    // The following method ecapsulates the long code after this, but does not work
+	    // for reasons I can't understand.
+	    //
+	    // cudaDataToGridImpl_p(griddedData, vbs, sumwt,//tmpSumWt,
+	    // 			 dopsf,
+	    // 			 polMap_ptr, chanMap_ptr,
+	    // 			 uvwScale_ptr, offset_ptr,
+	    // 			 dphase_ptr, gridCoords(i,0),gridCoords(i,1));
+	      
 
-	    //cuBlank();
+	    const uInt subGridShape[2]={vbs.BLCXi.shape()(0), vbs.BLCXi.shape()(1)};
+	    const uInt *BLCXi=vbs.BLCXi.getStorage(Dummy);
+	    const uInt *BLCYi=vbs.BLCYi.getStorage(Dummy);
+	    const uInt *TRCXi=vbs.TRCXi.getStorage(Dummy);
+	    const uInt *TRCYi=vbs.TRCYi.getStorage(Dummy);
+
+	    const Complex * visCube_ptr = vbs.visCube_p.getStorage(Dummy);
+	    const Float * imgWts_ptr = vbs.imagingWeight_p.getStorage(Dummy);
+	    const Bool * flagCube_ptr=vbs.flagCube_p.getStorage(Dummy);
+	    const Bool * rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);
+	    const Double *uvw_ptr=vbs.uvw_p.getStorage(Dummy);
+
+	    const Int nRow=vbs.nRow_p, beginRow=vbs.beginRow_p, endRow=vbs.endRow_p,
+	      nDataChan=vbs.nDataChan_p, nDataPol=vbs.nDataPol_p,
+	      startChan=vbs.startChan_p, endChan=vbs.endChan_p,
+	      spwID=vbs.spwID_p;
+	    const Double *vbFreq_ptr=vbs.freq_p.getStorage(Dummy);
+
+	    const Complex *cfV[2];//CHECK
+	    Int cfShape[4]={0,0,0,0};//CHECK
+	    Float s=vbs.cfBSt_p.CFBStorage->sampling;
+	    ;
+	    Float sampling[2]={s,s}; // CHECK
+	    const Int support[2]={vbs.cfBSt_p.CFBStorage->xSupport,vbs.cfBSt_p.CFBStorage->ySupport};//CHECK
+
+	    Double *sumWtPtr=tmpSumWt.getStorage(Dummy);
+	    const Bool accumCFs=vbs.accumCFs_p,dopsf_l=dopsf;
+
+	    cfV[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage;
+	    cfV[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage;
+	    cfShape[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[0];
+	    cfShape[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[1];
+	    
+	    cuDataToGridImpl_p(gridStore, gridShape, 
+
+	    		       subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
+	    		       // subGridShape,
+	    		       // vbStore_p.BLCXi_mat_dptr, 
+	    		       // vbStore_p.BLCYi_mat_dptr, 
+	    		       // vbStore_p.TRCXi_mat_dptr, 
+	    		       // vbStore_p.TRCYi_mat_dptr,
+
+	    		       visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+	    		       // vbStore_p.visCube_dptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+	    		       uvw_ptr,
+
+	    		       nRow, beginRow, endRow,
+	    		       nDataChan, nDataPol,
+	    		       startChan, endChan, spwID, 
+	    		       vbFreq_ptr, 
+
+	    		       cfV, cfShape, sampling, support,
+			       
+	    		       // //vbStore_p.convFunc, 
+	    		       // vbStore_p.cfShape_dptr, 
+	    		       // vbStore_p.sampling_dptr, 
+	    		       // vbStore_p.support_dptr,
+
+	    		       sumWtPtr, 
+	    		       dopsf_l, accumCFs,
+	    		       polMap_ptr, chanMap_ptr, 
+	    		       uvwScale_ptr, offset_ptr,
+	    		       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+			       
+	    //-------------------------------------------------------------------------
+
+	    // cuBlank(&vbStore_p);
 
 	    // dcomplexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    // 			polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    // 			dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 			    
+	    //-------------------------------------------------------------------------
 
 
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,gridCoords(i,0), gridCoords(i,1));
@@ -444,9 +537,9 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	}
       //      Timer timer;
 
-#ifdef HAS_OMP
-      Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
-#endif
+// #ifdef HAS_OMP
+//       Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
+// #endif
 
 //      timer.mark();
       //
@@ -467,16 +560,92 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	  {
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
+	    //----------------------------------------------------------------------
+	    // cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
+	    // 		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
+	    // 		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    //----------------------------------------------------------------------
+	    // cudaDataToGridImpl_p(griddedData, vbs, sumwt,//tmpSumWt,
+	    // 			 dopsf,
+	    // 			 polMap_ptr, chanMap_ptr,
+	    // 			 uvwScale_ptr, offset_ptr,
+	    // 			 dphase_ptr, gridCoords(i,0),gridCoords(i,1));
 
-	    cDataToGridImpl_p(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
-	    		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
-	    		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
 
-	    // cuBlank();
+	    const uInt subGridShape[2]={vbs.BLCXi.shape()(0), vbs.BLCXi.shape()(1)};
+	    const uInt *BLCXi=vbs.BLCXi.getStorage(Dummy);
+	    const uInt *BLCYi=vbs.BLCYi.getStorage(Dummy);
+	    const uInt *TRCXi=vbs.TRCXi.getStorage(Dummy);
+	    const uInt *TRCYi=vbs.TRCYi.getStorage(Dummy);
+
+	    const Complex * visCube_ptr = vbs.visCube_p.getStorage(Dummy);
+	    const Float * imgWts_ptr = vbs.imagingWeight_p.getStorage(Dummy);
+	    const Bool * flagCube_ptr=vbs.flagCube_p.getStorage(Dummy);
+	    const Bool * rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);
+	    const Double *uvw_ptr=vbs.uvw_p.getStorage(Dummy);
+
+	    const Int nRow=vbs.nRow_p, beginRow=vbs.beginRow_p, endRow=vbs.endRow_p,
+	      nDataChan=vbs.nDataChan_p, nDataPol=vbs.nDataPol_p,
+	      startChan=vbs.startChan_p, endChan=vbs.endChan_p,
+	      spwID=vbs.spwID_p;
+	    const Double *vbFreq_ptr=vbs.freq_p.getStorage(Dummy);
+
+	    const Complex *cfV[2];//CHECK
+	    Int cfShape[4]={0,0,0,0};//CHECK
+	    Float s=vbs.cfBSt_p.CFBStorage->sampling;
+
+	    Float sampling[2]={s,s}; // CHECK
+	    const Int support[2]={vbs.cfBSt_p.CFBStorage->xSupport,vbs.cfBSt_p.CFBStorage->ySupport};//CHECK
+
+	    Double *sumWtPtr=tmpSumWt.getStorage(Dummy);
+	    const Bool accumCFs=vbs.accumCFs_p,dopsf_l=dopsf;
+
+	    cfV[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage;
+	    cfV[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage;
+	    cfShape[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[0];
+	    cfShape[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[1];
+
+
+	    cuDataToGridImpl_p(gridStore, gridShape, 
+
+	    		       subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
+			       // subGridShape,
+			       // vbStore_p.BLCXi_mat_dptr, 
+			       // vbStore_p.BLCYi_mat_dptr, 
+			       // vbStore_p.TRCXi_mat_dptr, 
+			       // vbStore_p.TRCYi_mat_dptr,
+
+			       visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+	    		       // vbStore_p.visCube_dptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+	    		       uvw_ptr,
+
+	    		       nRow, beginRow, endRow,
+	    		       nDataChan, nDataPol,
+	    		       startChan, endChan, spwID, 
+	    		       vbFreq_ptr, 
+			       
+	    		       cfV,cfShape,sampling,support,
+
+			       //vbStore_p.convFunc, 
+			       // vbStore_p.cfShape_dptr,
+			       // vbStore_p.sampling_dptr,
+			       // vbStore_p.support_dptr,
+
+	    		       sumWtPtr, 
+	    		       dopsf_l, accumCFs,
+	    		       polMap_ptr, chanMap_ptr, 
+	    		       uvwScale_ptr, offset_ptr,
+	    		       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+
+	    //----------------------------------------------------------------------
+
+	    // cuBlank(&vbStore_p);
+	    //----------------------------------------------------------------------
 
 	    // complexGridder_ptr(gridStore, gridShape, &vbs, &tmpSumWt, dopsf, 
 	    // 		      polMap_ptr, chanMap_ptr, uvwScale_ptr, offset_ptr,
 	    // 		      dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    //----------------------------------------------------------------------
 
 
 
@@ -938,6 +1107,67 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
   vbStore_p.startChan_p = vbs.startChan_p;
   vbStore_p.endChan_p   = vbs.endChan_p;
 
+  //
+  // For now, using a local copy instant of VBStore (vbStore_p) to
+  // bind the required data to device pointers.
+  //
+  Bool Dummy;
+  //
+  // One-time data transfer only
+  //
+  if (vbStore_p.visCube_dptr == NULL) // This is the first VB
+    {
+      cerr << "BLCxi = " << vbs.BLCXi << " " << vbs.BLCXi.shape() << " " << vbs.BLCXi.getStorage(Dummy)[6] << endl;;
+
+      N=vbs.BLCXi.shape().product()*sizeof(uInt);    vbStore_p.BLCXi_mat_dptr = (uInt *)allocateDeviceBuffer(N);
+      void *ptr=(void*) vbs.BLCXi.getStorage(Dummy);
+      sendBufferToDevice((void*)vbStore_p.BLCXi_mat_dptr, ptr, N);
+
+      N=vbs.BLCYi.shape().product()*sizeof(uInt);    vbStore_p.BLCYi_mat_dptr = (uInt *)allocateDeviceBuffer(N);
+      sendBufferToDevice((void*)vbStore_p.BLCYi_mat_dptr, (void*) vbs.BLCYi.getStorage(Dummy), N);
+
+      N=vbs.TRCXi.shape().product()*sizeof(uInt);    vbStore_p.TRCXi_mat_dptr = (uInt *)allocateDeviceBuffer(N);
+      sendBufferToDevice((void*)vbStore_p.TRCXi_mat_dptr, (void*) vbs.TRCXi.getStorage(Dummy), N);
+
+      N=vbs.TRCYi.shape().product()*sizeof(uInt);    vbStore_p.TRCYi_mat_dptr = (uInt *)allocateDeviceBuffer(N);
+      sendBufferToDevice((void*)vbStore_p.TRCYi_mat_dptr, (void*) vbs.TRCYi.getStorage(Dummy), N);
+
+
+      Int cfShape[4]={vbs.cfBSt_p.getCFB(0,0,1)->shape[0],vbs.cfBSt_p.getCFB(0,0,1)->shape[0],0,0};
+      Float s=vbs.cfBSt_p.CFBStorage->sampling;
+      Float sampling[2]={s,s}; // CHECK
+      Int support[2]={vbs.cfBSt_p.CFBStorage->xSupport,vbs.cfBSt_p.CFBStorage->ySupport};//CHECK
+
+      N=cfShape[0]*cfShape[1]*sizeof(Complex);
+      vbStore_p.convFunc[0]=(Complex *)allocateDeviceBuffer(N);
+      vbStore_p.convFunc[1]=(Complex *)allocateDeviceBuffer(N);
+      vbStore_p.cfShape_dptr=(Int *)allocateDeviceBuffer(4*sizeof(Int));
+      sendBufferToDevice(vbStore_p.convFunc[0], vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage, N);      
+      sendBufferToDevice(vbStore_p.convFunc[1], vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage, N);      
+
+      sendBufferToDevice(vbStore_p.cfShape_dptr, cfShape, 4*sizeof(Int));      
+      
+      N=2*sizeof(Int);
+      vbStore_p.sampling_dptr = (Float *)allocateDeviceBuffer(N);
+      sendBufferToDevice(vbStore_p.sampling_dptr, sampling, N);
+      N=2*sizeof(Float);
+      vbStore_p.support_dptr  = (Int *)allocateDeviceBuffer(N);
+      sendBufferToDevice(vbStore_p.support_dptr, support, N);
+
+      // cfV[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage;
+      // cfV[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage;
+      // cfShape[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[0];
+      // cfShape[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[1];
+
+      N=vbs.freq_p.nelements()*sizeof(Double);
+      vbStore_p.vbFreq_dptr=(Double *)allocateDeviceBuffer(N);
+      sendBufferToDevice(vbStore_p.vbFreq_dptr, vbs.freq_p.getStorage(Dummy), N);
+
+    }
+
+
+  //  cerr << "########## " << vbStore_p.dataShape.product() << " " << vbs.dataShape.product() << endl;
+
   if (vbStore_p.dataShape.product() < vbs.dataShape.product())
     {
       vbStore_p.dataShape = vbs.dataShape;
@@ -948,30 +1178,136 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
 	  freeDeviceBuffer((void *)vbStore_p.rowFlag_dptr);
 	  freeDeviceBuffer((void *)vbStore_p.uvw_mat_dptr);
 	  freeDeviceBuffer((void *)vbStore_p.imagingWeight_mat_dptr);
-
-	  freeDeviceBuffer((void *)vbStore_p.BLCXi_mat_dptr);
-	  freeDeviceBuffer((void *)vbStore_p.BLCYi_mat_dptr);
-	  freeDeviceBuffer((void *)vbStore_p.TRCXi_mat_dptr);
-	  freeDeviceBuffer((void *)vbStore_p.TRCYi_mat_dptr);
-	  freeDeviceCFBStruct(&vbStore_p.cfBStr_dptr);
 	}
 
-      vbStore_p.visCube_dptr = (Complex *)allocateDeviceBuffer(shp.product()*sizeof(Complex));
-      vbStore_p.flagCube_dptr = (Bool *)allocateDeviceBuffer(vbs.flagCube_p.shape().product()*sizeof(Bool));
-      vbStore_p.rowFlag_dptr = (Bool *)allocateDeviceBuffer(vbs.rowFlag_p.shape().product()*sizeof(Bool));
-      vbStore_p.uvw_mat_dptr = (Double *)allocateDeviceBuffer(vbs.uvw_p.shape().product()*sizeof(Double));
-      vbStore_p.imagingWeight_mat_dptr = (Float *)allocateDeviceBuffer(vbs.imagingWeight_p.shape().product()*sizeof(Float));
+      N=shp.product()*sizeof(Complex);
+      vbStore_p.visCube_dptr = (Complex *)allocateDeviceBuffer(N);
 
+      N=vbs.flagCube_p.shape().product()*sizeof(Bool);
+      vbStore_p.flagCube_dptr = (Bool *)allocateDeviceBuffer(N);
 
-      vbStore_p.BLCXi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.BLCXi.shape().product()*sizeof(uInt));
-      vbStore_p.BLCYi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.BLCYi.shape().product()*sizeof(uInt));
-      vbStore_p.TRCXi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.TRCXi.shape().product()*sizeof(uInt));
-      vbStore_p.TRCYi_mat_dptr = (uInt *)allocateDeviceBuffer(vbs.TRCYi.shape().product()*sizeof(uInt));
+      N=vbs.rowFlag_p.shape().product()*sizeof(Bool);
+      vbStore_p.rowFlag_dptr = (Bool *)allocateDeviceBuffer(N);
 
-      allocateDeviceCFBStruct(&vbStore_p.cfBStr_dptr);
+      N=vbs.uvw_p.shape().product()*sizeof(Double);
+      vbStore_p.uvw_mat_dptr = (Double *)allocateDeviceBuffer(N);
 
-      cerr << "Device pointer = " << vbStore_p.visCube_dptr << " " << N*sizeof(Complex) << " " << shp(0) << " " << shp(1) << " " << shp(2) << endl;
+      N=vbs.imagingWeight_p.shape().product()*sizeof(Float);
+      vbStore_p.imagingWeight_mat_dptr = (Float *)allocateDeviceBuffer(N);
+
+      //  cerr << "Device pointer = " << vbStore_p.visCube_dptr << " " << N*sizeof(Complex) << " " << shp(0) << " " << shp(1) << " " << shp(2) << endl;
     }
 
+      N=shp.product()*sizeof(Complex);
+      void *tmp=(void *)vbs.visCube_p.getStorage(Dummy);
+      cerr << "vis = " << ((Complex *)tmp)[10] << " " << ((Complex *)tmp)[20] << N/sizeof(Complex) << " " << sizeof(Complex) << endl;
+      sendBufferToDevice((void *)vbStore_p.visCube_dptr, tmp,N);
+
+      N=vbs.flagCube_p.shape().product()*sizeof(Bool);
+      sendBufferToDevice((void *)vbStore_p.flagCube_dptr, (void *)vbs.flagCube_p.getStorage(Dummy),N);
+
+      N=vbs.rowFlag_p.shape().product()*sizeof(Bool);
+      sendBufferToDevice((void *)vbStore_p.rowFlag_dptr, (void *)vbs.rowFlag_p.getStorage(Dummy),N);
+
+      N=vbs.uvw_p.shape().product()*sizeof(Double);
+      sendBufferToDevice((void *)vbStore_p.uvw_mat_dptr, (void *)vbs.uvw_p.getStorage(Dummy),N);
+
+      N=vbs.imagingWeight_p.shape().product()*sizeof(Float);
+      sendBufferToDevice((void *)vbStore_p.imagingWeight_mat_dptr, (void *)vbs.imagingWeight_p.getStorage(Dummy),N);
 }
+  template <class T>
+  void ProtoVR::cudaDataToGridImpl_p(Array<T>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+				     const Bool dopsf,
+				     const Int* polMap_ptr, const Int *chanMap_ptr,
+				     const Double *uvwScale_ptr, const Double *offset_ptr,
+				     const Double *dphase_ptr, Int XThGrid, Int YThGrid)
+  {
+      Bool Dummy;
+      T *gridStore=griddedData.getStorage(Dummy);
+      Vector<Int> gridV=griddedData.shape().asVector();
+      IPosition shp=vbs.BLCXi.shape();
+      Int *gridShape = gridV.getStorage(Dummy),NBlocks=shp(0)*shp(1), k=0, threadID=0;
+
+      Matrix<Int> gridCoords(NBlocks,2);
+      for (Int i=0;i<shp(0);i++)
+	for (Int j=0;j<shp(0);j++)
+	{
+	  gridCoords(k,0)=i;
+	  gridCoords(k,1)=j;
+	  k++;
+	}
+      
+      Matrix<Double> tmpSumWt(sumwt.shape());
+      const uInt subGridShape[2]={vbs.BLCXi.shape()(0), vbs.BLCXi.shape()(1)};
+      const uInt *BLCXi=vbs.BLCXi.getStorage(Dummy);
+      const uInt *BLCYi=vbs.BLCYi.getStorage(Dummy);
+      const uInt *TRCXi=vbs.TRCXi.getStorage(Dummy);
+      const uInt *TRCYi=vbs.TRCYi.getStorage(Dummy);
+      
+      const Complex * visCube_ptr = vbs.visCube_p.getStorage(Dummy);
+      const Float * imgWts_ptr    = vbs.imagingWeight_p.getStorage(Dummy);
+      const Bool * flagCube_ptr   = vbs.flagCube_p.getStorage(Dummy);
+      const Bool * rowFlag_ptr    = vbs.rowFlag_p.getStorage(Dummy);
+      const Double *uvw_ptr       = vbs.uvw_p.getStorage(Dummy);
+      
+      const Int nRow=vbs.nRow_p, beginRow=vbs.beginRow_p, endRow=vbs.endRow_p,
+	nDataChan=vbs.nDataChan_p, nDataPol=vbs.nDataPol_p,
+	startChan=vbs.startChan_p, endChan=vbs.endChan_p,
+	spwID=vbs.spwID_p;
+      const Double *vbFreq_ptr=vbs.freq_p.getStorage(Dummy);
+      
+      const Complex *cfV[2];//CHECK
+      Int cfShape[4]={0,0,0,0};//CHECK
+      Float s=vbs.cfBSt_p.CFBStorage->sampling;
+      
+      Float sampling[2]={s,s}; // CHECK
+      const Int support[2]={vbs.cfBSt_p.CFBStorage->xSupport,vbs.cfBSt_p.CFBStorage->ySupport};//CHECK
+      
+      Double *sumWtPtr=sumwt.getStorage(Dummy);
+      const Bool accumCFs=vbs.accumCFs_p,dopsf_l=dopsf;
+      
+      cfV[0]=vbs.cfBSt_p.getCFB(0,//fndx
+				0,//wndx
+				0//polNdx
+				)->CFCStorage;
+      cfV[1]=vbs.cfBSt_p.getCFB(0,//fndx
+				0,//wndx
+				1//polNdx
+				)->CFCStorage;
+      
+      cfShape[0]=vbs.cfBSt_p.getCFB(0,//fndx
+				    0,//wndx
+				    1//polNdx
+				    )->shape[0];
+      cfShape[1]=vbs.cfBSt_p.getCFB(0,//fndx
+				    0,//wndx
+				    1//polNdx
+				    )->shape[1];
+      
+      
+      cDataToGridImpl2_p(gridStore, gridShape, 
+			 
+			 subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
+			 
+			 visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+			 uvw_ptr,
+			 
+			 nRow, beginRow, endRow,
+			 nDataChan, nDataPol,
+			 startChan, endChan, spwID, 
+			 vbFreq_ptr, 
+			 
+			 cfV, 
+			 cfShape, sampling, support,
+			 
+			 sumWtPtr, 
+			 dopsf_l, accumCFs,
+			 polMap_ptr, chanMap_ptr, 
+			 uvwScale_ptr, offset_ptr,
+			 dphase_ptr, gridCoords(XThGrid,0), gridCoords(YThGrid,1));
+      
+      //	    sumwt += tmpSumWt;
+      
+  }
+
 };// end namespace casa

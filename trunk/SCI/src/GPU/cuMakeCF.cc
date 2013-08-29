@@ -216,6 +216,7 @@ int main(int argc, char *argv[])
     fliptime+=elapsedTime/1000.0;
 #endif
 
+    cudaDeviceSynchronize();
 
     // theCF.put(cfBuf);
     

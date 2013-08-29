@@ -1,4 +1,4 @@
-ms            = /lustre/sbhatnag/AB1345/LBand/SecondRun/G55.7+3.4_cal.ms
+ms            = /lustre/sbhatnag/AB1345/LBand/SecondRun/tst_G55.ms
 imsize        = 1024,1024
 cellsize      = 8,8
 model         = junk.im

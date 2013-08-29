@@ -148,7 +148,7 @@ PGCC=pgc++ $(ACC_FLAGS)
 #
 # The list of source file names 
 #
-SOURCE  = timager2.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc cuMakeCF.cc cuMakeCF2.cc tBusBW.cu 
+SOURCE  = timager2.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc cuMakeCF.cc cuMakeCF2.cc tBusBW.cu tMemCpy.cc
 SOURCE  = $(wildcard *.cc)
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
@@ -193,7 +193,7 @@ $(OBJECTS): %.o: %.cc
 #	 $(C++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
 
 $(CUOBJECTS): %.o: %.cu
-	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
+	$(NVCC) -g -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
 #        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
 
 # $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
