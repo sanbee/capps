@@ -18,7 +18,7 @@ namespace casa{
   cudaError mallocHost(void** h_mem ,uInt memSize, memoryMode memMode, Bool wc);
   cudaError memCpy(void* sink, void* source, uInt memSize, cudaMemcpyKind direction, memoryMode memMode);
 
-  cudaError allocateDeviceCFBStruct(CFBStruct **buf);
+  cudaError copyDeviceCFBStruct(CFBStruct **buf, const VBStore& CFBSource);
   cudaError freeDeviceCFBStruct(CFBStruct **buf);
 
 

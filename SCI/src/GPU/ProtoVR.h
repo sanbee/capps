@@ -46,7 +46,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   {
   public: 
     ProtoVR():VisibilityResampler(), cached_phaseGrad_p(), cached_PointingOffset_p(), vbStore_p()
-    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;vbStore_p.init();};
+    {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;vbStore_p.init();griddedData_dptr=NULL, griddedData2_dptr=NULL, sumWt_dptr=NULL; gridShape_dptr=NULL;};
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~ProtoVR()                                         {};
 
@@ -234,10 +234,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   			  Bool& finitePointingOffset, 
   			  Matrix<Complex>& cached_phaseGrad_p);
 
-    virtual void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+    void DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
     			    const Bool& dopsf,Bool useConjFreqCF=False);
-    virtual void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
-    			    const Bool& dopsf,Bool useConjFreqCF=False);
+    void DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+		    const Bool& dopsf,Bool useConjFreqCF=False);
 
 
     //
@@ -256,6 +256,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Matrix<Complex> cached_phaseGrad_p;
     Vector<Double> cached_PointingOffset_p;
     VBStore vbStore_p;
+
+    Complex *griddedData_dptr;
+    DComplex *griddedData2_dptr;
+    Int *gridShape_dptr;
+    Double *sumWt_dptr;
 
     Bool computeSupport(const VBStore& vbs, 
 			const Int& XThGrid, const Int& YThGrid,
@@ -280,6 +285,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // void DataToGridImpl_p(Array<T>& griddedData, VBStore& vb,  
     // 			  Matrix<Double>& sumwt,const Bool& dopsf,
     // 			  Bool /*useConjFreqCF*/);
+
+    template <class T>
+    void cudaDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
+			      VBStore* vbs, Matrix<Double>* sumwt,
+			      const Bool dopsf,
+			      const Int* polMap_ptr, const Int *chanMap_ptr,
+			      const Double *uvwScale_ptr, const Double *offset_ptr,
+			      const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
     void sgrid(Double pos[2], Int loc[3], Double off[3], 
     	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 

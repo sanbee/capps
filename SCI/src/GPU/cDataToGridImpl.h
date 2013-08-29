@@ -18,36 +18,113 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				  const Double *uvwScale_ptr, const Double *offset_ptr,
 				  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
-  void cuBlank();
+  void cuBlank(uInt* t,Int n);
+
+  // template <class T>
+  // __global__ void kernel_cuDataToGridImpl_p(T* gridStore,  Int* gridShape, //4-elements
+					    
+  // 					    const uInt *subGridShape,//[2],
+  // 					    const uInt *BLCXi, const uInt *BLCYi,
+  // 					    const uInt *TRCXi, const uInt *TRCYi,
+					    
+  // 					    const Complex *visCube_ptr, const Float* imgWts_ptr,
+  // 					    const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
+  // 					    const Double *uvw_ptr,
+					    
+  // 					    const Int nRow, const Int rbeg, const Int rend, 
+  // 					    const Int nDataChan,const Int nDataPol, 
+  // 					    const Int startChan, const Int endChan, const Int vbSpw,
+  // 					    const Double *vbFreq,
+					    
+  // 					    const Complex *cfV[2],
+  // 					    Int *cfShape,//[4], //[4]
+  // 					    Float *sampling,//[2], 
+  // 					    const Int *support, //[2]
+					    
+  // 					    Double* sumWt_ptr,
+  // 					    const Bool dopsf, const Bool accumCFs,
+  // 					    const Int* polMap_ptr, const Int *chanMap_ptr,
+  // 					    const Double *uvwScale_ptr, const Double *offset_ptr,
+  // 					    const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+  template <class T>
+  void cuDataToGridImpl_p(T* gridStore,  Int* gridShape, //4-elements
+			  
+  			  const uInt *subGridShape,//[2],
+  			  const uInt *BLCXi, const uInt *BLCYi,
+  			  const uInt *TRCXi, const uInt *TRCYi,
+
+  			  const Complex *visCube_ptr, const Float* imgWts_ptr,
+  			  const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
+  			  const Double *uvw_ptr,
+
+  			  const Int nRow, const Int rbeg, const Int rend, 
+  			  const Int nDataChan,const Int nDataPol, const Int startChan, 
+			  const Int endChan, const Int vbSpw,
+  			  const Double *vbFreq,
+			  
+			  const Complex *cfV[2], 
+			  Int *cfShape,//[4], 
+			  Float *sampling,//[2], 
+			  const Int *support, //[2]
+
+  			  Double* sumWt_ptr,
+  			  const Bool dopsf, const Bool accumCFs,
+  			  const Int* polMap_ptr, const Int *chanMap_ptr,
+  			  const Double *uvwScale_ptr, const Double *offset_ptr,
+  			  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
   template <class T>
-  void cuDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore* vbs,
-				     Matrix<Double>* sumwt, 
-				     const Bool dopsf ,
-				     const Int* polMap_ptr, const Int *chanMap_ptr,
-				     const Double *uvwScale_ptr, const Double *offset_ptr,
-				     const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0
-				     );
+  void cDataToGridImpl2_p(T* gridStore,  Int* gridShape, //4-elements
+			  
+  			  const uInt *subGridShape,//[2],
+  			  const uInt *BLCXi, const uInt *BLCYi,
+  			  const uInt *TRCXi, const uInt *TRCYi,
+
+  			  const Complex *visCube_ptr, const Float* imgWts_ptr,
+  			  const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
+  			  const Double *uvw_ptr,
+
+  			  const Int nRow, const Int rbeg, const Int rend, 
+  			  const Int nDataChan,const Int nDataPol, const Int startChan, 
+			  const Int endChan, const Int vbSpw,
+  			  const Double *vbFreq,
+			  
+			  const Complex *cfV[2], 
+			  Int *cfShape,//[4], 
+			  Float *sampling,//[2], 
+			  const Int *support, //[2]
+
+  			  Double* sumWt_ptr,
+  			  const Bool dopsf, const Bool accumCFs,
+  			  const Int* polMap_ptr, const Int *chanMap_ptr,
+  			  const Double *uvwScale_ptr, const Double *offset_ptr,
+  			  const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
   template <class T>
   void cDataToGridImpl_p(T* gridStore, Int* gridShape, VBStore* vbs,
-			 Matrix<Double>* sumwt, const Bool dopsf,
+			 Matrix<Double>* sumwt, 
+			 const Bool dopsf,
 			 const Int* polMap_ptr, const Int *chanMap_ptr,
 			 const Double *uvwScale_ptr, const Double *offset_ptr,
 			 const Double *dphase_ptr, Int XThGrid=0, Int YThGrid=0);
 
   void csgrid(Double pos[2], Int loc[3], Double off[3], Complex& phasor, 
-	      const Int& irow, const Matrix<Double>& uvw, const Double& dphase, 
+	      const Int& irow, const Double* uvw, const Double& dphase, 
 	      const Double& freq, const Double* scale, const Double* offset,
 	      const Float sampling[2]);
 
-  Bool ccomputeSupport(const VBStore* vbs, const Int& XThGrid, const Int& YThGrid,
+  Bool ccomputeSupport(const uInt *BLCXi_ptr, const uInt *BLCYi_ptr,
+		       const uInt *TRCXi_ptr, const uInt *TRCYi_ptr,
+		       const uInt subGridShape[2],
+		       const Int& XThGrid, const Int& YThGrid,
 		       const Int support[2], const Float sampling[2],
 		       const Double pos[2], const Int loc[3],
 		       Float iblc[2], Float itrc[2]);
 
-  Complex* cgetConvFunc_p(Int cfShape[4], VBStore* vbs, Double& wVal, Int& fndx, 
-			  Int& wndx, Int **mNdx, Int  **conjMNdx,Int& ipol, uInt& mRow);
+  Complex* cgetConvFunc_p(Int cfShape[4], VBStore* vbs, Double& wVal, Int& fndx, Int& wndx, 
+			  //Int **mNdx, Int  **conjMNdx,
+			  Int mNdx[4][1], Int  conjMNdx[4][1],
+			  Int& ipol, uInt& mRow);
 
 
   void ccachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int phaseGradNY,

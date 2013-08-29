@@ -18,11 +18,77 @@
 #define OVERSAMPLING 20
 
 namespace casa{
+  void cuASSIGNVVofI(Int** &target, Int** source, Bool doAlloc, Int nx, Int ny)
+  {
+    // cerr << "Source: " << target << " " << source << endl;
+
+    //    Int nx,ny;					
+    Bool b=(doAlloc||(target==NULL));
+    //    nx=source.nelements();
+    if (b) target=(int **)allocateDeviceBuffer(nx*sizeof(int*));
+    for (int i=0;i<nx;i++)
+      {
+	//	ny = source[i].nelements();
+	if (b) (target[i]) = (int *)allocateDeviceBuffer(ny*sizeof(int));
+	for (int j=0;j<ny;j++)
+	  (target)[i][j]=source[i][j];
+      }
+
+    // cerr << "Target: ";
+    // for (int ii=0;ii<source.nelements();ii++)
+    //   {
+    // 	Int ny=source[ii].nelements();
+    // 	for(Int jj=0;jj<ny;jj++)
+    // 	  cerr << target[ii][jj] << " ";
+    // 	cerr << endl;
+    //   }
+  }
   //
   //--------------------------------------------
   //
-  cudaError allocateDeviceCFBStruct(CFBStruct **buf)
+  cudaError copyDeviceCFBStruct(CFBStruct **buf, const VBStore& sourceVBS)
   {
+    CFBStruct hbuf;
+    
+    Int N;
+    hbuf.shape[0]=sourceVBS.cfBSt_p.shape[0];
+    hbuf.shape[1]=sourceVBS.cfBSt_p.shape[1];
+    hbuf.shape[2]=sourceVBS.cfBSt_p.shape[2];
+
+    *buf = (CFBStruct *)allocateDeviceBuffer(sizeof(CFBStruct));
+    //    cudaMalloc((void**)buf, sizeof(CFBStruct));
+
+
+    N=sizeof(Double)*sourceVBS.cfBSt_p.shape[0];
+    hbuf.freqValues = (Double *)allocateDeviceBuffer(N);
+    sendBufferToDevice((hbuf.freqValues), (sourceVBS.cfBSt_p.freqValues), N);
+
+    sendBufferToDevice(*buf, &hbuf, sizeof(CFBStruct));
+
+    /* N=sizeof(Double)*sourceVBS.cfBSt_p.shape[1]; */
+    /* hbuf.wValues = (Double *)allocateDeviceBuffer(N); */
+    /* sendBufferToDevice((void*)(hbuf.wValues), (void*)(sourceVBS.cfBSt_p.wValues), N); */
+
+    /* // sourceCFB.cfBSt_p.shape: nchan x nW x nPol */
+    /* sendBufferToDevice((void*)&((*buf)->shape[0]), (void*)&(sourceVBS.cfBSt_p.shape[0]), sizeof(int)); */
+    /* sendBufferToDevice((void*)&((*buf)->shape[0]), (void*)&(sourceVBS.cfBSt_p.shape[1]), sizeof(int)); */
+    /* sendBufferToDevice((void*)&((*buf)->shape[0]), (void*)&(sourceVBS.cfBSt_p.shape[2]), sizeof(int)); */
+
+
+    /* //    (*buf)->pointingOffset = (Double *)allocateDeviceBuffer(sizeof(Double)*sourceCFB.shape[0]); */
+    /* hbuf.pointingOffset = NULL; */
+
+    /* sendBufferToDevice((void *)&((*buf)->fIncr), (void *)&(sourceVBS.cfBSt_p.fIncr), sizeof(sourceVBS.cfBSt_p.fIncr)); */
+    /* sendBufferToDevice((void *)&((*buf)->wIncr), (void *)&(sourceVBS.cfBSt_p.wIncr), sizeof(sourceVBS.cfBSt_p.wIncr)); */
+    /* sendBufferToDevice((void *)&((*buf)->nMueller), (void *)&(sourceVBS.cfBSt_p.nMueller), sizeof(sourceVBS.cfBSt_p.nMueller)); */
+
+
+
+    cuASSIGNVVofI(hbuf.muellerElementsIndex, 
+		  sourceVBS.cfBSt_p.muellerElementsIndex,
+		  True,
+		  sourceVBS.cfBSt_p.nMueller,  // [[0] [] [] [1]] ==> nMueller=4, shape[2]=1
+		  sourceVBS.cfBSt_p.shape[2]); 
     return cudaSuccess;
   }
   //
@@ -69,6 +135,8 @@ namespace casa{
 	fprintf(stderr, "Cuda error: Failed to send\n");
 	return 0;
       }
+    //    cudaDeviceSynchronize();
+
     return 1;
   }
   //
