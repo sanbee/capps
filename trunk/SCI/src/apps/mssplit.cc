@@ -100,7 +100,8 @@ void printInfo(MSSelection& msSelection)
   cout << "Time         = " << msSelection.getTimeList()     << endl;
   cout << "UVRange      = " << msSelection.getUVList()       << endl;
   cout << "UV in meters = " << msSelection.getUVUnitsList()  << endl;
-  cout << "DDIDs        = " << msSelection.getDDIDList()     << endl;
+  cout << "DDIDs(Poln)  = " << msSelection.getDDIDList()     << endl;
+  cout << "DDIDs(SPW)   = " << msSelection.getSPWDDIDList()     << endl;
   cout << "PolMap       = " << msSelection.getPolMap()       << endl;
   cout << "CorrMap      = " << msSelection.getCorrMap( )     << endl;
   cout << "StateList    = " << msSelection.getStateObsModeList() << endl;
