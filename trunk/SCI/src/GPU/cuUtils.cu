@@ -803,4 +803,51 @@ __global__ void kernel_newflip(cufftComplex *buf, const int nx, const int ny, co
       /* return found; */
     }
     
+
+  /*   __device__ */
+  /* void cucalcIntersection(const Int blc1[2], const Int trc1[2],  */
+  /* 			  const Float blc2[2], const Float trc2[2], */
+  /* 			  Float blc[2], Float trc[2]) */
+  /* { */
+  /*   Float dblc, dtrc; */
+  /*   for (Int i=0;i<2;i++) */
+  /*     { */
+  /*       dblc = blc2[i] - blc1[i]; */
+  /*       dtrc = trc2[i] - trc1[i]; */
+
+  /*       if ((dblc >= 0) and (dtrc >= 0)) */
+  /* 	  { */
+  /*           blc[i] = blc1[i] + dblc; */
+  /*           trc[i] = trc2[i] - dtrc; */
+  /* 	  } */
+  /*       else if ((dblc >= 0) and (dtrc < 0)) */
+  /* 	  { */
+  /*           blc[i] = blc1[i] + dblc; */
+  /*           trc[i] = trc1[i] + dtrc; */
+  /* 	  } */
+  /*       else if ((dblc < 0) and (dtrc >= 0)) */
+  /* 	  { */
+  /*           blc[i] = blc2[i] - dblc; */
+  /*           trc[i] = trc2[i] - dtrc; */
+  /* 	  } */
+  /*       else */
+  /* 	  { */
+  /*           blc[i] = blc2[i] - dblc; */
+  /*           trc[i] = trc1[i] + dtrc; */
+  /* 	  } */
+  /*     } */
+  /* } */
+  /* // */
+  /* // Check if the two rectangles interset (courtesy U.Rau). */
+  /* // */
+  /*   __device__ */
+  /* Bool cucheckIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]) */
+  /* { */
+  /*   if ((blc1[0] > trc2[0]) || (trc1[0] < blc2[0]) || (blc1[1] > trc2[1]) || (trc1[1] < blc2[1]))  */
+  /*     return False; */
+  /*   else */
+  /*     return True; */
+  /* } */
+
+
   };

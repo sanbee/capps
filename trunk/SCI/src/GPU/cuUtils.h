@@ -62,5 +62,13 @@ namespace casa{
   __global__ void  matrixMulCUDA(cufftComplex *A, cufftComplex *B, int wA, int wB);
 
   void flipSign(cufftComplex *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY);
+
+  __device__
+  Bool cucheckIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2]);
+
+    __device__
+  void cucalcIntersection(const Int blc1[2], const Int trc1[2], const Float blc2[2], const Float trc2[2],
+			  Float blc[2], Float trc[2]);
+ 
 };
 #endif

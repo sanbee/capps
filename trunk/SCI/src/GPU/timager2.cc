@@ -52,7 +52,7 @@ void toCASASVector(std::vector<string>& stdv, Vector<String>& tmp)
 }
 
 void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, string& spwStr, 
-	string& antStr, string& fieldStr, string& uvDistStr, float& paInc, string& cfcache, 
+	string& antStr, string& fieldStr, string& scanStr, string& uvDistStr, float& paInc, string& cfcache, 
 	string& pointingTable, float& cellx, float& celly, string& stokes,string& mode, 
 	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
 	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
@@ -179,6 +179,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFullValp("time",timeStr);  
 	i=1;clgetFullValp("baseline",antStr);  
 	i=1;clgetFullValp("uvrange",uvDistStr);  
+	i=1;clgetFullValp("scan",scanStr);  
 
 	InitMap(watchPoints,exposedKeys);
 	exposedKeys.push_back("imnchan");  
@@ -339,7 +340,7 @@ int main(int argc, char **argv)
   //
   //---------------------------------------------------
   //
-  string MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, cfcache,pointingTable;
+  string MSName, timeStr, spwStr, antStr, fieldStr, scanStr, uvDistStr, cfcache,pointingTable;
   string stokes,mode, casaMode, ftmac,wtType, rmode, algo, taql;
   Float padding=1.0, pblimit, paInc,cellx,celly;
   Long cache=2*1024*1024*1024L;
@@ -363,7 +364,7 @@ int main(int argc, char **argv)
   Vector<String> fluxScale; fluxScale.resize(0);
 
   //  cudaSetDevice(0);
-  cerr << "###Info: Initializing CUDA device...";
+  cerr << "###Info: Initializing device...";
   cudaDeviceSynchronize();
   if (cudaGetLastError() != cudaSuccess)
       throw(AipsError("Cuda error:  Failed to initialize"));
@@ -379,12 +380,12 @@ int main(int argc, char **argv)
   wtType="natural"; rmode="none"; mode="continuum";
   casaMode="channel";
   gain=0.1; paInc = 360.0;
-  spwStr=""; fieldStr=""; threshold=0;
+  spwStr=""; fieldStr=""; scanStr=""; threshold=0;
   useScratchColumns=True;
   //
   // The user interface
   //
-  UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, paInc, 
+  UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, scanStr, uvDistStr, paInc, 
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
@@ -430,6 +431,7 @@ int main(int argc, char **argv)
       msSelection.setSpwExpr(spwStr);
       msSelection.setAntennaExpr(antStr);
       msSelection.setFieldExpr(fieldStr);
+      msSelection.setScanExpr(scanStr);
       msSelection.setUvDistExpr(uvDistStr);
       MS ms(AMSName,Table::Update),selectedMS(ms);
       Vector<int> spwid, fieldid;

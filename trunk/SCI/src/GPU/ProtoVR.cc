@@ -129,6 +129,15 @@ namespace casa{
 				    Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr,
 				    Bool finitePointingOffset,
 				    Bool doPSFOnly, Bool& foundCFPeak);
+
+  // template
+  // void ProtoVR::DataToGrid(Array<DComplex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+  //   			    const Bool& dopsf,Bool useConjFreqCF=False);
+  // template
+  // void ProtoVR::DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
+  // 			   const Bool& dopsf,Bool useConjFreqCF=False);
+
+
     template
     void ProtoVR::cudaDataToGridImpl_p(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
 				     const Bool dopsf,
@@ -401,17 +410,19 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       // Loop over all the grid partitions
       //
 
-      const Int *polMap_ptr=polMap_p.getStorage(Dummy),
+      Int *polMap_ptr=polMap_p.getStorage(Dummy),
 	*chanMap_ptr = chanMap_p.getStorage(Dummy);
-      const Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
+      Double *uvwScale_ptr=uvwScale_p.getStorage(Dummy), 
 	*offset_ptr=offset_p.getStorage(Dummy), 
 	*dphase_ptr=dphase_p.getStorage(Dummy);
 
-#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
+      //#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
       {
 	Matrix<Double> tmpSumWt(sumwt.shape());
-#pragma omp for
-      for (Int i=0;i<NBlocks;i++)
+	//#pragma omp for
+	Int blockId=0;
+	//for (Int blockId=0; blockId<NBlocks; blockId++)
+
 	  {
 	    tmpSumWt=0.0;
 	    //-------------------------------------------------------------------------
@@ -446,11 +457,14 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 
 	    const Int nRow=vbs.nRow_p, beginRow=vbs.beginRow_p, endRow=vbs.endRow_p,
 	      nDataChan=vbs.nDataChan_p, nDataPol=vbs.nDataPol_p,
-	      startChan=vbs.startChan_p, endChan=vbs.endChan_p,
+	      //	      startChan=vbs.startChan_p, endChan=vbs.endChan_p,
+	      startChan=32, endChan=33,
 	      spwID=vbs.spwID_p;
+
 	    const Double *vbFreq_ptr=vbs.freq_p.getStorage(Dummy);
 
 	    const Complex *cfV[2];//CHECK
+	    //	    const Complex **cfV;//CHECK
 	    Int cfShape[4]={0,0,0,0};//CHECK
 	    Float s=vbs.cfBSt_p.CFBStorage->sampling;
 	    ;
@@ -464,37 +478,96 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    cfV[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage;
 	    cfShape[0]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[0];
 	    cfShape[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[1];
+	    //
+	    // Allocated and send subGridShape, gridStore, gridShape
+	    // and sumWt to the device.  These should be done
+	    // elsewhere in a cleaner design.
+	    //
+	    Int N;
+	    if (griddedData_dptr == NULL)
+	      {
+		if ((N=shp.nelements()*sizeof(Int)) > 0)
+		  {
+		    subGridShape_dptr=(uInt *)allocateDeviceBuffer(N);
+		    sendBufferToDevice(subGridShape_dptr, shp.asVector().getStorage(Dummy), N);
+		  }
+	      }
+	    if (griddedData2_dptr == NULL)
+	      {
+		if ((N=griddedData.shape().product()*sizeof(DComplex)) > 0)
+		  {
+		    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
+		    sendBufferToDevice(griddedData2_dptr, gridStore, N);
+		  }
+	      }
+	    if (gridShape_dptr==NULL)
+	      {
+		N=griddedData.shape().nelements()*sizeof(Int);
+		gridShape_dptr=(Int *)allocateDeviceBuffer(N);
+		sendBufferToDevice(gridShape_dptr, griddedData.shape().asVector().getStorage(Dummy), N);
+
+		N=sumwt.shape().product()*sizeof(Double);
+		sumWt_dptr=(Double *)allocateDeviceBuffer(N);
+		sendBufferToDevice(sumWt_dptr, sumwt.getStorage(Dummy), N);
+		//-------------------------------------------------------------------
+		N=polMap_p.shape().product()*sizeof(Int);
+		polMap_dptr=(Int *)allocateDeviceBuffer(N); sendBufferToDevice(polMap_dptr, polMap_ptr, N);
+
+		N=chanMap_p.shape().product()*sizeof(Int);
+		chanMap_dptr=(Int *)allocateDeviceBuffer(N); sendBufferToDevice(chanMap_dptr, chanMap_ptr, N);
+
+		N=uvwScale_p.shape().product()*sizeof(Double);
+		uvwScale_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(uvwScale_dptr, uvwScale_ptr, N);
+
+		N=offset_p.shape().product()*sizeof(Double);
+		offset_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(offset_dptr, offset_ptr, N);
+
+		N=dphase_p.shape().product()*sizeof(Double);
+		dphase_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(dphase_dptr, dphase_ptr, N);
+	      }
 	    
-	    cuDataToGridImpl_p(gridStore, gridShape, 
+	    //	    cerr << "Start, EndChan: " << startChan << " " << endChan << endl;
 
-	    		       subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
-	    		       // subGridShape,
-	    		       // vbStore_p.BLCXi_mat_dptr, 
-	    		       // vbStore_p.BLCYi_mat_dptr, 
-	    		       // vbStore_p.TRCXi_mat_dptr, 
-	    		       // vbStore_p.TRCYi_mat_dptr,
+	    cuDataToGridImpl_p(griddedData2_dptr, gridShape_dptr, 
 
-	    		       visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
-	    		       // vbStore_p.visCube_dptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
-	    		       uvw_ptr,
+	    		       //subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
+	    		       subGridShape_dptr,
+	    		       vbStore_p.BLCXi_mat_dptr, 
+	    		       vbStore_p.BLCYi_mat_dptr, 
+	    		       vbStore_p.TRCXi_mat_dptr, 
+	    		       vbStore_p.TRCYi_mat_dptr,
 
+	    		       //visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+			       vbStore_p.visCube_dptr, vbStore_p.imagingWeight_mat_dptr, vbStore_p.flagCube_dptr, vbStore_p.rowFlag_dptr,
+			       vbStore_p.uvw_mat_dptr,
+			       //uvw_ptr,
+			       
 	    		       nRow, beginRow, endRow,
 	    		       nDataChan, nDataPol,
 	    		       startChan, endChan, spwID, 
-	    		       vbFreq_ptr, 
+	    		       vbStore_p.vbFreq_dptr, 
 
-	    		       cfV, cfShape, sampling, support,
-			       
-	    		       // //vbStore_p.convFunc, 
-	    		       // vbStore_p.cfShape_dptr, 
-	    		       // vbStore_p.sampling_dptr, 
-	    		       // vbStore_p.support_dptr,
+	    		       // cfV, 
+	    		       // vbStore_p.convFunc, 
+			       //cfShape, sampling, support,
+			       vbStore_p.convFunc_dptr,
+	    		       vbStore_p.cfShape_dptr, 
+	    		       vbStore_p.sampling_dptr, 
+	    		       vbStore_p.support_dptr,
 
-	    		       sumWtPtr, 
+			       //sumWtPtr, 
+			       sumWt_dptr,
 	    		       dopsf_l, accumCFs,
-	    		       polMap_ptr, chanMap_ptr, 
-	    		       uvwScale_ptr, offset_ptr,
-	    		       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    		       polMap_dptr, chanMap_dptr, 
+	    		       uvwScale_dptr, offset_dptr,
+	    		       dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1));
+	    
+	    // Int NN=sumwt.shape().product()*sizeof(Double);
+	    // Double *tt=sumwt.getStorage(Dummy);
+	    // getBufferFromDevice(tt,sumWt_dptr,NN);
+	    // sumwt.putStorage(tt, Dummy);
+	    
+	    // if (max(sumwt) > 0) exit(0);
 			       
 	    //-------------------------------------------------------------------------
 
@@ -552,10 +625,10 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	*offset_ptr=offset_p.getStorage(Dummy), 
 	*dphase_ptr=dphase_p.getStorage(Dummy);
 
-#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
+      //#pragma omp parallel shared(gridCoords,polMap_ptr,chanMap_ptr, uvwScale_ptr, offset_ptr, dphase_ptr) num_threads(Nth)
       {
 	Matrix<Double> tmpSumWt(sumwt.shape());
-#pragma omp for
+	//#pragma omp for
       for (Int i=0;i<NBlocks;i++)
 	  {
 	    tmpSumWt=0.0;
@@ -606,36 +679,94 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    cfShape[1]=vbs.cfBSt_p.getCFB(0,/*fndx*/0,/*wndx*/1/*polNdx*/)->shape[1];
 
 
-	    cuDataToGridImpl_p(gridStore, gridShape, 
+	    //
+	    // Allocated and send subGridShape, gridStore, gridShape
+	    // and sumWt to the device.  These should be done else
+	    // where in a cleaner design.
+	    //
+	    Int N;
+	    if (griddedData_dptr == NULL)
+	      {
+		if ((N=shp.nelements()*sizeof(Int)) > 0)
+		  {
+		    subGridShape_dptr=(uInt *)allocateDeviceBuffer(N);
+		    sendBufferToDevice(subGridShape_dptr, shp.asVector().getStorage(Dummy), N);
+		  }
+	      }
+	    if (griddedData2_dptr == NULL)
+	      {
+		if ((N=griddedData.shape().product()*sizeof(DComplex)) > 0)
+		  {
+		    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
+		    sendBufferToDevice(griddedData2_dptr, gridStore, N);
+		  }
+	      }
+	    if (gridShape_dptr==NULL)
+	      {
+		Int N=griddedData.shape().nelements()*sizeof(Int);
+		gridShape_dptr=(Int *)allocateDeviceBuffer(N);
+		sendBufferToDevice(gridShape_dptr, griddedData.shape().asVector().getStorage(Dummy), N);
+		
+		N=shp.nelements()*sizeof(Int);
+		subGridShape_dptr=(uInt *)allocateDeviceBuffer(N);
+		sendBufferToDevice(subGridShape_dptr, shp.asVector().getStorage(Dummy), N);
 
-	    		       subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
-			       // subGridShape,
-			       // vbStore_p.BLCXi_mat_dptr, 
-			       // vbStore_p.BLCYi_mat_dptr, 
-			       // vbStore_p.TRCXi_mat_dptr, 
-			       // vbStore_p.TRCYi_mat_dptr,
+		N=griddedData.shape().product()*sizeof(DComplex);
+		griddedData_dptr=(Complex *)allocateDeviceBuffer(N);
+		sendBufferToDevice(griddedData_dptr, gridStore, N);
 
-			       visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
-	    		       // vbStore_p.visCube_dptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
-	    		       uvw_ptr,
+		N=sumwt.shape().product()*sizeof(Double);
+		sumWt_dptr=(Double *)allocateDeviceBuffer(N);
+		sendBufferToDevice(sumWt_dptr, sumwt.getStorage(Dummy), N);
+		//-------------------------------------------------------------------
+		N=polMap_p.shape().product()*sizeof(Int);
+		polMap_dptr=(Int *)allocateDeviceBuffer(N); sendBufferToDevice(polMap_dptr, polMap_ptr, N);
+
+		N=chanMap_p.shape().product()*sizeof(Int);
+		chanMap_dptr=(Int *)allocateDeviceBuffer(N); sendBufferToDevice(chanMap_dptr, chanMap_ptr, N);
+
+		N=uvwScale_p.shape().product()*sizeof(Double);
+		uvwScale_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(uvwScale_dptr, uvwScale_ptr, N);
+
+		N=offset_p.shape().product()*sizeof(Double);
+		offset_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(offset_dptr, offset_ptr, N);
+
+		N=dphase_p.shape().product()*sizeof(Double);
+		dphase_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(dphase_dptr, dphase_ptr, N);
+	      }
+	    
+	    cuDataToGridImpl_p(griddedData_dptr, gridShape_dptr, 
+
+	    		       //subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
+			       subGridShape_dptr,
+			       vbStore_p.BLCXi_mat_dptr, 
+			       vbStore_p.BLCYi_mat_dptr, 
+			       vbStore_p.TRCXi_mat_dptr, 
+			       vbStore_p.TRCYi_mat_dptr,
+
+			       //visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
+			       vbStore_p.visCube_dptr, vbStore_p.imagingWeight_mat_dptr, vbStore_p.flagCube_dptr, vbStore_p.rowFlag_dptr,
+	    		       vbStore_p.uvw_mat_dptr,
 
 	    		       nRow, beginRow, endRow,
 	    		       nDataChan, nDataPol,
 	    		       startChan, endChan, spwID, 
-	    		       vbFreq_ptr, 
+	    		       vbStore_p.vbFreq_dptr, 
 			       
-	    		       cfV,cfShape,sampling,support,
+			       //cfV,
+			       // vbStore_p.convFunc, 
+			       //cfShape,sampling,support,
+			       vbStore_p.convFunc_dptr,
+			       vbStore_p.cfShape_dptr,
+			       vbStore_p.sampling_dptr,
+			       vbStore_p.support_dptr,
 
-			       //vbStore_p.convFunc, 
-			       // vbStore_p.cfShape_dptr,
-			       // vbStore_p.sampling_dptr,
-			       // vbStore_p.support_dptr,
-
-	    		       sumWtPtr, 
+	    		       //sumWtPtr, 
+			       sumWt_dptr,
 	    		       dopsf_l, accumCFs,
-	    		       polMap_ptr, chanMap_ptr, 
-	    		       uvwScale_ptr, offset_ptr,
-	    		       dphase_ptr, gridCoords(i,0), gridCoords(i,1));
+	    		       polMap_dptr, chanMap_dptr, 
+	    		       uvwScale_dptr, offset_dptr,
+	    		       dphase_dptr, gridCoords(i,0), gridCoords(i,1));
 
 	    //----------------------------------------------------------------------
 
@@ -1090,13 +1221,7 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
 	    vbs.visCube_p(ipol,ichan,irow) = conj(vbs.visCube_p(ipol,ichan,irow));
 	  }
     }
-  // for (Int irow=0;irow<vbs.nRow();irow++)
-  //   {
-  //     cerr << irow << " " << vbs.uvw_p(0,irow) << " " << vbs.uvw_p(1,irow) << " " << vbs.uvw_p(2,irow) << endl;
-  //   }
-  // exit(0);
 
-  //  cerr << vbStore_p.dataShape.product() << " " << vbs.dataShape.product() << endl;
   vbStore_p.spwID_p     = vbs.spwID_p;
   vbStore_p.beginRow_p  = vbs.beginRow_p;
   vbStore_p.endRow_p    = vbs.endRow_p;
@@ -1117,7 +1242,9 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
   //
   if (vbStore_p.visCube_dptr == NULL) // This is the first VB
     {
-      cerr << "BLCxi = " << vbs.BLCXi << " " << vbs.BLCXi.shape() << " " << vbs.BLCXi.getStorage(Dummy)[6] << endl;;
+      //      cerr << "BLCxi = " << vbs.BLCXi << " " << vbs.BLCXi.shape() << " " << vbs.BLCXi.getStorage(Dummy)[6] << endl;;
+      log_l << "Shape of block-grid : " << vbs.BLCXi.shape() << LogIO::POST;
+      log_l << "Initiating OTT to device" << LogIO::POST;
 
       N=vbs.BLCXi.shape().product()*sizeof(uInt);    vbStore_p.BLCXi_mat_dptr = (uInt *)allocateDeviceBuffer(N);
       void *ptr=(void*) vbs.BLCXi.getStorage(Dummy);
@@ -1138,13 +1265,21 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
       Float sampling[2]={s,s}; // CHECK
       Int support[2]={vbs.cfBSt_p.CFBStorage->xSupport,vbs.cfBSt_p.CFBStorage->ySupport};//CHECK
 
+      N=sizeof(Complex **)*2;
+      vbStore_p.convFunc_dptr = (Complex **)allocateDeviceBuffer(N);
+
       N=cfShape[0]*cfShape[1]*sizeof(Complex);
       vbStore_p.convFunc[0]=(Complex *)allocateDeviceBuffer(N);
       vbStore_p.convFunc[1]=(Complex *)allocateDeviceBuffer(N);
-      vbStore_p.cfShape_dptr=(Int *)allocateDeviceBuffer(4*sizeof(Int));
+
+      //      cerr << "Proto: CF[0][100]=" << vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage[100] << endl;
+
       sendBufferToDevice(vbStore_p.convFunc[0], vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/0/*polNdx*/)->CFCStorage, N);      
       sendBufferToDevice(vbStore_p.convFunc[1], vbs.cfBSt_p.getCFB(0,/*fndx*/ 0,/*wndx*/1/*polNdx*/)->CFCStorage, N);      
+      sendBufferToDevice(vbStore_p.convFunc_dptr, vbStore_p.convFunc, sizeof(Complex *)*2);
+      
 
+      vbStore_p.cfShape_dptr=(Int *)allocateDeviceBuffer(4*sizeof(Int));
       sendBufferToDevice(vbStore_p.cfShape_dptr, cfShape, 4*sizeof(Int));      
       
       N=2*sizeof(Int);
@@ -1200,7 +1335,7 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
 
       N=shp.product()*sizeof(Complex);
       void *tmp=(void *)vbs.visCube_p.getStorage(Dummy);
-      cerr << "vis = " << ((Complex *)tmp)[10] << " " << ((Complex *)tmp)[20] << N/sizeof(Complex) << " " << sizeof(Complex) << endl;
+      //      cerr << "vis = " << ((Complex *)tmp)[10] << " " << ((Complex *)tmp)[20] << N/sizeof(Complex) << " " << sizeof(Complex) << endl;
       sendBufferToDevice((void *)vbStore_p.visCube_dptr, tmp,N);
 
       N=vbs.flagCube_p.shape().product()*sizeof(Bool);
@@ -1309,5 +1444,58 @@ void ProtoVR::initializeDataBuffers(VBStore& vbs)
       //	    sumwt += tmpSumWt;
       
   }
+
+void ProtoVR::GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) 
+{
+  LogIO log_l(LogOrigin("ProtoVR[R&D]","GatherGrids(DComplex)"));
+  Bool saveData, saveSumWt;
+  DComplex *griddedData_hptr;
+  Double *sumwt_hptr;
+  Int N;
+
+  N=griddedData.shape().product()*sizeof(DComplex);
+  if ((N > 0) && griddedData2_dptr != NULL)
+    {
+      griddedData_hptr=griddedData.getStorage(saveData);
+      sumwt_hptr = sumwt.getStorage(saveSumWt);
+  
+      getBufferFromDevice(griddedData_hptr, griddedData2_dptr, N);
+
+      N=sumwt.shape().product()*sizeof(Double);
+      getBufferFromDevice(sumwt_hptr, sumWt_dptr, N);
+
+      griddedData.putStorage(griddedData_hptr, saveData);
+      sumwt.putStorage(sumwt_hptr, saveSumWt);
+
+      log_l << "Sum of Weights = " << sumwt << " " << max(griddedData) << LogIO::POST;
+    }
+};
+
+void ProtoVR::GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) 
+{
+  LogIO log_l(LogOrigin("ProtoVR[R&D]","GatherGrids(Complex)"));
+
+  Bool saveData, saveSumWt;
+  Complex *griddedData_hptr;
+  Double *sumwt_hptr;
+  Int N;
+
+  N=griddedData.shape().product()*sizeof(Complex);
+  if ((N > 0) && (griddedData_dptr != NULL))
+    {
+      griddedData_hptr=griddedData.getStorage(saveData);
+      sumwt_hptr = sumwt.getStorage(saveSumWt);
+  
+      getBufferFromDevice(griddedData_hptr, griddedData_dptr, N);
+      N=sumwt.shape().product()*sizeof(Double);
+      getBufferFromDevice(sumwt_hptr, sumWt_dptr, N);
+
+      griddedData.putStorage(griddedData_hptr, saveData);
+      sumwt.putStorage(sumwt_hptr, saveSumWt);
+      
+      log_l << "Sum of Weights = " << sumwt << " " << max(griddedData) << LogIO::POST;
+    }
+
+};
 
 };// end namespace casa
