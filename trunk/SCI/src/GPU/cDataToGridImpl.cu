@@ -6,6 +6,7 @@
 #include "cDataToGridImpl.h"
 #include <typeinfo>
 #include <stdio.h>
+#include "./GPUGEOM.h"
 
 extern "C" {
 #include <cuUtils.h>
@@ -47,8 +48,11 @@ namespace casa{
     // This is a host-side function!!!
 
     //    printf("DSubGridShape = %d %d\n", subGridShape[0], subGridShape[1]);
-    Int NB=16;
-    Int NT=17;
+    // Int NB=16;
+    // Int NT=17;
+    Int NB=XBLOCKSIZE;
+    Int NT=XTHREADSIZE;
+
     dim3 dimBlock ( NB, NB, 1 ) ;
     dim3 dimThread( NT, NT, 1 ) ;
     
@@ -207,24 +211,24 @@ namespace casa{
 					   loc,cfblc,cftrc);
 
 			// DEBUGGING CODE BEGINS---------------------------------------------------------------
-			Int thx0=support[0],thy0=support[1];
-			{
+			// Int thx0=support[0],thy0=support[1];
+			// {
 
-			    Int iblc[2], itrc[2];
-  			    iblc[0]=NINT((cfblc[0]-pos[0]));///sampling[0]);
-  			    iblc[1]=NINT((cfblc[1]-pos[1]));///sampling[1]);
-  			    itrc[0]=NINT((cftrc[0]-pos[0]));///sampling[0]);
-  			    itrc[1]=NINT((cftrc[1]-pos[1]));///sampling[1]); 
-			    Int thBLC[2], thTRC[2];
-			    thBLC[0]=iblc[0]+thx0; thTRC[0]=itrc[0]+thy0;
-			    thBLC[1]=iblc[1]+thx0; thTRC[1]=itrc[1]+thy0;
+			//     Int iblc[2], itrc[2];
+  			//     iblc[0]=NINT((cfblc[0]-pos[0]));///sampling[0]);
+  			//     iblc[1]=NINT((cfblc[1]-pos[1]));///sampling[1]);
+  			//     itrc[0]=NINT((cftrc[0]-pos[0]));///sampling[0]);
+  			//     itrc[1]=NINT((cftrc[1]-pos[1]));///sampling[1]); 
+			//     Int thBLC[2], thTRC[2];
+			//     thBLC[0]=iblc[0]+thx0; thTRC[0]=itrc[0]+thy0;
+			//     thBLC[1]=iblc[1]+thx0; thTRC[1]=itrc[1]+thy0;
 
-			    //			    if (onMyGrid)
-			    // printf("%d %d %d : %d %d %d %d %d %d %d %d %d %d %d\n", XThGrid, YThGrid, onMyGrid, 
-			    // 	   iblc[0], itrc[0], iblc[1], itrc[1],
-			    // 	   thBLC[0], thTRC[0], thBLC[1], thTRC[1],
-			    // 	   threadIdx.x, threadIdx.y,irow);
-			}
+			//     //			    if (onMyGrid)
+			//     // printf("%d %d %d : %d %d %d %d %d %d %d %d %d %d %d\n", XThGrid, YThGrid, onMyGrid, 
+			//     // 	   iblc[0], itrc[0], iblc[1], itrc[1],
+			//     // 	   thBLC[0], thTRC[0], thBLC[1], thTRC[1],
+			//     // 	   threadIdx.x, threadIdx.y,irow);
+			// }
 			// DEBUGGING CODE ENDS---------------------------------------------------------------
   			if (onMyGrid)
   			  {
@@ -399,6 +403,8 @@ namespace casa{
 	    uvw_l[i]=uvw_ptr[i+irow*3];
 	  }
       }
+    // else 
+    //   printf("cusgrid::UVW == 0\n");
     
     pos[2]=sqrt(abs(scale[2]*uvw_l[2]*LambdaInv))+offset[2];
     loc[2]=NINT(pos[2]);

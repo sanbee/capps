@@ -70,7 +70,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
 CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls_new.o ./Utils.o
 CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o
-CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o ./cuConvolver.o ./ProtoVR.o ./cDataToGridImpl.o 
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o ./cuConvolver.o ./ProtoVR.o ./cDataToGridImpl.o ./AWProjectFT.o
 
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
 		-lsynthesis -lcasadbus -laatm
