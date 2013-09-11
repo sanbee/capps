@@ -444,7 +444,7 @@ int main(int argc, char **argv)
       for (int i=0;i<chanList.shape()(0);i++)
 	{
 	  datastart[i]=chanList(i,1);
-	  datastep[i]=chanList(i,3);
+	  datastep[i]=chanList(i,2)-chanList(i,3)+1;//chanList(i,3);
 	  datanchan[i]=chanList(i,2)-chanList(i,3)+1;
 	}
       //      cerr << datanchan << " " << datastart << " " << datastep << endl; 
@@ -474,7 +474,8 @@ int main(int argc, char **argv)
       //
       Bool compress=False;
       if (operation == "predict") useScratchColumns=True;
-      imager.open(selectedMS,compress,useScratchColumns);
+      //imager.open(selectedMS,compress,useScratchColumns);
+      imager.open(ms,compress,useScratchColumns);
       vector<double> pa(1);pa[0]=paInc;
 
       imager.setvp(False,       //dovp
@@ -487,14 +488,15 @@ int main(int argc, char **argv)
 		   );
       Vector<Int> antIndex;
       imager.setdata(casaMode,
-		     datanchan,    //vector<int>
-		     datastart,    //vector<int>
-		     datastep,     //vector<int>
+		     Vector<Int>(),//datanchan,    //vector<int>
+		     Vector<Int>(),//datastart,    //vector<int>
+		     Vector<Int>(),//datastep,     //vector<int>
 		     casa::Quantity(0,"km/s"),//mstart
 		     casa::Quantity(1,"km/s"),//mstep
 		     spwid,    //vector<int>
 		     fieldid,  //<vector<int>
-		     String(taql)//msselect
+		     String(taql),//msselect
+		     timeStr, fieldStr, antIndex, antStr, spwStr, uvDistStr, scanStr
 		     //		     "","",antIndex,"","","","",useScratchColumns
 		     );
       Bool doshift=False;

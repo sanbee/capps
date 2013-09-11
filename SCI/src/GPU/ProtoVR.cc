@@ -421,8 +421,7 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	Matrix<Double> tmpSumWt(sumwt.shape());
 	//#pragma omp for
 	Int blockId=0;
-	//for (Int blockId=0; blockId<NBlocks; blockId++)
-
+	//for (blockId=0; blockId<NBlocks; blockId++)
 	  {
 	    tmpSumWt=0.0;
 	    //-------------------------------------------------------------------------
@@ -484,24 +483,30 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    // elsewhere in a cleaner design.
 	    //
 	    Int N;
-	    if (griddedData_dptr == NULL)
+	    // if (griddedData_dptr == NULL)
+	    //   {
+	    // 	if ((N=griddedData.shape().product()*sizeof(Complex)) > 0)
+	    // 	  {
+	    // 	    griddedData_dptr=(Complex *)allocateDeviceBuffer(N);
+	    // 	    sendBufferToDevice(griddedData_dptr, gridStore, N);
+	    // 	  }
+	    //   }
+	    if (griddedData2_dptr == NULL)
+	      {
+	    	if ((N=griddedData.shape().product()*sizeof(DComplex)) > 0)
+	    	  {
+	    	    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
+	    	    sendBufferToDevice(griddedData2_dptr, gridStore, N);
+	    	  }
+	      }
+	    if (gridShape_dptr==NULL)
 	      {
 		if ((N=shp.nelements()*sizeof(Int)) > 0)
 		  {
 		    subGridShape_dptr=(uInt *)allocateDeviceBuffer(N);
 		    sendBufferToDevice(subGridShape_dptr, shp.asVector().getStorage(Dummy), N);
 		  }
-	      }
-	    if (griddedData2_dptr == NULL)
-	      {
-		if ((N=griddedData.shape().product()*sizeof(DComplex)) > 0)
-		  {
-		    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
-		    sendBufferToDevice(griddedData2_dptr, gridStore, N);
-		  }
-	      }
-	    if (gridShape_dptr==NULL)
-	      {
+
 		N=griddedData.shape().nelements()*sizeof(Int);
 		gridShape_dptr=(Int *)allocateDeviceBuffer(N);
 		sendBufferToDevice(gridShape_dptr, griddedData.shape().asVector().getStorage(Dummy), N);
@@ -629,7 +634,9 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
       {
 	Matrix<Double> tmpSumWt(sumwt.shape());
 	//#pragma omp for
-      for (Int i=0;i<NBlocks;i++)
+
+	Int blockId=0;
+	//for (blockId=0; blockId < NBlocks; blockId++)
 	  {
 	    tmpSumWt=0.0;
 	    //	    DataToGridImpl_p(gridStore, gridShape, vbs, tmpSumWt,dopsf,i,j);
@@ -687,23 +694,30 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    Int N;
 	    if (griddedData_dptr == NULL)
 	      {
+		if ((N=griddedData.shape().product()*sizeof(Complex)) > 0)
+		  {
+		    griddedData_dptr=(Complex *)allocateDeviceBuffer(N);
+		    sendBufferToDevice(griddedData_dptr, gridStore, N);
+		  }
+	      }
+	    // if (griddedData2_dptr == NULL)
+	    //   {
+	    // 	if ((N=griddedData2.shape().product()*sizeof(DComplex)) > 0)
+	    // 	  {
+	    // 	    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
+	    // 	    sendBufferToDevice(griddedData2_dptr, gridStore, N);
+	    // 	  }
+	    //   }
+
+	    if (gridShape_dptr==NULL)
+	      {
 		if ((N=shp.nelements()*sizeof(Int)) > 0)
 		  {
 		    subGridShape_dptr=(uInt *)allocateDeviceBuffer(N);
 		    sendBufferToDevice(subGridShape_dptr, shp.asVector().getStorage(Dummy), N);
 		  }
-	      }
-	    if (griddedData2_dptr == NULL)
-	      {
-		if ((N=griddedData.shape().product()*sizeof(DComplex)) > 0)
-		  {
-		    griddedData2_dptr=(DComplex *)allocateDeviceBuffer(N);
-		    sendBufferToDevice(griddedData2_dptr, gridStore, N);
-		  }
-	      }
-	    if (gridShape_dptr==NULL)
-	      {
-		Int N=griddedData.shape().nelements()*sizeof(Int);
+
+		N=griddedData.shape().nelements()*sizeof(Int);
 		gridShape_dptr=(Int *)allocateDeviceBuffer(N);
 		sendBufferToDevice(gridShape_dptr, griddedData.shape().asVector().getStorage(Dummy), N);
 		
@@ -735,6 +749,10 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 		dphase_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(dphase_dptr, dphase_ptr, N);
 	      }
 	    
+	    //	    cerr << "Complex vbs.uvw.shape = " << vbs.uvw_p.shape() << endl;
+	    if (vbs.uvw_p.shape().product()==0) uvw_ptr=NULL;
+	    else uvw_ptr = vbStore_p.uvw_mat_dptr;
+
 	    cuDataToGridImpl_p(griddedData_dptr, gridShape_dptr, 
 
 	    		       //subGridShape,BLCXi, BLCYi, TRCXi, TRCYi,
@@ -746,7 +764,7 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 
 			       //visCube_ptr, imgWts_ptr, flagCube_ptr, rowFlag_ptr,
 			       vbStore_p.visCube_dptr, vbStore_p.imagingWeight_mat_dptr, vbStore_p.flagCube_dptr, vbStore_p.rowFlag_dptr,
-	    		       vbStore_p.uvw_mat_dptr,
+	    		       uvw_ptr, //vbStore_p.uvw_mat_dptr,
 
 	    		       nRow, beginRow, endRow,
 	    		       nDataChan, nDataPol,
@@ -766,7 +784,7 @@ void ProtoVR::cachePhaseGrad_g(Complex *cached_phaseGrad_p, Int phaseGradNX, Int
 	    		       dopsf_l, accumCFs,
 	    		       polMap_dptr, chanMap_dptr, 
 	    		       uvwScale_dptr, offset_dptr,
-	    		       dphase_dptr, gridCoords(i,0), gridCoords(i,1));
+	    		       dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1));
 
 	    //----------------------------------------------------------------------
 
