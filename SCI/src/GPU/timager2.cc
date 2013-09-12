@@ -449,7 +449,16 @@ int main(int argc, char **argv)
 	}
       //      cerr << datanchan << " " << datastart << " " << datastep << endl; 
 
-      if (mode=="continuum") {casaMode="mfs";imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
+      if (mode=="continuum") 
+	{
+	  casaMode="MFS";
+	  imnchan=-1;
+	  imstart=0;//datastart[0];
+	  imstep=0;//datanchan[0];
+	  datanchan.resize(1);datanchan[0]=-1;
+	  datastart.resize(1);datastart[0]=0;
+	  datastep.resize(1);datastep[0]=1;
+	}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
       else if (mode=="pseudo") {}
       else throw(AipsError("Incorrect setting for keyword \"mode\".  "));
@@ -487,13 +496,14 @@ int main(int argc, char **argv)
 		   ""           //telescope
 		   );
       Vector<Int> antIndex;
-      imager.setdata(casaMode,
-		     Vector<Int>(),//datanchan,    //vector<int>
-		     Vector<Int>(),//datastart,    //vector<int>
-		     Vector<Int>(),//datastep,     //vector<int>
+      String dummyMode("none"); // Any other mode will now ignore channel selection
+      imager.setdata(dummyMode,
+		     datanchan,    //vector<int>
+		     datastart,    //vector<int>
+		     datastep,     //vector<int>
 		     casa::Quantity(0,"km/s"),//mstart
 		     casa::Quantity(1,"km/s"),//mstep
-		     spwid,    //vector<int>
+		     Vector<Int>(),//spwid,    //vector<int>
 		     fieldid,  //<vector<int>
 		     String(taql),//msselect
 		     timeStr, fieldStr, antIndex, antStr, spwStr, uvDistStr, scanStr

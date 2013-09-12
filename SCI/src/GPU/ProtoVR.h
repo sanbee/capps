@@ -45,7 +45,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   class ProtoVR: public VisibilityResampler
   {
   public: 
-    ProtoVR():VisibilityResampler(), cached_phaseGrad_p(), cached_PointingOffset_p(), vbStore_p()
+    ProtoVR():VisibilityResampler(), 
+	      cached_phaseGrad_p(), 
+	      cached_PointingOffset_p(), vbStore_p()
     {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;vbStore_p.init();
       griddedData_dptr=NULL, griddedData2_dptr=NULL, sumWt_dptr=NULL; gridShape_dptr=NULL;subGridShape_dptr=NULL;};
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
@@ -263,6 +265,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int *gridShape_dptr; 
     uInt *subGridShape_dptr;
     Double *sumWt_dptr;
+    Int *polMap_dptr, *chanMap_dptr;
+    Double *uvwScale_dptr, *offset_dptr, *dphase_dptr;
 
     Bool computeSupport(const VBStore& vbs, 
 			const Int& XThGrid, const Int& YThGrid,
@@ -289,15 +293,15 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     // 			  Bool /*useConjFreqCF*/);
 
     template <class T>
-    void cudaDataToGridImpl_p(T* gridStore,  Int* gridShape /*4-elements*/,
-			      VBStore* vbs, Matrix<Double>* sumwt,
+    void cudaDataToGridImpl_p(Array<T>& gridStore, // Int* gridShape /*4-elements*/,
+			      VBStore& vbs, Matrix<Double>& sumwt,
 			      const Bool dopsf,
 			      const Int* polMap_ptr, const Int *chanMap_ptr,
 			      const Double *uvwScale_ptr, const Double *offset_ptr,
 			      const Double *dphase_ptr, Int XThGrid, Int YThGrid);
 
-    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt) {cerr << "Empty GatherGrids(DComplex)" << endl;};
-    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt) {cerr << "Empy GatherGrids(Complex)" << endl;};
+    virtual void GatherGrids(Array<DComplex>& griddedData, Matrix<Double>& sumwt);
+    virtual void GatherGrids(Array<Complex>& griddedData, Matrix<Double>& sumwt);
 
     void sgrid(Double pos[2], Int loc[3], Double off[3], 
     	       Complex& phasor, const Int& irow, const Matrix<Double>& uvw, 
