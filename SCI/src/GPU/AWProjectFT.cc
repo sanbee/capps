@@ -63,8 +63,6 @@
 // tabulated exp() function.
 #define DORES True
 
-#include "./GPUGEOM.h"
-
 namespace casa { //# NAMESPACE CASA - BEGIN
   
 #define NEED_UNDERSCORES
@@ -1570,8 +1568,14 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     else
       {
 	visResampler_p->finalizeToSky(griddedData, sumWeight);
-	String Name("ComplexImg.im");
-	storeArrayAsImage(Name, image->coordinates(), griddedData);
+	{
+	  Array<Complex> tt(griddedData.shape());
+	  convertArray(tt, griddedData);
+	      
+	  String Name("ComplexImg.im");
+	  cerr << "Image size = " << tt.shape() << " " << max(tt) << endl;
+	  storeArrayAsImage(Name, image->coordinates(),tt);
+	}
       }
   }
   //
@@ -1674,13 +1678,19 @@ namespace casa { //# NAMESPACE CASA - BEGIN
       }
 
     VBStore vbs;
-    Vector<Int> gridShape = griddedData2.shape().asVector();
-    setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
 
     if (useDoubleGrid_p)
-      resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      {
+	Vector<Int> gridShape = griddedData2.shape().asVector();
+	setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
+	resampleDataToGrid(griddedData2, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      }
     else
-      resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      {
+	Vector<Int> gridShape = griddedData.shape().asVector();
+	setupVBStore(vbs,vb, elWeight,data,uvw,flags, dphase,dopsf,gridShape);
+	resampleDataToGrid(griddedData, vbs, vb, dopsf);//, *imagingweight, *data, uvw,flags,dphase,dopsf);
+      }
   }
   //
   //-------------------------------------------------------------------------
@@ -1689,7 +1699,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& /*vb*/, Bool& dopsf)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleDataToGrid[R&D]"));
+    Timer tim;
+    tim.mark();
     visResampler_p->DataToGrid(griddedData_l, vbs, sumWeight, dopsf); 
+    runTime1_p+=tim.user();
     //    cerr << "####SumWt(C): " << sumWeight << endl;
   }
   //
@@ -1801,10 +1814,7 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				       const VisBuffer& /*vb*/)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "resampleGridToData[R&D]"));
-    //    Timer tim;
-    //    tim.mark();
     visResampler_p->GridToData(vbs, griddedData_l);
-    //    runTime+=tim.user();
   }
   //
   //---------------------------------------------------------------
@@ -1870,9 +1880,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 	      {	      
 	      // Array<Complex> tt(griddedData2.shape());
 	      // convertArray(tt, griddedData2);
-	      String Name("DComplexImg_getimage.im");
-	      cerr << "Image size = " << griddedData.shape() << " " << max(griddedData) << endl;
-	      storeArrayAsImage(Name, image->coordinates(),griddedData);
+
+	      // String Name("DComplexImg_getimage.im");
+	      // cerr << "Image size = " << griddedData.shape() << " " << max(griddedData) << endl;
+	      // storeArrayAsImage(Name, image->coordinates(),griddedData);
 	      }
 	  }
 	else
@@ -2257,7 +2268,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //  
   void AWProjectFT::makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape)
   {
-    Float dNx=(gridShape(0)/XBLOCKSIZE), dNy=(gridShape(1)/YBLOCKSIZE);
+    Float NBlocksX=16.0, NBlocksY=16.0;
+    Float dNx=(gridShape(0)/NBlocksX), dNy=(gridShape(1)/NBlocksY);
     Int GNx=SynthesisUtils::nint(gridShape(0)/dNx),
       GNy=SynthesisUtils::nint(gridShape(1)/dNy);
 
@@ -2272,19 +2284,37 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     BLCY0=gridShape(1)/4;
     TRCX0=gridShape(0)*3/4;
     TRCY0=gridShape(1)*3/4;
-    for (Int i=0;i<GNx;i++)
-      for (Int j=0;j<GNy;j++)
-	{
-	  vbs.BLCXi(i,j)=max(BLCX0,SynthesisUtils::nint(i*dNx));
-	  vbs.BLCYi(i,j)=max(BLCY0,SynthesisUtils::nint(j*dNy));
-	  vbs.TRCXi(i,j)=min(TRCX0, SynthesisUtils::nint((i+1)*dNx-1.0));
-	  vbs.TRCYi(i,j)=min(TRCY0, SynthesisUtils::nint((j+1)*dNy-1.0));
 
-	  // vbs.BLCXi(i,j)=max(0,SynthesisUtils::nint(i*dNx));
-	  // vbs.BLCYi(i,j)=max(0,SynthesisUtils::nint(j*dNy));
-	  // vbs.TRCXi(i,j)=min(gridShape(0), SynthesisUtils::nint((i+1)*dNx-1.0));
-	  // vbs.TRCYi(i,j)=min(gridShape(1), SynthesisUtils::nint((j+1)*dNy-1.0));
+    BLCX0=300;
+    BLCY0=300;
+    TRCX0=750;
+    TRCY0=750;
+    dNx = abs(BLCX0-TRCX0)/NBlocksX;
+    dNy = abs(BLCY0-TRCY0)/NBlocksY;
+    for (Int i=0;i<(Int)NBlocksX;i++)
+      for (Int j=0;j<(Int)NBlocksY;j++)
+	{
+	  vbs.BLCXi(i,j)=BLCX0+SynthesisUtils::nint(i*dNx);
+	  vbs.BLCYi(i,j)=BLCY0+SynthesisUtils::nint(j*dNy);
+	  vbs.TRCXi(i,j)=BLCX0+SynthesisUtils::nint((i+1)*dNx-1.0);
+	  vbs.TRCYi(i,j)=BLCY0+SynthesisUtils::nint((j+1)*dNy-1.0);
+	  //	  cerr << vbs.BLCXi(i,j) << " " << vbs.BLCYi(i,j) << " " << vbs.TRCXi(i,j) << " " << vbs.TRCYi(i,j) << endl;;
 	}
+
+    // for (Int i=0;i<GNx;i++)
+    //   for (Int j=0;j<GNy;j++)
+    // 	{
+    // 	  vbs.BLCXi(i,j)=max(BLCX0,SynthesisUtils::nint(i*dNx));
+    // 	  vbs.BLCYi(i,j)=max(BLCY0,SynthesisUtils::nint(j*dNy));
+    // 	  vbs.TRCXi(i,j)=min(TRCX0, SynthesisUtils::nint((i+1)*dNx-1.0));
+    // 	  vbs.TRCYi(i,j)=min(TRCY0, SynthesisUtils::nint((j+1)*dNy-1.0));
+
+    // 	  // vbs.BLCXi(i,j)=max(0,SynthesisUtils::nint(i*dNx));
+    // 	  // vbs.BLCYi(i,j)=max(0,SynthesisUtils::nint(j*dNy));
+    // 	  // vbs.TRCXi(i,j)=min(gridShape(0), SynthesisUtils::nint((i+1)*dNx-1.0));
+    // 	  // vbs.TRCYi(i,j)=min(gridShape(1), SynthesisUtils::nint((j+1)*dNy-1.0));
+    // 	}
+
     // for (Int i=0;i<GNx;i++)
     //   for (Int j=0;j<GNy;j++)
     // 	cerr << i << " " << j << ": " << vbs.BLCXi(i,j) << " " << vbs.BLCYi(i,j) << " " << vbs.TRCXi(i,j) << " " << vbs.TRCYi(i,j) << endl;

@@ -1,4 +1,6 @@
+// -*- C -*-
 #include <stdio.h>
+#include <cuComplex.h>
 
 void cpuflip(int *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
 {
@@ -30,7 +32,19 @@ void cpuflip(int *buf, const int nx, const int ny, const int tileWidthX, const i
 //buf, 4,4,2,2
 __global__ void kernel_flip(int *buf, const int nx, const int ny, const int tileWidthX, const int tileWidthY)
     {
-#if 1
+
+      cuComplex tmp; tmp.x=tmp.y=0;
+      cuComplex t0; t0.y=0;
+      for (int j=0;j<1000000;j++)
+      for (int i=0;i<100000;i++)
+	{
+	  t0.x=(float)(i*j)/100000.0;
+	  tmp.x+=t0.x;
+	  tmp.y+=t0.y;
+	}
+
+
+#if 0
 //working kernel
       // calculate thread id
       unsigned int i = tileWidthX*blockIdx.x + threadIdx.x ;
@@ -105,7 +119,8 @@ int main()
    dim3 dimGrid ( (nx/32) , (ny/32) ,1 ) ;
    dim3 dimBlock( 32, 32, 1 ) ;
    //printf(" Kernel Parameters::#blks=%d, #tpB=%d\n", (nx*ny/2), nx/2 );
-   kernel_flip<<<dimGrid,dimBlock>>>(d_buf, nx,ny,tileWidthX, tileWidthY);
+   for (int i=0;i<10000;i++)
+     kernel_flip<<<dimGrid,dimBlock>>>(d_buf, nx,ny,tileWidthX, tileWidthY);
    cudaMemcpy(buf_gpu, d_buf, size, cudaMemcpyDeviceToHost);
 
 

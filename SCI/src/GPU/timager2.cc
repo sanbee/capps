@@ -62,7 +62,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
 	bool& interactive,Long& cache, bool& copydata, bool& copyboth, Vector<Float>& MSScales,
 	bool& useScratch,
-	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams)
+	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams,
+	bool& singlePrecision)
 {
   if (!restart)
     {
@@ -230,6 +231,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Float fcache=1024*1024*1024*2.0; 
 	i=1;dbgclgetFValp("cache",fcache,i); cache=(Long)fcache;
 	i=1;dbgclgetBValp("usescratch",useScratch,i);
+	i=1;dbgclgetBValp("singleprecision",singlePrecision,i);
 	//
 	// Do some user support!;-) Set the possible options for various keywords.
 	//
@@ -349,14 +351,14 @@ int main(int argc, char **argv)
   bool applyOffsets=false,dopbcorr=true, copydata=false, copyboth=false, interactive=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Vector<Float> MSScales(1,0.0);
-  Bool restartUI=False;;
+  Bool restartUI=False;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
   Bool psterm_b=True, aterm_b=True, mterm_b=True, wbawp_b=True, conjbeams_b=True;
   Float gain,threshold;
   Vector<String> models, restoredImgs, residuals,masks,psfs;
   String complist,operation;
   MSSelection msSelection;
-  Bool useScratchColumns=True;
+  Bool useScratchColumns=True, singlePrecision=True;
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1, cycleMaxPSFFraction=0.8;
   Float rotpainc=5.0;
   Int stopLargeNegatives=2, stopPointMode = -1;
@@ -390,7 +392,8 @@ int main(int argc, char **argv)
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth,
-     MSScales,useScratchColumns,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b);
+     MSScales,useScratchColumns,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b,
+     singlePrecision);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -562,7 +565,7 @@ int main(int argc, char **argv)
       if (cache <= 0) cache=nx*ny*2;
       const String& freqinterpmethod="linear";
       const Int imageTileSizeInPix=0;
-      const Bool singleprecisiononly=False;
+      const Bool singleprecisiononly=singlePrecision;
       const Int numthreads=-1;
 
       imager.setoptions(ftmac,            //Def="ft"
