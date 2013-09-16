@@ -7,25 +7,25 @@ __global__ void kernel_cuBlank(uInt *vbs,Int n);
 
 // template
 // __global__ void kernel_cuDataToGridImpl_p(DComplex* gridStore,  Int* gridShape, //4-elements
-					  
+
 // 					  const uInt *subGridShape,//[2],
 // 					  const uInt *BLCXi, const uInt *BLCYi,
 // 					  const uInt *TRCXi, const uInt *TRCYi,
-					  
+
 // 					  const Complex *visCube_ptr, const Float* imgWts_ptr,
 // 					  const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
 // 					  const Double *uvw_ptr,
-					  
+
 // 					  const Int nRow, const Int rbeg, const Int rend, 
 // 					  const Int nDataChan,const Int nDataPol, 
 // 					  const Int startChan, const Int endChan, const Int vbSpw,
 // 					  const Double *vbFreq,
-					  
+
 // 					  const Complex *cfV[2],
 // 					  Int *cfShape,//[4],
 // 					  Float *sampling,//[2], 
 // 					  const Int *support, //[2]
-					  
+
 // 					  Double* sumWt_ptr,
 // 					  const Bool dopsf, const Bool accumCFs,
 // 					  const Int* polMap_ptr, const Int *chanMap_ptr,
@@ -34,25 +34,25 @@ __global__ void kernel_cuBlank(uInt *vbs,Int n);
 
 // template
 // __global__ void kernel_cuDataToGridImpl_p(Complex* gridStore,  Int* gridShape, //4-elements
-					  
+
 // 					  const uInt *subGridShape,//[2],
 // 					  const uInt *BLCXi, const uInt *BLCYi,
 // 					  const uInt *TRCXi, const uInt *TRCYi,
-					  
+
 // 					  const Complex *visCube_ptr, const Float* imgWts_ptr,
 // 					  const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
 // 					  const Double *uvw_ptr,
-					  
+
 // 					  const Int nRow, const Int rbeg, const Int rend, 
 // 					  const Int nDataChan,const Int nDataPol, 
 // 					  const Int startChan, const Int endChan, const Int vbSpw,
 // 					  const Double *vbFreq,
-					  
+
 // 					  const Complex *cfV[2],
 // 					  Int *cfShape,//[4],
 // 					  Float *sampling,//[2], 
 // 					  const Int *support, //[2]
-					  
+
 // 					  Double* sumWt_ptr,
 // 					  const Bool dopsf, const Bool accumCFs,
 // 					  const Int* polMap_ptr, const Int *chanMap_ptr,
@@ -88,7 +88,7 @@ void cuDataToGridImpl_p(Complex* gridStore,  Int* gridShape, //4-elements
 			const Bool dopsf, const Bool accumCFs,
 			const Int* polMap_ptr, const Int *chanMap_ptr,
 			const Double *uvwScale_ptr, const Double *offset_ptr,
-			const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+			const Double *dphase_ptr, Int XThGrid, Int YThGrid,Int *gridHits);
 
 template 
 void cuDataToGridImpl_p(DComplex* gridStore,  Int* gridShape, //4-elements
@@ -115,37 +115,38 @@ void cuDataToGridImpl_p(DComplex* gridStore,  Int* gridShape, //4-elements
 			const Bool dopsf, const Bool accumCFs,
 			const Int* polMap_ptr, const Int *chanMap_ptr,
 			const Double *uvwScale_ptr, const Double *offset_ptr,
-			const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+			const Double *dphase_ptr, Int XThGrid, Int YThGrid,Int *gridHits);
 //
 //----------------------------------------------------------------------
 //
 template 
 __global__
 void cuDataToGridImpl2_p(Complex* gridStore,  Int* gridShape, //4-elements
-			
-			const uInt *subGridShape,//[2],
-			const uInt *BLCXi, const uInt *BLCYi,
-			const uInt *TRCXi, const uInt *TRCYi,
-			
-			const Complex *visCube_ptr, const Float* imgWts_ptr,
-			const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
-			const Double *uvw_ptr,
-			
-			const Int nRow, const Int rbeg, const Int rend, 
-			const Int nDataChan,const Int nDataPol, 
-			const Int startChan, const Int endChan, const Int vbSpw,
-			const Double *vbFreq,
-			
+			 
+			 const uInt *subGridShape,//[2],
+			 const uInt *BLCXi, const uInt *BLCYi,
+			 const uInt *TRCXi, const uInt *TRCYi,
+			 
+			 const Complex *visCube_ptr, const Float* imgWts_ptr,
+			 const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
+			 const Double *uvw_ptr,
+			 
+			 const Int nRow, const Int rbeg, const Int rend, 
+			 const Int nDataChan,const Int nDataPol, 
+			 const Int startChan, const Int endChan, const Int vbSpw,
+			 const Double *vbFreq,
+			 
 			 Complex **cfV,//[2],
-			Int *cfShape,//[4],
-			Float *sampling,//[2], 
-			const Int *support, //[2]
-			
-			Double* sumWt_ptr,
-			const Bool dopsf, const Bool accumCFs,
-			const Int* polMap_ptr, const Int *chanMap_ptr,
-			const Double *uvwScale_ptr, const Double *offset_ptr,
-			const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+			 Int *cfShape,//[4],
+			 Float *sampling,//[2], 
+			 const Int *support, //[2]
+			 
+			 Double* sumWt_ptr,
+			 const Bool dopsf, const Bool accumCFs,
+			 const Int* polMap_ptr, const Int *chanMap_ptr,
+			 const Double *uvwScale_ptr, const Double *offset_ptr,
+			 const Double *dphase_ptr, Int XThGrid, Int YThGrid,
+			 Int *gridHits);
 
 //
 //----------------------------------------------------------------------
@@ -153,30 +154,31 @@ void cuDataToGridImpl2_p(Complex* gridStore,  Int* gridShape, //4-elements
 template 
 __global__
 void cuDataToGridImpl2_p(DComplex* gridStore,  Int* gridShape, //4-elements
-			
-			const uInt *subGridShape,//[2],
-			const uInt *BLCXi, const uInt *BLCYi,
-			const uInt *TRCXi, const uInt *TRCYi,
-			
-			const Complex *visCube_ptr, const Float* imgWts_ptr,
-			const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
-			const Double *uvw_ptr,
-			
-			const Int nRow, const Int rbeg, const Int rend, 
-			const Int nDataChan,const Int nDataPol, 
-			const Int startChan, const Int endChan, const Int vbSpw,
-			const Double *vbFreq,
-			
+			 
+			 const uInt *subGridShape,//[2],
+			 const uInt *BLCXi, const uInt *BLCYi,
+			 const uInt *TRCXi, const uInt *TRCYi,
+			 
+			 const Complex *visCube_ptr, const Float* imgWts_ptr,
+			 const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
+			 const Double *uvw_ptr,
+			 
+			 const Int nRow, const Int rbeg, const Int rend, 
+			 const Int nDataChan,const Int nDataPol, 
+			 const Int startChan, const Int endChan, const Int vbSpw,
+			 const Double *vbFreq,
+			 
 			 Complex **cfV,//[2],
-			Int *cfShape,//[4],
-			Float *sampling,//[2], 
-			const Int *support, //[2]
-			
-			Double* sumWt_ptr,
-			const Bool dopsf, const Bool accumCFs,
-			const Int* polMap_ptr, const Int *chanMap_ptr,
-			const Double *uvwScale_ptr, const Double *offset_ptr,
-			const Double *dphase_ptr, Int XThGrid, Int YThGrid);
+			 Int *cfShape,//[4],
+			 Float *sampling,//[2], 
+			 const Int *support, //[2]
+			 
+			 Double* sumWt_ptr,
+			 const Bool dopsf, const Bool accumCFs,
+			 const Int* polMap_ptr, const Int *chanMap_ptr,
+			 const Double *uvwScale_ptr, const Double *offset_ptr,
+			 const Double *dphase_ptr, Int XThGrid, Int YThGrid,
+			 Int *gridHits);
 
 //
 //----------------------------------------------------------------------
@@ -277,7 +279,7 @@ cuComplex cuaccumulateOnGrid(Complex* gridStore, const Int* gridInc_p, const cuC
 			     Double wVal, Int *supBLC_ptr, Int *supTRC_ptr, const Int *support_ptr,
 			     Float* scaledSampling_ptr, Double* off_ptr, Int* convOrigin_ptr, 
 			     Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr, Bool finitePointingOffset,
-			     Bool doPSFOnly, Bool& foundCFPeak);
+			     Bool doPSFOnly, Bool& foundCFPeak, Int& gridHits);
 
 template
 __device__
@@ -287,7 +289,7 @@ cuComplex cuaccumulateOnGrid(DComplex* gridStore, const Int* gridInc_p, const cu
 			     Double wVal, Int *supBLC_ptr, Int *supTRC_ptr, const Int *support_ptr,
 			     Float* scaledSampling_ptr, Double* off_ptr, Int* convOrigin_ptr, 
 			     Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr, Bool finitePointingOffset,
-			     Bool doPSFOnly, Bool& foundCFPeak);
+			     Bool doPSFOnly, Bool& foundCFPeak, Int& gridHits);
 
 //
 //----------------------------------------------------------------------

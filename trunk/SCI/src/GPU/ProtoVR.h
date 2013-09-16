@@ -47,9 +47,9 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   public: 
     ProtoVR():VisibilityResampler(), 
 	      cached_phaseGrad_p(), 
-	      cached_PointingOffset_p(), vbStore_p()
+	      cached_PointingOffset_p(), vbStore_p(), myBLCX(), myTRCX(), myBLCY(), myTRCY()
     {cached_PointingOffset_p.resize(2);cached_PointingOffset_p=-1000.0;runTimeG_p=runTimeDG_p=0.0;vbStore_p.init();
-      griddedData_dptr=NULL, griddedData2_dptr=NULL, sumWt_dptr=NULL; gridShape_dptr=NULL;subGridShape_dptr=NULL;};
+      griddedData_dptr=NULL, griddedData2_dptr=NULL, sumWt_dptr=NULL; gridShape_dptr=NULL;subGridShape_dptr=NULL;gridHits_dptr=NULL;}
     //    ProtoVR(const CFStore& cfs): VisibilityResampler(cfs)      {}
     virtual ~ProtoVR()                                         {};
 
@@ -265,8 +265,10 @@ namespace casa { //# NAMESPACE CASA - BEGIN
     Int *gridShape_dptr; 
     uInt *subGridShape_dptr;
     Double *sumWt_dptr;
-    Int *polMap_dptr, *chanMap_dptr;
+    Int *polMap_dptr, *chanMap_dptr, *gridHits_dptr;
     Double *uvwScale_dptr, *offset_dptr, *dphase_dptr;
+
+    Matrix<uInt> myBLCX, myBLCY, myTRCX, myTRCY;
 
     Bool computeSupport(const VBStore& vbs, 
 			const Int& XThGrid, const Int& YThGrid,

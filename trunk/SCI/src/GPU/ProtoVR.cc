@@ -30,6 +30,7 @@
 //#include <synthesis/TransformMachines/cDataToGridImpl.h>
 #include "cDataToGridImpl.h"
 #include "cuUtils.h"
+#include "GPUGEOM.h"
 #include <synthesis/TransformMachines/ProtoVR.h>
 //#include "ProtoVR.h"
 #include <synthesis/TransformMachines/Utils.h>
@@ -456,6 +457,11 @@ namespace casa{
 	const Bool * rowFlag_ptr = vbs.rowFlag_p.getStorage(Dummy);
 	const Double *uvw_ptr=vbs.uvw_p.getStorage(Dummy);
 	
+    myBLCX.assign(vbs.BLCXi);
+    myBLCY.assign(vbs.BLCYi);
+    myTRCX.assign(vbs.TRCXi);
+    myTRCY.assign(vbs.TRCYi);
+
 	const Int nRow=vbs.nRow_p, beginRow=vbs.beginRow_p, endRow=vbs.endRow_p,
 	  nDataChan=vbs.nDataChan_p, nDataPol=vbs.nDataPol_p,
 	  startChan=vbs.startChan_p, endChan=vbs.endChan_p,
@@ -531,6 +537,13 @@ namespace casa{
 	    
 	    N=dphase_p.shape().product()*sizeof(Double);
 	    dphase_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(dphase_dptr, dphase_ptr, N);
+
+	    N=subGridShape[0]*subGridShape[1]*sizeof(Int);
+	    gridHits_dptr = (Int *)allocateDeviceBuffer(N);
+	    Matrix<Int> tmp(subGridShape[0], subGridShape[1]);
+	    tmp=0;
+	    Int *tt=tmp.getStorage(Dummy);
+	    sendBufferToDevice(gridHits_dptr, tt, N);
 	  }
 	
 	//	    cerr << "Start, EndChan: " << startChan << " " << endChan << endl;
@@ -571,7 +584,8 @@ namespace casa{
 			   dopsf_l, accumCFs,
 			   polMap_dptr, chanMap_dptr, 
 			   uvwScale_dptr, offset_dptr,
-			   dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1));
+			   dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1),
+			   gridHits_dptr);
 	
 	Int NN=sumwt.shape().product()*sizeof(Double);
 	Double *tt=tmpSumWt.getStorage(Dummy);
@@ -753,6 +767,13 @@ namespace casa{
 	    
 	    N=dphase_p.shape().product()*sizeof(Double);
 	    dphase_dptr=(Double *)allocateDeviceBuffer(N); sendBufferToDevice(dphase_dptr, dphase_ptr, N);
+
+	    N=subGridShape[0]*subGridShape[1]*sizeof(Int);
+	    gridHits_dptr = (Int *)allocateDeviceBuffer(N);
+	    Matrix<Int> tmp(subGridShape[0], subGridShape[1]);
+	    tmp=0;
+	    Int *tt=tmp.getStorage(Dummy);
+	    sendBufferToDevice(gridHits_dptr, tt, N);
 	  }
 	
 	//	    cerr << "Complex vbs.uvw.shape = " << vbs.uvw_p.shape() << endl;
@@ -794,7 +815,8 @@ namespace casa{
 			   dopsf_l, accumCFs,
 			   polMap_dptr, chanMap_dptr, 
 			   uvwScale_dptr, offset_dptr,
-			   dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1));
+			   dphase_dptr, gridCoords(blockId,0), gridCoords(blockId,1),
+			   gridHits_dptr);
 	
 	Int NN=sumwt.shape().product()*sizeof(Double);
 	Double *tt=tmpSumWt.getStorage(Dummy);
@@ -1419,6 +1441,7 @@ namespace casa{
     const uInt *TRCXi=vbs.TRCXi.getStorage(Dummy);
     const uInt *TRCYi=vbs.TRCYi.getStorage(Dummy);
     
+
     const Complex * visCube_ptr = vbs.visCube_p.getStorage(Dummy);
     const Float * imgWts_ptr    = vbs.imagingWeight_p.getStorage(Dummy);
     const Bool * flagCube_ptr   = vbs.flagCube_p.getStorage(Dummy);
@@ -1498,6 +1521,29 @@ namespace casa{
 	sumwt.putStorage(sumwt_hptr, saveSumWt);
 	
 	log_l << "Sum of Weights = " << sumwt << " " << max(griddedData) << LogIO::POST;
+	
+	Bool Dummy;
+	Matrix<Int> tmp(myBLCX.shape());
+	Int N=tmp.shape().product()*sizeof(Int);
+	Int *tt=tmp.getStorage(Dummy);
+	getBufferFromDevice(tt,gridHits_dptr,N);
+	tmp.putStorage(tt,Dummy);
+	Float tmax=Float(max(tmp));
+	tmax=XTHREADSIZE*YTHREADSIZE;
+	//	cerr << tmp << endl;
+	ofstream output;
+	
+	tmax=1.0;
+
+	output.open("gridhits.dat");
+	for (Int i=0;i<tmp.shape()(0);i++)
+	  {
+	    for (Int j=0;j<tmp.shape()(1);j++)
+	      output<< i << " " << j << " " 
+		    << myBLCX(i,j) << " " << myBLCY(i,j) << " " << myTRCX(i,j) << " " << myTRCY(i,j) << " " 
+		    << tmp(i,j)/tmax << endl;
+	    output << endl;
+	  }
       }
   };
   //
@@ -1527,6 +1573,26 @@ namespace casa{
 	
 	//      griddedData /= max(griddedData);
 	log_l << "Sum of Weights = " << sumwt << " " << max(griddedData) << LogIO::POST;
+	Bool Dummy;
+	Matrix<Int> tmp(myBLCX.shape());
+	Int N=tmp.shape().product()*sizeof(Int);
+	Int *tt=tmp.getStorage(Dummy);
+	getBufferFromDevice(tt,gridHits_dptr,N);
+	tmp.putStorage(tt,Dummy);
+	Float tmax;
+	//	tmp /= max(tmp);
+	tmax=XTHREADSIZE*YTHREADSIZE;
+	//	cerr << tmp << endl;
+	ofstream output;
+	output.open("gridhits.dat");
+	for (Int i=0;i<tmp.shape()(0);i++)
+	  {
+	    for (Int j=0;j<tmp.shape()(1);j++)
+	      output << i << " " << j << " "
+		     << myBLCX(i,j) << " " << myBLCY(i,j) << " " << myTRCX(i,j) << " " << myTRCY(i,j) << " " 
+		     << tmp(i,j)/tmax << endl;
+	    output << endl;
+	  }
       }
   };
   
