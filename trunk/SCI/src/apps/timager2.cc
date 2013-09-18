@@ -7,7 +7,7 @@
 #include <synthesis/MSVis/VisSetUtil.h>
 //#include <synthesis/MeasurementEquations/Imager.h>
 #include <synthesis/MeasurementEquations/ImagerMultiMS.h>
-#include <synthesis/MeasurementComponents/Utils.h>
+#include <synthesis/TransformMachines/Utils.h>
 #include <cl.h>
 #include <clinteract.h>
 //#include <xmlcasa/Quantity.h>
@@ -50,7 +50,7 @@ void toCASASVector(std::vector<string>& stdv, Vector<String>& tmp)
 }
 
 void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, string& spwStr, 
-	string& antStr, string& fieldStr, string& uvDistStr, float& paInc, string& cfcache, 
+	string& antStr, string& fieldStr, string& scanStr, string& uvDistStr, float& paInc, string& cfcache, 
 	string& pointingTable, float& cellx, float& celly, string& stokes,string& mode, 
 	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
 	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
@@ -59,7 +59,9 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& psfs, Vector<String>& masks,string& complist,string&algo,string& taql,
 	string& operation,float& pblimit,float& cycleFactor,bool& applyOffsets,bool& dopbcorr,
 	bool& interactive,Long& cache, bool& copydata, bool& copyboth, Vector<Float>& MSScales,
-	bool& useScratch)
+	bool& useScratch,
+	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams,
+	bool& singlePrecision)
 {
   if (!restart)
     {
@@ -116,9 +118,26 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchPoints["pbwproject"]=exposedKeys;	
 	watchPoints["pbmosaic"]=exposedKeys;	
 
+	ClearKeys(exposedKeys);
+	exposedKeys.push_back("facets");        exposedKeys.push_back("wplanes");
+	exposedKeys.push_back("cfcache");       exposedKeys.push_back("painc");
+	exposedKeys.push_back("rotpainc");      exposedKeys.push_back("psterm");
+	exposedKeys.push_back("aterm");         exposedKeys.push_back("wbawp");
+	exposedKeys.push_back("mterm");         exposedKeys.push_back("conjbeams");     
+	exposedKeys.push_back("pointingtable");exposedKeys.push_back("applyoffsets");	
+	exposedKeys.push_back("dopbcorr");
+	watchPoints["awproject"]=exposedKeys;
+	watchPoints["protoft"]=exposedKeys;
+
 	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
 	i=1;clgetIValp("facets",facets,i);
 	i=1;clgetIValp("wplanes",wplanes,i);  
+	i=1;clgetBValp("psterm",psterm,i);  
+	i=1;clgetBValp("aterm",aterm,i);  
+	i=1;clgetBValp("mterm",mterm,i);  
+	i=1;clgetBValp("wbawp",wbawp,i);  
+	i=1;clgetBValp("conjbeams",conjbeams,i);  
+	i=1;clgetFValp("rotpainc",rotpainc,i);  
 	
 	//
 	// Key of "1" and "0" implies logical True and False for watchPoints.
@@ -159,6 +178,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFullValp("time",timeStr);  
 	i=1;clgetFullValp("baseline",antStr);  
 	i=1;clgetFullValp("uvrange",uvDistStr);  
+	i=1;clgetFullValp("scan",scanStr);  
 
 	InitMap(watchPoints,exposedKeys);
 	exposedKeys.push_back("imnchan");  
@@ -167,13 +187,13 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchPoints["pseudo"]=exposedKeys;
 
 	i=1;clgetSValp("mode",mode,i, watchPoints);
-	vector<int> dnc(1,1),dstrt(1,0),dstp(1,1);
-	i=0;clgetNIValp("datanchan",dnc,i);
-	i=0;clgetNIValp("datastart",dstrt,i);
-	i=0;clgetNIValp("datastep",dstp,i);
-	toCASAVector(dnc,datanchan);
-	toCASAVector(dstrt,datastart);
-	toCASAVector(dstp,datastep);
+	// vector<int> dnc(1,1),dstrt(1,0),dstp(1,1);
+	// i=0;clgetNIValp("datanchan",dnc,i);
+	// i=0;clgetNIValp("datastart",dstrt,i);
+	// i=0;clgetNIValp("datastep",dstp,i);
+	// toCASAVector(dnc,datanchan);
+	// toCASAVector(dstrt,datastart);
+	// toCASAVector(dstp,datastep);
 
 	i=1;clgetIValp("imnchan",imnchan,i);
 	i=1;clgetIValp("imstart",imstart,i);
@@ -209,6 +229,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Float fcache=1024*1024*1024*2.0; 
 	i=1;dbgclgetFValp("cache",fcache,i); cache=(Long)fcache;
 	i=1;dbgclgetBValp("usescratch",useScratch,i);
+	i=1;dbgclgetBValp("singleprecision",singlePrecision,i);
 	//
 	// Do some user support!;-) Set the possible options for various keywords.
 	//
@@ -231,7 +252,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 
 	options.resize(0);
 	options.push_back("ft");options.push_back("wproject");options.push_back("pbwproject");
-	options.push_back("pbmosaic");
+	options.push_back("pbmosaic");options.push_back("awproject");options.push_back("protoft");
 	clSetOptions("ftmachine",options);
 
 	options.resize(0);
@@ -319,7 +340,7 @@ int main(int argc, char **argv)
   //
   //---------------------------------------------------
   //
-  string MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, cfcache,pointingTable;
+  string MSName, timeStr, spwStr, antStr, fieldStr, scanStr, uvDistStr, cfcache,pointingTable;
   string stokes,mode, casaMode, ftmac,wtType, rmode, algo, taql;
   Float padding=1.0, pblimit, paInc,cellx,celly;
   Long cache=2*1024*1024*1024L;
@@ -328,17 +349,27 @@ int main(int argc, char **argv)
   bool applyOffsets=false,dopbcorr=true, copydata=false, copyboth=false, interactive=false;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Vector<Float> MSScales(1,0.0);
-  Bool restartUI=False;;
+  Bool restartUI=False;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
+  Bool psterm_b=True, aterm_b=True, mterm_b=True, wbawp_b=True, conjbeams_b=True;
   Float gain,threshold;
   Vector<String> models, restoredImgs, residuals,masks,psfs;
   String complist,operation;
   MSSelection msSelection;
-  Bool useScratchColumns=False;
+  Bool useScratchColumns=True, singlePrecision=True;
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1, cycleMaxPSFFraction=0.8;
+  Float rotpainc=5.0;
   Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
+
+  //  cudaSetDevice(0);
+  //cerr << "###Info: Initializing device...";
+  //cudaDeviceSynchronize();
+  //if (cudaGetLastError() != cudaSuccess)
+      //throw(AipsError("Cuda error:  Failed to initialize"));
+
+  //cerr << "done." << endl;
  RENTER:// UI re-entry point.
   MSName=timeStr=antStr=uvDistStr=cfcache=complist=pointingTable="";
   //
@@ -349,17 +380,18 @@ int main(int argc, char **argv)
   wtType="natural"; rmode="none"; mode="continuum";
   casaMode="channel";
   gain=0.1; paInc = 360.0;
-  spwStr=""; fieldStr=""; threshold=0;
-  useScratchColumns=False;
+  spwStr=""; fieldStr=""; scanStr=""; threshold=0;
+  useScratchColumns=True;
   //
   // The user interface
   //
-  UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, paInc, 
+  UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, scanStr, uvDistStr, paInc, 
      cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,psfs,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,copydata,copyboth,
-     MSScales,useScratchColumns);
+     MSScales,useScratchColumns,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b,
+     singlePrecision);
 
   // if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   // if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
@@ -375,7 +407,20 @@ int main(int argc, char **argv)
       // if (cfcache=="") 
       // 	throw(AipsError("CF cache directory name is blank!"));
 
+      // cDataToGridImpl_p is an overloaded function.  The two names
+      // below are the same, but the complier, via the ComplexGridder
+      // and DComplexGridder typedefs from cDataToGridImpl.h has all
+      // the information needed to pick up the correct instantiation
+      // of cDataToGridImpl_p.
+
+      // ComplexGridder fC = cDataToGridImpl_p;
+      // DComplexGridder fD = cDataToGridImpl_p;
+      // ComplexGridder fC = cuDataToGridImpl_p;
+      // DComplexGridder fD = cuDataToGridImpl_p;
+
       Imager imager;
+      //      imager.setGridder(fC, fD);
+      
       String AMSName(MSName),diskCacheDir(cfcache);
       //
       // Make the MS 
@@ -387,10 +432,38 @@ int main(int argc, char **argv)
       msSelection.setSpwExpr(spwStr);
       msSelection.setAntennaExpr(antStr);
       msSelection.setFieldExpr(fieldStr);
+      msSelection.setScanExpr(scanStr);
       msSelection.setUvDistExpr(uvDistStr);
       MS ms(AMSName,Table::Update),selectedMS(ms);
       Vector<int> spwid, fieldid;
       TableExprNode exprNode=msSelection.toTableExprNode(&ms);
+      Matrix<Int> chanList = msSelection.getChanList(NULL,1,True);
+
+      datanchan.resize(chanList.shape()(0));
+      datastart.resize(chanList.shape()(0));
+      datastep.resize(chanList.shape()(0));
+      for (int i=0;i<chanList.shape()(0);i++)
+	{
+	  datastart[i]=chanList(i,1);
+	  datastep[i]=chanList(i,2)-chanList(i,3)+1;//chanList(i,3);
+	  datanchan[i]=chanList(i,2)-chanList(i,3)+1;
+	}
+      //      cerr << datanchan << " " << datastart << " " << datastep << endl; 
+
+      if (mode=="continuum") 
+	{
+	  casaMode="MFS";
+	  imnchan=-1;
+	  imstart=0;//datastart[0];
+	  imstep=0;//datanchan[0];
+	  datanchan.resize(1);datanchan[0]=-1;
+	  datastart.resize(1);datastart[0]=0;
+	  datastep.resize(1);datastep[0]=1;
+	}
+      else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
+      else if (mode=="pseudo") {}
+      else throw(AipsError("Incorrect setting for keyword \"mode\".  "));
+
       if (!exprNode.isNull())
 	{
 	  selectedMS = MS(ms(exprNode));
@@ -411,7 +484,8 @@ int main(int argc, char **argv)
       //
       Bool compress=False;
       if (operation == "predict") useScratchColumns=True;
-      imager.open(selectedMS,compress,useScratchColumns);
+      //imager.open(selectedMS,compress,useScratchColumns);
+      imager.open(ms,compress,useScratchColumns);
       vector<double> pa(1);pa[0]=paInc;
 
       imager.setvp(False,       //dovp
@@ -423,15 +497,17 @@ int main(int argc, char **argv)
 		   ""           //telescope
 		   );
       Vector<Int> antIndex;
-      imager.setdata(casaMode,
+      String dummyMode("none"); // Any other mode will now ignore channel selection
+      imager.setdata(dummyMode,
 		     datanchan,    //vector<int>
 		     datastart,    //vector<int>
 		     datastep,     //vector<int>
 		     casa::Quantity(0,"km/s"),//mstart
 		     casa::Quantity(1,"km/s"),//mstep
-		     spwid,    //vector<int>
+		     Vector<Int>(),//spwid,    //vector<int>
 		     fieldid,  //<vector<int>
-		     String(taql)//msselect
+		     String(taql),//msselect
+		     timeStr, fieldStr, antIndex, antStr, spwStr, uvDistStr, scanStr
 		     //		     "","",antIndex,"","","","",useScratchColumns
 		     );
       Bool doshift=False;
@@ -446,10 +522,6 @@ int main(int argc, char **argv)
       //      mdFromString(mphaseCenter, phasecenter);
       doshift=True;
 
-      if (mode=="continuum") {casaMode="mfs";imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
-      else if (mode=="pseudo") {}
-      else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
-      else throw(AipsError("Incorrect setting for keyword \"mode\".  "));
 
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
@@ -469,28 +541,6 @@ int main(int argc, char **argv)
 			 casa::Quantity(0,"Hz"),   // Rest frequency (we don't care yet)
 			 casa::MFrequency::LSRK,   // Rest freq. frame
 			 casa::Quantity(0,"m"));   // Distance (==> not in the near field)
-      /*
-      imager.setimage(nx,ny,
-		      casa::Quantity((Double)cellx,"arcsec"),
-		      casa::Quantity((Double)celly,"arcsec"),
-		      stokes,                      // Def="I"
-		      doshift,                     // Def=false
-		      mphaseCenter,                //Def= "00h 90d"
-		      casa::Quantity(0,"arcsec"),  //shiftx, // Def=0arcsec
-		      casa::Quantity(0,"arcsec"),  //shifty, // Def=0arcsec
-		      casaMode,                    // Def="mfs"
-		      imnchan,//datanchan[0],      // Def=1
-		      imstart,//datastart[0],      // Def=0
-		      imstep,//datanchan[0],       // Def=1
-		      casa::Quantity(0,"km/s"),    //mstart, // Def=0 km/s
-		      casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
-		      spwid,                       // Def=Vector<Int>(1,0)
-		      //		      fieldid[0],                  // Def=0
-		      0,
-		      facets,                      // Def=1
-		      casa::Quantity(0,"m")        //distance // Def=0m
-		      );
-*/
       if (operation != "predict")
 	imager.weight(wtType,                        // Def="natural"
 		      rmode,                         // Def="none"
@@ -498,10 +548,7 @@ int main(int argc, char **argv)
 		      robust,    // Def=0
 		      casa::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
 		      0);        
-      //  npixels, // Def=0
-      //  False,//mosaic, // Def=false
-      //  False //async // Def=false
-      //		    );
+
       imager.setmfcontrol(cycleFactor,
 			  cycleSpeedup,
 			  cycleMaxPSFFraction,
@@ -514,38 +561,31 @@ int main(int argc, char **argv)
       MPosition mlocation;
       //mpFromString(mlocation, location);
       if (cache <= 0) cache=nx*ny*2;
-      /*
+      const String& freqinterpmethod="linear";
+      const Int imageTileSizeInPix=0;
+      const Bool singleprecisiononly=singlePrecision;
+      const Int numthreads=-1;
+
       imager.setoptions(ftmac,            //Def="ft"
 			cache,            // Def=4194304
 			16,               // tile Def=16
 			"sf",             // gridfunction Def="sf"
 			mlocation,        // Def=""
 			padding,          // Def=1.0
-			usemodelcol,
-			wPlanes,
-			pointingTable,    //epjTableName
-			applyPointingOffsets,//Def=True
-			applyPointingCorrections,//Def=true
-			cfcache,          //Def=""
-			paInc,            // Def=4.0
-			pblimit           // Def=0.05
-			);
-      */
-      imager.setoptions(ftmac,            //Def="ft"
-			cache,            // Def=4194304
-			16,               // tile Def=16
-			"sf",             // gridfunction Def="sf"
-			mlocation,        // Def=""
-			padding,          // Def=1.0
-			wPlanes,
 			//			usemodelcol,
+			wPlanes,
 			pointingTable,    //epjTableName
 			applyPointingOffsets,//Def=True
 			applyPointingCorrections,//Def=true
 			cfcache,          //Def=""
+			rotpainc,
 			paInc,            // Def=4.0
-			pblimit           // Def=0.05
-			);
+			pblimit,           // Def=0.05
+			freqinterpmethod,
+			imageTileSizeInPix,
+			singleprecisiononly,
+			numthreads,
+			psterm_b, aterm_b, mterm_b, wbawp_b,conjbeams_b);
       if (algo == "multiscale")
 	imager.setscales(String("uservector"), (Int)MSScales.nelements(), MSScales);
 
