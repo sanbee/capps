@@ -396,19 +396,19 @@ namespace casa{
     
     Matrix<Int> gridCoords(NBlocks,2);
     for (Int i=0;i<shp(0);i++)
-      for (Int j=0;j<shp(0);j++)
+      for (Int j=0;j<shp(1);j++)
 	{
 	  gridCoords(k,0)=i;
 	  gridCoords(k,1)=j;
 	  k++;
 	}
-    //      Timer timer;
+    Timer timer;
     
     // #ifdef HAS_OMP
     //       Nth=min(max(1,NBlocks),omp_get_max_threads()-2);
     // #endif
     
-    //      timer.mark();
+    timer.mark();
     //
     // Loop over all the grid partitions
     //
@@ -613,7 +613,8 @@ namespace casa{
 	sumwt += tmpSumWt;
       }
     }
-    //      cerr << "Timer: " << timer.all() << endl;
+    runTimeG_p += timer.all();
+    //    cerr << "Timer: " << runTimeG_p << " " << timer.all() << endl;
   }
   
   void ProtoVR::DataToGrid(Array<Complex>& griddedData, VBStore& vbs, Matrix<Double>& sumwt,
@@ -627,7 +628,7 @@ namespace casa{
     Int Nth=1;
     Matrix<Int> gridCoords(NBlocks,2);
     for (Int i=0;i<shp(0);i++)
-      for (Int j=0;j<shp(0);j++)
+      for (Int j=0;j<shp(1);j++)
 	{
 	  gridCoords(k,0)=i;
 	  gridCoords(k,1)=j;
@@ -1394,19 +1395,29 @@ namespace casa{
     N=shp.product()*sizeof(Complex);
     void *tmp=(void *)vbs.visCube_p.getStorage(Dummy);
     //      cerr << "vis = " << ((Complex *)tmp)[10] << " " << ((Complex *)tmp)[20] << N/sizeof(Complex) << " " << sizeof(Complex) << endl;
-    sendBufferToDevice((void *)vbStore_p.visCube_dptr, tmp,N);
+    //    cerr << tmp << " " << vbStore_p.visCube_dptr << " " << N << endl;
+    sendBufferToDevice((void *)vbStore_p.visCube_dptr, tmp, N);
     
     N=vbs.flagCube_p.shape().product()*sizeof(Bool);
-    sendBufferToDevice((void *)vbStore_p.flagCube_dptr, (void *)vbs.flagCube_p.getStorage(Dummy),N);
+    tmp=(void *)vbs.flagCube_p.getStorage(Dummy);
+    //    cerr << tmp << " " << vbStore_p.flagCube_dptr << " " << N << endl;
+    sendBufferToDevice((void *)vbStore_p.flagCube_dptr, tmp, N);
     
     N=vbs.rowFlag_p.shape().product()*sizeof(Bool);
-    sendBufferToDevice((void *)vbStore_p.rowFlag_dptr, (void *)vbs.rowFlag_p.getStorage(Dummy),N);
+    tmp = (void *)vbs.rowFlag_p.getStorage(Dummy);
+    //    cerr << tmp << " " << vbStore_p.rowFlag_dptr << " " << N << endl;
+    sendBufferToDevice((void *)vbStore_p.rowFlag_dptr, tmp, N);
     
     N=vbs.uvw_p.shape().product()*sizeof(Double);
-    sendBufferToDevice((void *)vbStore_p.uvw_mat_dptr, (void *)vbs.uvw_p.getStorage(Dummy),N);
+    tmp = (void *)vbs.uvw_p.getStorage(Dummy);
+    //    cerr << tmp << " " << vbStore_p.uvw_mat_dptr << " " << N << endl;
+    sendBufferToDevice((void *)vbStore_p.uvw_mat_dptr, tmp, N);
     
+
     N=vbs.imagingWeight_p.shape().product()*sizeof(Float);
-    sendBufferToDevice((void *)vbStore_p.imagingWeight_mat_dptr, (void *)vbs.imagingWeight_p.getStorage(Dummy),N);
+    tmp = (void *)vbs.imagingWeight_p.getStorage(Dummy);
+    //    cerr << tmp << " " << vbStore_p.imagingWeight_mat_dptr << " " << N << endl;
+    sendBufferToDevice((void *)vbStore_p.imagingWeight_mat_dptr, tmp, N);
   }
   //
   //-----------------------------------------------------------------------------------
