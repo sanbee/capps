@@ -1,0 +1,199 @@
+# -*- makefile -*-
+# ifeq (0,${MAKELEVEL})
+# whoami    := $(shell whoami)
+# host-type := $(shell arch)
+# HOST := $(shell hostname)
+# endif
+#
+# HOSTNAME is defined by make with the OS command as the value, which
+# when executed, returns the name of the host.
+#
+HOST := $(shell $(HOSTNAME))
+include makefile.casacore.inc.localhost.lite
+
+ACC_FLAGS = -acc -ta=nvidia::cc3x -Minfo=accel
+
+
+
+CPPFLAGS = $(OPT)                                           \
+           $(DEFS64)                                        \
+           -DHAVE_QT4                                       \
+           -DAIPS_NEEDS_RETHROW                             \
+           -DAIPS_LINUX                                     \
+           -DAIPS_LITTLE_ENDIAN                             \
+           -DAIPS_STDLIB                                    \
+           -DAIPS_NO_LEA_MALLOC                             \
+           -D_GLIBCPP_DEPRECATED                            \
+	   -DAIPS_AUTO_STL                                  \
+
+CU_CPPFLAGS = $(OPT)                            \
+           $(DEFS64)                                        \
+           -DHAVE_QT4                                       \
+           -DAIPS_NEEDS_RETHROW                             \
+           -DAIPS_LINUX                                     \
+           -DAIPS_LITTLE_ENDIAN                             \
+           -DAIPS_STDLIB                                    \
+           -DAIPS_NO_LEA_MALLOC                             \
+           -D_GLIBCPP_DEPRECATED                            \
+	   -DAIPS_AUTO_STL                                  \
+
+
+#PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/include/boost_python -I$(USRLIB)/casapy/lib/python2.5/site-packages/numpy/core/include
+#PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
+
+INCL = -I. -I$(CLHOME)/include -I$(CASACODEINC) -I$(CASACOREINC) -I/usr/include/cfitsio -I/usr/include/ATM                
+
+BOOSTLIBS = -L/usr/lib64 -lboost_thread-mt
+GSLLIBS = -lgsl -lgslcblas
+SYNTHESISLIBS = $(SYNTHROOT)/libsynthesis.a $(IMANALYSISROOT)/libimageanalysis.a $(ASDMSTMANROOT)/libasdmstman.a $(GSLLIBS) $(BOOSTLIBS) -laatm 
+
+CORELIBS = $(CORELIBSPATH)/msfits/libmsfits.a $(CORELIBSPATH)/ms/libms.a $(CORELIBSPATH)/images/libimages.a \
+	$(CORELIBSPATH)/components/libcomponents.a $(CORELIBSPATH)/coordinates/libcoordinates.a  \
+	$(CORELIBSPATH)/lattices/liblattices.a $(CORELIBSPATH)/measures/libmeasures.a  \
+	$(CORELIBSPATH)/derivedmscal/libderivedmscal.a  $(CORELIBSPATH)/fits/libfits.a  \
+	$(CORELIBSPATH)/scimath/libscimath.a $(CORELIBSPATH)/scimath_f/libscimath_f.a \
+	$(CORELIBSPATH)/tables/libtables.a $(CORELIBSPATH)/casa/libcasa.a 
+
+CASALIBS =  $(SYNTHESISLIBS) $(CORELIBS)
+
+
+SOLIBS   = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o 
+SOLIBS   = 
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuda_calls_new.o ./Utils.o
+CUSOLIBS = ./AntennaATerm.o ./BeamCalc.o ./WTerm.o ./cuUtils.o ./cuLatticeFFT.o
+CUSOLIBS = $(SOLIBS) ./cuUtils.o ./cuLatticeFFT.o ./cuConvolver.o ./ProtoVR.o ./cDataToGridImpl.o ./AWProjectFT.o
+CUSOLIBS = $(SOLIBS) ./cuUtils.o ./cuLatticeFFT.o ./cuConvolver.o ./ProtoVR.o ./cDataToGridImpl.o 
+
+
+
+CASALIBS = $(SOLIBS) $(SYNTHESISLIBS) $(CORELIBS) 
+CUCASALIBS = $(CUSOLIBS) $(CUSYNTHESISLIBS) $(CASALIBS)  	  $(WCSPKG)/libwcs.a                     
+
+CAAPSLIBOBJS = casaChecks.o
+ifneq ($(strip $(SCILIBDIR)),)
+CAAPSLIB = $(SCILIBDIR)/libcaaps.a
+endif
+#CASAAPPSLIBS = ./AntennaATerm.o ./BeamCalc.o 
+
+ifneq ($(strip $(CLHOME)),)
+UILIBS = $(CLHOME)/lib/libshccl.a                 \
+         $(CLHOME)/lib/libsh.a                    \
+         $(CLHOME)/lib/libshccl.a                 \
+	 $(CLHOME)/lib/libcalc.a                  \
+	 -lreadline -lhistory -ltermcap -lm -lfl -lc
+endif
+
+# LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+# 	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+# 	     -Wl,-rpath -Wl,$(QT4LIBD)
+LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(USRLIB)/casapy/lib:/usr/local/lib:
+
+CU_LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib 
+
+# LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+# 	  -L$(USRLIB)                            \
+# 	  -L$(QT4LIBD)                           \
+# 	  -lcfitsio -llapack -lblas              \
+# 	  -L/usr/local/lib -lcpgplot -lpgplot    \
+# 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
+# 	  $(WCSPKG)/libwcs.a                     \
+# 	  $(PGPLOTPKG)/libpgsbox.so              
+# 	  -lQtCore -lQtGui -lQtDBus -lQtDBus_debug -ldbus-c++-1 -lQtXml -lqwt -lgomp
+
+LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+	  -L$(USRLIB)                            \
+	  -lcfitsio -llapack -lblas              \
+	  $(WCSPKG)/libwcs.a                     \
+
+CU_LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+	  -L$(USRLIB)                            \
+	  -lcfitsio -llapack -lblas              \
+	  $(WCSPKG)/libwcs.a                     
+	  # -L/usr/local/lib -lcpgplot -lpgplot    \
+	  # -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
+
+ACC_FLAGS= -acc -Minfo=accel –ta=nvidia::sm_35
+PGCC=pgc++ $(ACC_FLAGS)
+
+#-------------------------------------------------------------------------------------------------
+# Variables that control the generic targets below
+#
+#
+# The list of source file names 
+#
+SOURCE  = timager2.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc makeCF.cc cuMakeCF.cc cuMakeCF2.cc tBusBW.cu tMemCpy.cc
+SOURCE  = $(wildcard *.cc)
+ifneq ($(strip $(SCILIBDIR)),)
+CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
+endif
+#
+# The list of applications to be built derived from the list of source files in $(SOURCE)
+#
+APPS    = $(patsubst %.cc,%,$(SOURCE))
+CUAPPS  = cuda_calls_new Utils cuUtils tBusBW cuBeamCalc cDataToGridImpl
+#
+# The list object files derived from the list of application in $(APPS)
+#
+OBJECTS = $(patsubst %,%.o,$(APPS))
+CUOBJECTS = $(patsubst %,%.o,$(CUAPPS))
+ifneq ($(strip $(SCILIBDIR)),)
+CAAPSLIBOBJS = $(patsubst %.cc, %.o, $(CAAPSLIBSRC))
+endif
+#
+#-------------------------------------------------------------------------------------------------
+#
+# The actual tagets
+#
+all: $(APPS) 
+
+install: all
+	strip $(APPS); cp $(APPS) $(SCIBIN)
+
+$(CAAPSLIB): $(CAAPSLIBOBJS) 
+ifneq ($(strip $(SCILIBDIR)),)
+	ar r $(CAAPSLIB) $(CAAPSLIBOBJS)
+endif
+$(CAAPSLIBOBJS): %.o: %.cc
+	$(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $< -o $@
+
+$(OBJECTS): %.o: %.cc 
+	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(INCLUDES_CUDA) $< -o $@
+
+# WTerm.o: WTerm.cc 
+# 	 $(PGCC) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) WTerm.cc -o WTerm.o
+
+#$(OBJECTS): %.o: %.cc
+#	 $(C++) -c $(PYFLAGS) $(CU_CPPFLAGS) $(INCL) $(PYINCL) $(CUDAFLAGS) $(ACC_FLAGS) $< -o $@
+
+$(CUOBJECTS): %.o: %.cu
+#	$(NVCC) -g -G -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
+	$(NVCC) -c $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) $(CUDAFLAGS) $(PYFLAGS) $(CU_CPPFLAGS) $(CU_LINKEROPTS) $(INCL) $< -o $@
+#        $(NVCC) $(GENCODE_FLAGS) $(INCLUDES_CUDA) $(LDFLAGS_CUDA) -c cuda_calls.cu -o cuda_calls.o
+
+# $(APPS): % : %.o $(CAAPSLIB) $(SOLIBS)
+# 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+# 	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) $(CUDAFLAGS) -o $@
+# #	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
+
+$(APPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
+	 $(C++) $< $(CUDAFLAGS) $(LINKEROPTS) $(LIBOPTS) -L $(CUDA_LIB_PATH) $(LDFLAGS_CUDA)\
+	 $(CUCASALIBS) $(UILIBS) $(CAAPSLIB) -o $@
+$(CUAPPS): % : %.o $(CAAPSLIB) $(CUSOLIBS)
+	 $(NVCC) $< $(CUDAFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) -L $(CUDA_LIB_PATH) $(LDFLAGS_CUDA)\
+	 $(CUCASALIBS)  $(UILIBS) $(CAAPSLIB) -o $@
+#
+#-------------------------------------------------------------------------------------------------
+#
+.PHONY: clean allclean
+
+depend:
+	makedepend $(INCL) $(SOURCE)
+
+clean: 
+	\rm -rf *.o
+	cd $(SCILIBDIR); \rm -rf *.{o,a}
+
+allclean: clean
+	\rm -f $(APPS)
