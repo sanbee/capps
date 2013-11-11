@@ -12,6 +12,8 @@ extern "C" {
 #include <cuUtils.h>
 #include <cuda_runtime_api.h>
 #include <cuda_profiler_api.h>
+#include <device_launch_parameters.h>
+#include <cuda_runtime.h>
 };
 
 namespace casa{
@@ -25,7 +27,7 @@ namespace casa{
   			  const uInt *BLCXi, const uInt *BLCYi,
   			  const uInt *TRCXi, const uInt *TRCYi,
 			  
-  			  const Complex *visCube_ptr, const Float* imgWts_ptr,
+  			  const Complex * visCube_ptr, const Float* imgWts_ptr,
   			  const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
   			  const Double *uvw_ptr,
 			  
@@ -53,12 +55,11 @@ namespace casa{
     // Int NT=17;
     Int NB=XBLOCKSIZE;
     Int NT=XTHREADSIZE;
-
     dim3 dimBlock ( NB, NB, 1 ) ;
     dim3 dimThread( NT, NT, 1 ) ;
     
     //cudaProfilerStart();
-
+    //    if (cudaDeviceSetCacheConfig(cudaFuncCachePreferL1) != cudaSuccess) printf("Error in L1 Cache\n");
 
     cuDataToGridImpl2_p<<<dimBlock,dimThread>>>(gridStore, gridShape,subGridShape,BLCXi,BLCYi,TRCXi,TRCYi,
 						visCube_ptr,imgWts_ptr,flagCube_ptr,rowFlag_ptr,uvw_ptr,
@@ -73,19 +74,6 @@ namespace casa{
 
 
 
-    //    cudaDeviceSynchronize();
-
-    // cDataToGridImpl2_p(gridStore, gridShape,subGridShape,BLCXi,BLCYi,TRCXi,TRCYi,
-    // 		       visCube_ptr,imgWts_ptr,flagCube_ptr,rowFlag_ptr,uvw_ptr,
-		       
-    // 		       nRow,rbeg,rend,nDataChan,nDataPol,startChan,endChan,vbSpw,
-    // 		       vbFreq,
-		       
-    // 		       cfV,cfShape,sampling,support,
-		       
-    // 		       sumWt_ptr,dopsf,accumCFs,polMap_ptr,chanMap_ptr,
-    // 		       uvwScale_ptr,offset_ptr,dphase_ptr,XThGrid,YThGrid);
-    
     cudaError_t err=cudaGetLastError();
     if (err != cudaSuccess)
       {
@@ -106,7 +94,7 @@ namespace casa{
 			   const uInt *BLCXi, const uInt *BLCYi,
 			   const uInt *TRCXi, const uInt *TRCYi,
 			   
-			   const Complex *visCube_ptr, const Float* imgWts_ptr,
+			   const Complex *  visCube_ptr, const Float* imgWts_ptr,
 			   const Bool *flagCube_ptr, const Bool *rowFlag_ptr,
 			   const Double *uvw_ptr,
 			   
@@ -152,11 +140,11 @@ namespace casa{
     
     iloc[0]=iloc[1]=iloc[2]=iloc[3]=0;
     
-    // Loop over all Rows, and all channels and polarization in each
-    // row.  if the data[Row, Chan, Pol] data point is not flagged,
-    // use it's UVW co-ordinate to determine if the current Block is
-    // touched by the CF for this data point (this decision is in the
-    // variable onMyGrid below).  
+    // Loop over all Rows, channels and polarization in each row.  If
+    // the data[Row, Chan, Pol] data point is not flagged, use it's
+    // UVW co-ordinate to determine if the current Block is touched by
+    // the CF for this data point (this decision is in the variable
+    // onMyGrid below).
     //
     // If onMyGrid == True, then determine the pixels within this
     // block that need to do the addition.  With threads-per-block
@@ -173,20 +161,40 @@ namespace casa{
     CU_CACHE_AXIS_INCREMENTS(cfShape, cfInc_l);
 
     Bool finitePointingOffsets = False;
+    
+    // The input data consists of the following:
+    // Complex *visCube_ptr:  This is a cube of size NRows x NChannel x NPolarizaiton
+    // Float* imgWts_ptr:  This is a cube of the same dim as visCube
+    // Bool *flagCube_ptr: This is a cube of the same dim as visCube
+    // Bool *rowFlag_ptr: This is an array of length NRows
+    // Double *uvw_ptr:  This is a matrix of size NRows x 3
+    //
+    //float2 *tmp_visCube_ptr; 
+    //*tmp_visCube_ptr = __ldg((cuComplex *)visCube_ptr);
+
+    // Loop over all rows of the visCube
+    //
     for(Int irow=rbeg; irow< rend; irow++)
       {   
-  	if(!(*(rowFlag_ptr+irow)))
+	// Process the current row only if it is not flagged
+  	if(!(*(rowFlag_ptr+irow))) 
   	  {   
 	    const Float *imgWts_Chan_offset=imgWts_ptr + irow*nDataChan;
+
+	    // Loop over all channels of the visCube
   	    for(Int ichan=startChan; ichan< endChan; ichan++)
   	      {
-  		//if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) 
+		// Process the current channel only if it is not flagged or has weight=0
+		// if (*(imgWts_ptr + ichan+irow*nDataChan)!=0.0) 
 		const Float imgWts_Chan = *(imgWts_Chan_offset+ichan);
 		if ((imgWts_Chan)!=0.0) 
   		  {  
   		    targetIMChan=chanMap_ptr[ichan];
-		    
+
+		    // If the current channels has weight>0 and is marked for us (via chanMap),
+		    // process it further
   		    if((targetIMChan>=0) && (targetIMChan<nGridChan)) 
+		      //if((targetIMChan=chanMap_ptr[ichan]) >=0 )
   		      {
   			Double dataWVal = 0;
   			// if (uvw_ptr != NULL) dataWVal = uvw_ptr[irow+nRow*2];
@@ -196,16 +204,30 @@ namespace casa{
   			Int cfFreqNdx=0;
   			Float s;
 			
+			//
+			// Given the (U,V,W) co-ordinates of the visibility, find the nearest pixel on the
+			// grid where this data should be gridded. This is returned pos and loc variables.
+			//
   			cusgrid(pos,loc,off, &phasor, irow, uvw_ptr, dphase_ptr[irow], vbFreq[ichan], 
   			       uvwScale_ptr, offset_ptr, sampling);
 			
   			Float cfblc[2], cftrc[2];
 
+			//
+			// Given the nearest grid point and the CF support size, find out if the CF support
+			// falls in the current subgrid.  The top-right-corner (TRC) and bottom-left-corner 
+			// (BLC) of the sub-grids is in BLCXi, BLCYi, TRCXi, TRCYi variables. The co-ordinates 
+			// of the current sub-grid are the same as the co-ordinates of the CUDA Blocks.  
+			// Those are stored in (XThGrid, YThGrid).
+			//
   			Bool onMyGrid=
 			  cucomputeSupport(BLCXi,BLCYi, TRCXi, TRCYi, subGridShape,
 					   XThGrid, YThGrid, support, sampling, pos, 
 					   loc,cfblc,cftrc);
-
+			//
+			// If the CF support center on the current data point falls in the current sub-grid
+			// (or equivalently currentl CUDA Block), then process it further
+			//
   			if (onMyGrid)
   			  {
 			    // Gather some stats
@@ -225,23 +247,32 @@ namespace casa{
 				const Int iCiP_offset = ipol + ichan*nDataPol + irow*nDataPol*nDataChan;
 				const Bool iCiPFlagCube = *(flagCube_ptr + iCiP_offset);
   				//if((!(*(flagCube_ptr + iCiP_offset))))
+
+				// Process the polarization if it is not flagged.
 				if((!(iCiPFlagCube)))
   				  {  
   				    targetIMPol=polMap_ptr[ipol];
+
   				    if ((targetIMPol>=0) && (targetIMPol<nGridPol)) 
+				      //if ((targetIMPol=polMap_ptr[ipol]) >=0 )
   				      {
   					igrdpos[2]=targetIMPol; igrdpos[3]=targetIMChan;
 					
   					//if(dopsf) {nvalue.x=(*(imgWts_ptr + ichan + irow*nDataChan));nvalue.y=0.0;}
+
+					//
+					// Extract the complex data from visCube in the nvalue variable.  This is the data
+					// that will be gridded. If gridding is being done only for making the PSF,
+					// nvalue is set to the weights.  Else to the vis. data.
+					//
 					if(dopsf) {nvalue.x=((imgWts_Chan));nvalue.y=0.0;}
   					else      
 					  {
 					    cuComplex vis;
-					    // Float twt;
-					    //twt=*(imgWts_ptr+ichan+irow*nDataChan);
-					    //twt=(imgWts_Chan);
-					    vis=cuCmulf(*((cuComplex *)visCube_ptr+ iCiP_offset),phasor);
-					    
+					    vis=cuCmulf(*(( cuComplex *)visCube_ptr+ iCiP_offset),phasor);
+                          
+					   //vis=cuCmulf(*((cuComplex *)tmp_visCube_ptr+ iCiP_offset),phasor);
+
 					    nvalue.x= imgWts_Chan * vis.x;
 					    nvalue.y= imgWts_Chan * vis.y;
 					  }
@@ -249,6 +280,11 @@ namespace casa{
   					norm.x = norm.y = 0.0;
   					Bool foundCFPeak=False;
   					uInt nMueller=1; //vbs->cfBSt_p.nMueller
+
+					//
+					// Now go over all the elements of the Mueller matrix that are required
+					// for the current polarization.  This for now is always equal to 1
+					//
   					for (uInt mRow=0;mRow<nMueller; mRow++) 
   					  {
   					    const cuComplex* convFuncV;
@@ -257,6 +293,9 @@ namespace casa{
 					    Int polNdx;
 					    if (dataWVal > 0.0) polNdx=muellerElementsIndex[ipol][mRow];
 					    else                polNdx=conjMuellerElementsIndex[ipol][mRow];
+
+					    // Get the pointer to the CF in convFuncV variable
+
 					    convFuncV = (cuComplex *)cfV[polNdx];
 					    
   					    // convOrigin[0]=cfShape[0]/2;	    convOrigin[1]=cfShape[1]/2;
@@ -267,14 +306,30 @@ namespace casa{
   					    cuComplex *cached_PhaseGrad_ptr=NULL;
 					    
 					    cuComplex tmpNorm; tmpNorm.x=tmpNorm.y=0.0;
+     // unsigned long long smClock1 = 0;
+     // unsigned long long smClock2 = 0;
+     // asm volatile ("mov.u64 %0, %globaltimer;" : "=l" (smClock1));
+
+
+
+					    // Do the actual gridding.  Grid is pointed to by gridStore (4D array -- but the last two 
+					    // axis are degenerated.  So in storage it is only a 2D array).  gridInc_l holds
+					    // pixel increments to use to index in gridStore.  cached_PhaseGrad is not used for now.
+					    // convFuncV points to the CF.  cfInc_l holds the pixel increments to be used to index in
+					    // the CF array. iblc, itrc are the bounds of the CF indices that are to be used for this 
+					    // Block (or sub-grid).
 
   					    tmpNorm = cuaccumulateOnGrid(gridStore, gridInc_l, cached_PhaseGrad_ptr, 
-					    				 cachedPhaseGradNX, cachedPhaseGradNY,
-					    				 convFuncV, cfInc_l, nvalue,dataWVal,
-					    				 iblc, itrc, support, sampling, off, 
-					    				 convOrigin, cfShape, loc, igrdpos,
-					    				 finitePointingOffsets, psfOnly, foundCFPeak,
-					    				 gridHits[XThGrid + YThGrid*subGridShape[0]]);
+									  cachedPhaseGradNX, cachedPhaseGradNY,
+									  convFuncV, cfInc_l, nvalue,dataWVal,
+									  iblc, itrc, support, sampling, off, 
+									  convOrigin, cfShape, loc, igrdpos,
+									  finitePointingOffsets, psfOnly, foundCFPeak,
+									  gridHits[XThGrid + YThGrid*subGridShape[0]]);
+    
+    // asm volatile ("mov.u64 %0, %globaltimer;" : "=l" (smClock2));
+    // printf ("globalTime = %d %d %d %d %llu\n", blockIdx.x, blockIdx.y, threadIdx.x, threadIdx.y, smClock2 - smClock1);
+
 					    norm.x += tmpNorm.x; norm.y += tmpNorm.y;
   					  }
 					
@@ -309,6 +364,8 @@ namespace casa{
 			       Bool doPSFOnly, Bool& foundCFPeak,
 			       Int& gridHits)
   {
+
+
     Int iloc_ptr[4]={0,0,0,0};
     // !!! Converting sampling and offset to Ints. Check if this still gives correct results.
     Int scaledSampling_l[2]={(Int)scaledSampling_ptr[0], (Int)scaledSampling_ptr[1]};
@@ -330,6 +387,9 @@ namespace casa{
     
     Int xOff=off_l[0]-1+convOrigin_ptr[0], 
       yOff = off_l[1]-1+convOrigin_ptr[1];
+   // float2 tmpnvalue = __ldg(&nvalue);
+   // float2 *tmp_convFuncV ;
+   // *tmp_convFuncV= __ldg(convFuncV); 
 
     for(Int iy=supBLC_ptr[1]; iy <= supTRC_ptr[1]; iy++) 
       {
@@ -345,10 +405,15 @@ namespace casa{
 	    {
 	      if (ix==0 and iy==0) foundCFPeak=True;
 
+	      //printf("       # : %d %d %d %d %d %d\n",ix,support_ptr[0], iy,support_ptr[1], threadIdx.x,threadIdx.y);
+	      wt.x=wt.y=0.0;
 	      if (ix+support_ptr[0]==threadIdx.x and iy+support_ptr[1]==threadIdx.y)
 		{
-		  // printf("       # : %d %d %d %d \n",ix+support_ptr[0], iy+support_ptr[1], threadIdx.x,threadIdx.y);
 		  wt = CU_GET_FROM_4DARRAY(convFuncV, iloc_ptr,cfInc_p);///cfArea;
+//                  wt = (*((tmp_convFuncV)+((iloc_ptr)[0] + (iloc_ptr)[1]*(cfInc_p)[1] + (iloc_ptr)[2]*(cfInc_p)[2] +(iloc_ptr)[3]*(cfInc_p)[3])));
+                //#define CU_GET_FROM_4DARRAY(store, iPos, inc) (*((store)+((iPos)[0] + (iPos)[1]*(inc)[1] + (iPos)[2]*(inc)[2] +(iPos)[3]*(inc)[3])))
+ 			
+
 
 		  // !!!UNCOMMENT THE FOLLOWING 2 LINES
 		  // if (wVal > 0.0) {wt = cuConjf(wt);}
@@ -357,12 +422,96 @@ namespace casa{
 
 		  // !!! ENABLE COMPUTING
 		  // The following uses raw index on the 4D grid
+		  //cuaddTo4DArray(gridStore,iGrdpos_ptr,gridInc_p, tmpnvalue,wt);
 		  cuaddTo4DArray(gridStore,iGrdpos_ptr,gridInc_p, nvalue,wt);
-		  //gridHits++;
+		  gridHits++;
 		}
 	    }
 	  }
       }
+
+    return norm;
+  }
+  //
+  //---------------------------------------------------------------------------------
+  //
+  template <class T>
+  __device__
+  cuComplex cuaccumulateOnGrid2(T* gridStore, const Int* gridInc_p, const cuComplex *cached_phaseGrad_p,
+			       const Int cachedPhaseGradNX, const Int cachedPhaseGradNY,
+			       const cuComplex* convFuncV, const Int *cfInc_p, cuComplex nvalue,
+			       Double wVal, 
+			       Int *supBLC_ptr, Int *supTRC_ptr,
+			       const Int *support_ptr,
+			       Float* scaledSampling_ptr, 
+			       Double* off_ptr, Int* convOrigin_ptr, 
+			       Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr,
+			       Bool finitePointingOffset,
+			       Bool doPSFOnly, Bool& foundCFPeak,
+			       Int& gridHits)
+  {
+
+
+    Int iloc_ptr[4]={0,0,0,0};
+    // !!! Converting sampling and offset to Ints. Check if this still gives correct results.
+    Int scaledSampling_l[2]={(Int)scaledSampling_ptr[0], (Int)scaledSampling_ptr[1]};
+    Int off_l[2]={(Int)off_ptr[0], off_ptr[1]};
+    
+    cuComplex wt;
+    //cuComplex cfArea;cfArea.x=1.0; 
+    cuComplex norm;norm.x=norm.y=0.0;
+
+    //    Bool finitePointingOffset_l=finitePointingOffset;
+    //    Bool doPSFOnly_l=doPSFOnly;
+    Double wVal_l=wVal;
+    cuComplex nvalue_l=nvalue;
+    
+    // Int phaseGradOrigin_l[2]; 
+
+    // phaseGradOrigin_l[0] = cachedPhaseGradNX/2;
+    // phaseGradOrigin_l[1] = cachedPhaseGradNY/2;
+    
+    Int xOff=off_l[0]-1+convOrigin_ptr[0], 
+      yOff = off_l[1]-1+convOrigin_ptr[1];
+    
+
+    Int ix,iy;
+    iy=threadIdx.y+supBLC_ptr[1];
+    ix=threadIdx.x+supBLC_ptr[0];
+    Bool inMyThread = !(((iy < supBLC_ptr[1]) and (iy > supTRC_ptr[1]))  or
+			((ix < supBLC_ptr[0]) and (ix > supTRC_ptr[0])));
+    //for(iy=supBLC_ptr[1]; iy <= supTRC_ptr[1]; iy++) 
+      {
+	iloc_ptr[1]=scaledSampling_l[1]*iy+yOff;
+	iGrdpos_ptr[1]=loc_ptr[1]+iy;
+
+	//for(ix=supBLC_ptr[0]; ix <= supTRC_ptr[0]; ix++) 
+	  {
+	    iloc_ptr[0]=scaledSampling_l[0]*ix+xOff;
+	    iGrdpos_ptr[0]=loc_ptr[0]+ix;
+	    {
+	      //	      if (ix==0 and iy==0) foundCFPeak=True;
+
+	      wt.x=wt.y=0.0;
+	      // inMyThread = ((ix+support_ptr[0]==threadIdx.x) and (iy+support_ptr[1]==threadIdx.y));
+	      // if (inMyThread)
+		{
+		  wt = CU_GET_FROM_4DARRAY(convFuncV, iloc_ptr,cfInc_p);///cfArea;
+		  wt.x *= inMyThread;
+		  wt.y *= inMyThread;
+
+		  // !!! ENABLE COMPUTING !!!UNCOMMENT THE FOLLOWING 2 LINES 
+		  //if (wVal > 0.0) {wt = cuConjf(wt);}
+		  norm = cuCaddf(norm,wt);
+
+		  // The following uses raw index on the 4D grid
+		  cuaddTo4DArray(gridStore,iGrdpos_ptr,gridInc_p, nvalue,wt);
+		  gridHits++;
+		}
+	    }
+	  }
+      }
+
     return norm;
   }
   //
@@ -433,6 +582,7 @@ namespace casa{
     int n=iPos[0] + iPos[1]*inc[1] + iPos[2]*inc[2] +iPos[3]*inc[3];
     ((cuComplex *)store)[n].x += tmp.x;
     ((cuComplex *)store)[n].y += tmp.y;
+   
 
 
   }

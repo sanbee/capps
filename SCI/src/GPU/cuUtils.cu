@@ -265,8 +265,8 @@ namespace casa{
       		    {
       		      double phase=twoPiW*(sqrt(1.0-rsq)-1.0);
 		      cufftComplex w;w.x=cos(phase); w.y=sin(phase);
-		      screen[ix+convSize/2 + (iy+convSize/2)*ny]=
-			cuCmulf(screen[ix+convSize/2 + (iy+convSize/2)*ny], w); 
+		      screen[ix+convSize/2 + (iy+convSize/2)*nx]=
+			cuCmulf(screen[ix+convSize/2 + (iy+convSize/2)*nx], w); 
       		      /* float wre=cos(phase), wim=sin(phase); */
       		      /* float re=screen[ix+convSize/2 + (iy+convSize/2)*ny].x, */
       		      /* 	im=screen[ix+convSize/2 + (iy+convSize/2)*ny].y; */
@@ -294,7 +294,9 @@ namespace casa{
 
       //      printf("wTerm %d %d\n",col,row);
       __shared__ float twoPiW;
-      twoPiW=__fmul_rn(2.0,M_PI);
+      //      twoPiW=__fmul_rn(2.0,M_PI);
+
+      twoPiW=2.0*M_PI;
       int originx=nx/2, originy=ny/2, tix, tiy;
 
       /* for (col=blockIdx.x * tileWidthX + threadIdx.x; col < nx; col +=tileWidthX * gridDim.x) */
@@ -305,21 +307,28 @@ namespace casa{
 
       float m=sampling*float(ix), l=sampling*float(iy);
       float rsq=(l*l+m*m);
+
       /* float m=__fmul_rn(sampling,float(ix)), l=__fmul_rn(sampling,float(iy)); */
       /* float rsq=__fadd_rn(__fmul_rn(l,l),__fmul_rn(m,m)); */
 
       if (rsq<1.0)
 	{
-	  //	  float wValue = wPixel*wPixel/wScale;
-	  float wValue=__fdividef((wPixel*wPixel),wScale);
-	  twoPiW = __fmul_rn(twoPiW, wValue);
-	  //	  float phase = twoPiW*(sqrt(1.0-rsq)-1.0);
-	  float phase=__fmul_rn(twoPiW,
-				(__fsqrt_rn(1.0-rsq)-1.0)
-				);
-	  cufftComplex w; __sincosf(phase, &(w.y),&(w.x));
+	  float wValue = wPixel*wPixel/wScale;
+	  twoPiW = twoPiW*wValue;
+	  float phase = twoPiW*(sqrt(1.0-rsq)-1.0);
+
+	  /* float wValue=__fdividef((wPixel*wPixel),wScale); */
+	  /* twoPiW = __fmul_rn(twoPiW, wValue); */
+	  /* float phase=__fmul_rn(twoPiW, */
+	  /* 			(__fsqrt_rn(1.0-rsq)-1.0) */
+	  /* 			); */
+	  float c=1.0,s=0.0;
+	  cufftComplex w;
+	  sincosf(phase, &(s),&(c));
+	  w.x=c; w.y=s;
 	  screen[tix*ny+tiy] = cuCmulf(w,aTerm[tix*ny+tiy]);
-	  //screen[tix*ny+tiy] = w;
+	  /* screen[tix*ny+tiy].x = 1.0; */
+	  /* screen[tix*ny+tiy].y = 0.0; */
 	}
       else
 	{
