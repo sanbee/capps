@@ -2266,9 +2266,11 @@ namespace casa { //# NAMESPACE CASA - BEGIN
   //
   //-------------------------------------------------------------------------
   //  
+#include "GPUGEOM.h"
   void AWProjectFT::makeThGridCoords(VBStore& vbs, const Vector<Int>& gridShape)
   {
-    Float NBlocksX=16.0, NBlocksY=16.0;
+    //    Float NBlocksX=1024.0, NBlocksY=1.0;
+    Float NBlocksX=XBLOCKSIZE, NBlocksY=YBLOCKSIZE;
     Float dNx=(gridShape(0)/NBlocksX), dNy=(gridShape(1)/NBlocksY);
     Int GNx=SynthesisUtils::nint(gridShape(0)/dNx),
       GNy=SynthesisUtils::nint(gridShape(1)/dNy);
@@ -2334,6 +2336,8 @@ namespace casa { //# NAMESPACE CASA - BEGIN
 				 const Vector<Int>& gridShape)
   {
     LogIO log_l(LogOrigin("AWProjectFT", "setupVBStore[R&D]"));
+
+    //    log_l << imagingweight << endl;
 
     //    Vector<Int> ConjCFMap, CFMap;
 

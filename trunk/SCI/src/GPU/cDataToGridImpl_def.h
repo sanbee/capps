@@ -290,6 +290,25 @@ cuComplex cuaccumulateOnGrid(DComplex* gridStore, const Int* gridInc_p, const cu
 			     Float* scaledSampling_ptr, Double* off_ptr, Int* convOrigin_ptr, 
 			     Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr, Bool finitePointingOffset,
 			     Bool doPSFOnly, Bool& foundCFPeak, Int& gridHits);
+template
+__device__
+cuComplex cuaccumulateOnGrid2(Complex* gridStore, const Int* gridInc_p, const cuComplex *cached_phaseGrad_p,
+			     const Int cachedPhaseGradNX, const Int cachedPhaseGradNY,
+			     const cuComplex* convFuncV, const Int *cfInc_p,cuComplex nvalue,
+			     Double wVal, Int *supBLC_ptr, Int *supTRC_ptr, const Int *support_ptr,
+			     Float* scaledSampling_ptr, Double* off_ptr, Int* convOrigin_ptr, 
+			     Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr, Bool finitePointingOffset,
+			     Bool doPSFOnly, Bool& foundCFPeak, Int& gridHits);
+
+template
+__device__
+cuComplex cuaccumulateOnGrid2(DComplex* gridStore, const Int* gridInc_p, const cuComplex *cached_phaseGrad_p,
+			     const Int cachedPhaseGradNX, const Int cachedPhaseGradNY,
+			     const cuComplex* convFuncV, const Int *cfInc_p,cuComplex nvalue,
+			     Double wVal, Int *supBLC_ptr, Int *supTRC_ptr, const Int *support_ptr,
+			     Float* scaledSampling_ptr, Double* off_ptr, Int* convOrigin_ptr, 
+			     Int* cfShape, Int* loc_ptr, Int* iGrdpos_ptr, Bool finitePointingOffset,
+			     Bool doPSFOnly, Bool& foundCFPeak, Int& gridHits);
 
 //
 //----------------------------------------------------------------------
