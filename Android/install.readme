@@ -56,6 +56,10 @@ o To install on a device connected to the USB:
 Go to the emulator window, and do what you'd do on Adam to run the
 app.
 
+o To get log messages from emulator
+
+    adb logcat
+
 o To interactive with the device-xxxx, use
    telnet localhost xxxx 
   
