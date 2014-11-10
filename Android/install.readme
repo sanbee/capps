@@ -66,3 +66,19 @@ o To interactive with the device-xxxx, use
   use "help" to get a list of commands
 
 You can find all the packages to install in /home/tara/sanjay/Projects
+
+o Name of the app on android device is determined by the following in
+  AndroidManifest.xml: 
+
+         <activity
+            android:name="naarad.client.tabhost.MainActivity"
+            android:label="@string/app_name" >
+
+  The name of the MainActivity can be anything (it's "MainActivity"
+  here).
+
+o The name of the .apk file which is installed on the device is
+  determined by the following in build.xml:
+
+    <?xml version="1.0" encoding="UTF-8"?>
+    <project name="Naarad" default="help">
