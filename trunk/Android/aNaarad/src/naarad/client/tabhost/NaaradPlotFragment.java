@@ -110,7 +110,10 @@ public class NaaradPlotFragment extends Fragment
     {
 	apiLevel=android.os.Build.VERSION.SDK_INT;
 	Log.i("API Level: ",android.os.Build.VERSION.RELEASE+" "+Integer.toString(apiLevel));
+
 	setHasOptionsMenu(true);
+	setRetainInstance(true);
+
 	mView = inflater.inflate(R.layout.activity_naarad_plot, container, false);
 	//
 	//--------------------------------------------------------------------------
@@ -406,6 +409,4 @@ public class NaaradPlotFragment extends Fragment
 		super.onPostExecute(result);
 	    }
     }
-    
-    
 }
