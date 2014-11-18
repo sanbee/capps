@@ -9,7 +9,7 @@
     tools:context=".NaaradClientActivity" >
 
     <EditText
-       android:id="@+id/editText1"
+       android:id="@+id/serverName"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:layout_alignParentLeft="true"
@@ -17,24 +17,25 @@
        android:ems="10" >
         <requestFocus />
     </EditText>
-
-    <!-- <Button -->
-    <!--    android:id="@+id/sendButton" -->
-    <!--    android:layout_width="wrap_content" -->
-    <!--    android:layout_height="wrap_content" -->
-    <!--    android:layout_alignParentBottom="true" -->
-    <!--    android:layout_centerHorizontal="true" -->
-    <!--    android:layout_toLeftOf="@+id/editText1" -->
-    <!--    android:text="Send" /> -->
-
-    <Button
-       android:id="@+id/connectButton"
+    <EditText
+       android:id="@+id/serverPort"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:layout_centerHorizontal="true"
        android:layout_alignParentTop="true"
-       android:layout_toRightOf="@+id/editText1"
-       android:text="Connect" />
+       android:layout_toRightOf="@+id/serverName"
+       android:ems="10" >
+        <requestFocus />
+    </EditText>
+
+    <Button
+       android:id="@+id/setButton"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_centerHorizontal="true"
+       android:layout_alignParentTop="true"
+       android:layout_toRightOf="@+id/serverPort"
+       android:text="Set" />
 
 
     <!-- <ToggleButton -->

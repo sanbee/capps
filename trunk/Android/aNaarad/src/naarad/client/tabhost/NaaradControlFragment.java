@@ -19,8 +19,14 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.os.AsyncTask;
 import android.widget.EditText;
+import android.content.SharedPreferences;
+import android.content.Context;
+import android.widget.Toast;
+import java.net.UnknownHostException;
+import android.os.Handler;
 
-public class NaaradControlFragment extends Fragment 
+//public class NaaradControlFragment extends Fragment 
+public class NaaradControlFragment extends NaaradAbstractFragment
 {
     private static View mView;
     
@@ -28,8 +34,11 @@ public class NaaradControlFragment extends Fragment
     private PrintWriter printwriter;
     private EditText textField;
     private Button sendButton,initButton;
-    private ToggleButton lamp0, lamp1, lamp2;
-    private String messsage;
+    private ToggleButton lamp0, lamp1, lamp2, currentToggleButton;
+    private String messsage, serverName;
+    private int serverPort=1234;
+    private Handler myHandler;
+    final private String ALL_WELL="All well";
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -46,6 +55,24 @@ public class NaaradControlFragment extends Fragment
     //
     //-----------------------------------------------------------------------------------------
     //
+    public void lampHandler0(View v)
+    {
+	serverName = getServerName();
+	serverPort = getServerPort();
+	currentToggleButton = (ToggleButton)(v);
+	//Log.i("Ctrl Server: ", serverName+":"+serverPort);
+
+	boolean on = ((ToggleButton)v).isChecked();
+	messsage="tell "+v.getTag()+" ";
+	// Log.i("lamp" + v.getTag() + ": ","clicked");
+	if (on)	messsage += "1";
+	else	messsage += "0";
+	SendMessage sendMessageTask = new SendMessage();
+	sendMessageTask.execute();
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				       Bundle savedInstanceState) 
     {
@@ -53,13 +80,16 @@ public class NaaradControlFragment extends Fragment
 	    {
 		public void onClick(View v) 
 		{
-		    boolean on = ((ToggleButton)v).isChecked();
-		    messsage="tell "+v.getTag()+" ";
-		    // Log.i("lamp" + v.getTag() + ": ","clicked");
-		    if (on)	messsage += "1";
-		    else	messsage += "0";
-		    SendMessage sendMessageTask = new SendMessage();
-		    sendMessageTask.execute();
+		    lampHandler0(v);
+		    // if (super.getServerName() != null)
+		    // 	Log.i("Ctrl Server: ", super.getServerName());
+		    // boolean on = ((ToggleButton)v).isChecked();
+		    // messsage="tell "+v.getTag()+" ";
+		    // // Log.i("lamp" + v.getTag() + ": ","clicked");
+		    // if (on)	messsage += "1";
+		    // else	messsage += "0";
+		    // SendMessage sendMessageTask = new SendMessage();
+		    // sendMessageTask.execute();
 		}
 	    };
 	
@@ -99,7 +129,7 @@ public class NaaradControlFragment extends Fragment
     //
     //-----------------------------------------------------------------------------------------
     //
-    private class SendMessage extends AsyncTask<Void, Void, Void> 
+    private class SendMessage extends AsyncTask<Void, Void, String> 
     {
 	private String mkMessage(String message) 
 	{
@@ -117,12 +147,18 @@ public class NaaradControlFragment extends Fragment
 	//
 	//-----------------------------------------------------------------------------------------
 	//
-	@Override protected Void doInBackground(Void... params) 
+	@Override protected String doInBackground(Void... params) 
 	    {
 	    try 
 		{
 		    if (messsage.length() == 0) return null;
-		    client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
+
+		    //Log.i("Thread: ",serverName+":"+Integer.toString(serverPort));
+		    
+		    client = new Socket(serverName, serverPort);
+
+		    //		    client = new Socket(serverName, serverPort);
+		    //		    client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
 		    //client = new Socket("raspberrypi", 1234); // connect to the Naarad server
 		    printwriter = new PrintWriter(client.getOutputStream(), true);
 		    
@@ -135,12 +171,6 @@ public class NaaradControlFragment extends Fragment
 		    printwriter.flush();
 		    SystemClock.sleep(500);
 		    
-		    // Handler handler = new Handler(); 
-		    // handler.postDelayed(new Runnable() { 
-		    // 	public void run() { 
-		    // 	    //			    my_button.setBackgroundResource(R.drawable.defaultcard); 
-		    // 	} 
-		    //     }, 1000); 
 		    printwriter.write(mkMessage("done"));
 		    printwriter.flush();
 		    //SystemClock.sleep(500);
@@ -151,13 +181,24 @@ public class NaaradControlFragment extends Fragment
 		} 
 	    catch (UnknownHostException e) 
 		{
-		    e.printStackTrace();
+		    String msg = "Unknown host: "+serverName+":"+Integer.toString(serverPort)+"\nCheck settings";
+		    return msg;
 		} 
 	    catch (IOException e) 
 		{
-		    e.printStackTrace();
+		    String msg = "Error connecting to "+serverName+":"+Integer.toString(serverPort)+"\nCheck settings";
+		    return msg;
 		}
-	    return null;
+	    return ALL_WELL;
+	    }
+	@Override protected void onPostExecute(String result) 
+	    {
+		super.onPostExecute(result);
+		if (result != ALL_WELL)		
+		    {
+			Toast.makeText(getActivity(), result, Toast.LENGTH_SHORT).show();
+			currentToggleButton.setChecked(!currentToggleButton.isChecked());
+		    }
 	    }
     }
 }

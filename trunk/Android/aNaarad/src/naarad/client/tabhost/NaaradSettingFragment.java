@@ -19,16 +19,19 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.os.AsyncTask;
 import android.widget.EditText;
+import java.lang.Integer;
+import android.widget.Toast;
 
-public class NaaradSettingFragment extends Fragment 
+//public class NaaradSettingFragment extends Fragment 
+public class NaaradSettingFragment extends NaaradAbstractFragment
 {
     private static View mView;
-    
+    // private SharedPreferences prefs; 
     private Socket client;
     private PrintWriter printwriter;
-    private EditText textField;
-    private Button connectButton;
-    private String messsage;
+    private EditText serverNameField, serverPortField;
+    private Button setButton;
+    private String message;
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -48,86 +51,105 @@ public class NaaradSettingFragment extends Fragment
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				       Bundle savedInstanceState) 
     {
+	
 	mView = inflater.inflate(R.layout.activity_naarad_setting,
 				 container, false);
 	String sampleText = getArguments().getString("bString");
-	textField  = (EditText) mView.findViewById(R.id.editText1); // reference to the text field
-	connectButton = (Button)  mView.findViewById(R.id.connectButton); // reference to the send button
+	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
+	serverPortField  = (EditText) mView.findViewById(R.id.serverPort); // reference to the text field
+	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button
+	serverPortField.setText(Integer.toString(getDefaultPort()));
+	serverNameField.setText(getDefaultServer());
 
 	// Button press event listener
-	connectButton.setOnClickListener(new View.OnClickListener() 
+	setButton.setOnClickListener(new View.OnClickListener() 
 	    {
 		public void onClick(View v) 
 		{
-		    messsage = textField.getText().toString(); // get the text message on the text field
-		    textField.setText(""); // Reset the text field to blank
-		    Log.i("Msg: ",messsage);
+		    String serverName;
+		    int serverPort=getDefaultPort();
+		    serverName = serverNameField.getText().toString(); // get the text message on the text field
+		    try
+			{
+			    serverPort = Integer.parseInt(serverPortField.getText().toString()); // get the text message on the text field
+			    if (serverPort <= 0)
+				throw (new NumberFormatException("Port number < 0"));
+			}
+		    catch (NumberFormatException nfe)
+			{
+			    String msg = "Wrong Port number: "+ nfe.getMessage();
+			    System.out.println(msg);
+			    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
+			}
+		    setServerName(serverName);
+		    setServerPort(serverPort);
+
 		}
 	    });
 	return mView;
     }
-    //
-    //-----------------------------------------------------------------------------------------
-    //
-    private class SendMessage extends AsyncTask<Void, Void, Void> 
-    {
-	private String mkMessage(String message) 
-	{
-	    Integer n, totalLen;
-	    n = message.length();
-	    String msg,lenStr;
+    // //
+    // //-----------------------------------------------------------------------------------------
+    // //
+    // private class SendMessage extends AsyncTask<Void, Void, Void> 
+    // {
+    // 	private String mkMessage(String message) 
+    // 	{
+    // 	    Integer n, totalLen;
+    // 	    n = message.length();
+    // 	    String msg,lenStr;
 	    
-	    lenStr=Integer.toString(n);
-	    totalLen =lenStr.length() + n + 1;
-	    lenStr=Integer.toString(totalLen);
-	    msg = lenStr + " " + message;
-	    //Log.i("Message: ",msg);
-	    return msg;
-	}
-	//
-	//-----------------------------------------------------------------------------------------
-	//
-	@Override protected Void doInBackground(Void... params) 
-	    {
-	    try 
-		{
-		    if (messsage.length() == 0) return null;
-		    //client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
-		    client = new Socket("raspberrypi", 1234); // connect to the Naarad server
-		    printwriter = new PrintWriter(client.getOutputStream(), true);
+    // 	    lenStr=Integer.toString(n);
+    // 	    totalLen =lenStr.length() + n + 1;
+    // 	    lenStr=Integer.toString(totalLen);
+    // 	    msg = lenStr + " " + message;
+    // 	    //Log.i("Message: ",msg);
+    // 	    return msg;
+    // 	}
+    // 	//
+    // 	//-----------------------------------------------------------------------------------------
+    // 	//
+    // 	@Override protected Void doInBackground(Void... params) 
+    // 	    {
+    // 	    try 
+    // 		{
+    // 		    if (messsage.length() == 0) return null;
+    // 		    //client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
+    // 		    client = new Socket("raspberrypi", 1234); // connect to the Naarad server
+    // 		    printwriter = new PrintWriter(client.getOutputStream(), true);
 		    
-		    printwriter.write(mkMessage("open"));
-		    printwriter.flush();
-		    SystemClock.sleep(500);
+    // 		    printwriter.write(mkMessage("open"));
+    // 		    printwriter.flush();
+    // 		    SystemClock.sleep(500);
 		    
-		    printwriter.write(mkMessage(messsage)); // write the message to output stream
-		    // printwriter.write((messsage)); // write the message to output stream
-		    printwriter.flush();
-		    SystemClock.sleep(500);
+    // 		    printwriter.write(mkMessage(messsage)); // write the message to output stream
+    // 		    // printwriter.write((messsage)); // write the message to output stream
+    // 		    printwriter.flush();
+    // 		    SystemClock.sleep(500);
 		    
-		    // Handler handler = new Handler(); 
-		    // handler.postDelayed(new Runnable() { 
-		    // 	public void run() { 
-		    // 	    //			    my_button.setBackgroundResource(R.drawable.defaultcard); 
-		    // 	} 
-		    //     }, 1000); 
-		    printwriter.write(mkMessage("done"));
-		    printwriter.flush();
-		    //SystemClock.sleep(500);
+    // 		    // Handler handler = new Handler(); 
+    // 		    // handler.postDelayed(new Runnable() { 
+    // 		    // 	public void run() { 
+    // 		    // 	    //			    my_button.setBackgroundResource(R.drawable.defaultcard); 
+    // 		    // 	} 
+    // 		    //     }, 1000); 
+    // 		    printwriter.write(mkMessage("done"));
+    // 		    printwriter.flush();
+    // 		    //SystemClock.sleep(500);
 		    
-		    printwriter.close();
-		    client.close(); // closing the connection
+    // 		    printwriter.close();
+    // 		    client.close(); // closing the connection
 		    
-		} 
-	    catch (UnknownHostException e) 
-		{
-		    e.printStackTrace();
-		} 
-	    catch (IOException e) 
-		{
-		    e.printStackTrace();
-		}
-	    return null;
-	    }
-    }
+    // 		} 
+    // 	    catch (UnknownHostException e) 
+    // 		{
+    // 		    e.printStackTrace();
+    // 		} 
+    // 	    catch (IOException e) 
+    // 		{
+    // 		    e.printStackTrace();
+    // 		}
+    // 	    return null;
+    // 	    }
+    // }
 }
