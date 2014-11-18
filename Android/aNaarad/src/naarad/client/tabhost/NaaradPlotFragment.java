@@ -104,7 +104,9 @@ public class NaaradPlotFragment extends Fragment
 
     private XYSeries series0, series1;
     private XYSeriesRenderer renderer0,renderer1;
-
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				       Bundle savedInstanceState) 
     {
@@ -141,9 +143,7 @@ public class NaaradPlotFragment extends Fragment
 			    startAllCharts();
 		    	}
 		    else 
-		    	{
-			    stopAllCharts();
-		    	}
+			stopAllCharts();
 		}
 	    };
 	plotButton.setOnClickListener(plotButtonHandler);
@@ -183,6 +183,9 @@ public class NaaradPlotFragment extends Fragment
 	
 	return f;
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     
     private void makeSeries(XYMultipleSeriesRenderer multiRenderer,
 			   XYMultipleSeriesDataset multiDataset,
@@ -199,6 +202,9 @@ public class NaaradPlotFragment extends Fragment
 	renderer0.setColor(color);
 	multiRenderer.addSeriesRenderer(renderer0);
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     private void initMultiRenderer(XYMultipleSeriesRenderer multiRenderer)
     {
 	mRenderer.setApplyBackgroundColor(true);
@@ -219,6 +225,9 @@ public class NaaradPlotFragment extends Fragment
 	mRenderer.setClickEnabled(false);
 	mRenderer.setPanEnabled(false);
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     public void makeChart(XYMultipleSeriesRenderer multiRenderer,
 			  XYMultipleSeriesDataset multiDataset)
     {
@@ -228,6 +237,9 @@ public class NaaradPlotFragment extends Fragment
 	LayoutParams lp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 	layout.addView(mTimeChartView,0, lp);
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     public void startAllCharts()
     {
 	if (mUpdateTask0 != null) mUpdateTask0.cancel(true);
@@ -247,6 +259,9 @@ public class NaaradPlotFragment extends Fragment
 	else
 	    mUpdateTask1.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(1));
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     public void stopAllCharts()
     {
 	if (mUpdateTask0 != null) 
