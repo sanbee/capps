@@ -25,7 +25,9 @@ import android.content.Context;
 public abstract class NaaradAbstractFragment extends Fragment 
 {
     private SharedPreferences prefs; 
-
+    
+    // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
+    // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
     final public int getDefaultPort() {return 1234;}
     final public String getDefaultServer() {return "10.0.2.2";}
 
