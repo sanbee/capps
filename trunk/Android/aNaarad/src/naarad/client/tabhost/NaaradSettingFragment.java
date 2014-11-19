@@ -21,6 +21,7 @@ import android.os.AsyncTask;
 import android.widget.EditText;
 import java.lang.Integer;
 import android.widget.Toast;
+import android.graphics.Color;
 
 //public class NaaradSettingFragment extends Fragment 
 public class NaaradSettingFragment extends NaaradAbstractFragment
@@ -51,10 +52,9 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     @Override public View onCreateView(LayoutInflater inflater, ViewGroup container,
 				       Bundle savedInstanceState) 
     {
-	
+	setRetainInstance(true);	
 	mView = inflater.inflate(R.layout.activity_naarad_setting,
 				 container, false);
-	String sampleText = getArguments().getString("bString");
 	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
 	serverPortField  = (EditText) mView.findViewById(R.id.serverPort); // reference to the text field
 	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button
@@ -74,16 +74,18 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 			    serverPort = Integer.parseInt(serverPortField.getText().toString()); // get the text message on the text field
 			    if (serverPort <= 0)
 				throw (new NumberFormatException("Port number < 0"));
+			    else
+				setButton.setTextColor(Color.GREEN);
 			}
 		    catch (NumberFormatException nfe)
 			{
 			    String msg = "Wrong Port number: "+ nfe.getMessage();
 			    System.out.println(msg);
 			    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
+			    setButton.setTextColor(Color.RED);
 			}
 		    setServerName(serverName);
 		    setServerPort(serverPort);
-
 		}
 	    });
 	return mView;

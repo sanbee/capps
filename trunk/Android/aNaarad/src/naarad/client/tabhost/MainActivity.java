@@ -1,5 +1,6 @@
 package naarad.client.tabhost;
 
+import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import android.os.Bundle;
@@ -103,7 +104,7 @@ public class MainActivity extends FragmentActivity implements
 	MainActivity.AddTab(this, this.mTabHost,
 			    this.mTabHost.newTabSpec("Controls").setIndicator("Controls"));
 	MainActivity.AddTab(this, this.mTabHost,
-			    this.mTabHost.newTabSpec("Plots").setIndicator("Plots"));
+			    this.mTabHost.newTabSpec("Sensors").setIndicator("Sensors"));
 	MainActivity.AddTab(this, this.mTabHost,
 			    this.mTabHost.newTabSpec("Settings").setIndicator("Settings"));
 	mTabHost.getTabWidget().getChildAt(0).getLayoutParams().height =40;
