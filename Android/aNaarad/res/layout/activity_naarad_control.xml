@@ -8,39 +8,10 @@
 		android:paddingTop="@dimen/activity_vertical_margin"
 		android:background="@drawable/ourhouse2"
 		android:alpha="0.7"
+		android:id="@+id/controlRL"
 		tools:context=".NaaradClientActivity">
 
-    <!-- <EditText -->
-    <!--    android:id="@+id/editText1" -->
-    <!--    android:layout_width="wrap_content" -->
-    <!--    android:layout_height="wrap_content" -->
-    <!--    android:layout_alignParentRight="true" -->
-    <!--    android:layout_alignParentBottom="true" -->
-    <!--    android:layout_centerHorizontal="true" -->
-    <!--    android:ems="10" > -->
-    <!--     <requestFocus /> -->
-    <!-- </EditText> -->
-
-    <!-- <Button -->
-    <!--    android:id="@+id/sendButton" -->
-    <!--    android:layout_width="wrap_content" -->
-    <!--    android:layout_height="wrap_content" -->
-    <!--    android:layout_alignParentBottom="true" -->
-    <!--    android:layout_centerHorizontal="true" -->
-    <!--    android:layout_toLeftOf="@+id/editText1" -->
-    <!--    android:text="Send" /> -->
-
-    <!-- <Button -->
-    <!--    android:id="@+id/initButton" -->
-    <!--    android:layout_width="wrap_content" -->
-    <!--    android:layout_height="wrap_content" -->
-    <!--    android:layout_centerVertical="true" -->
-    <!--    android:layout_alignParentRight="true" -->
-    <!--    android:layout_alignParentTop="true" -->
-    <!--    android:text="Connect" /> -->
-
-
-    <ToggleButton
+      <ToggleButton
        android:id="@+id/lamp0"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
@@ -79,7 +50,7 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher"
+       android:src="@drawable/ic_launcher_bg"
        android:layout_marginTop="50dp"
        android:layout_marginRight="165dp"
        android:longClickable="true"
@@ -90,7 +61,7 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher"
+       android:src="@drawable/ic_launcher_bg"
        android:layout_marginTop="105dp"
        android:layout_marginRight="395dp"
        />
@@ -99,7 +70,7 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher"
+       android:src="@drawable/ic_launcher_bg"
        android:layout_marginTop="140dp"
        android:layout_marginRight="330dp"
        />

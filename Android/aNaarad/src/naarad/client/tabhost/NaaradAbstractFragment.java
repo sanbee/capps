@@ -31,7 +31,6 @@ public abstract class NaaradAbstractFragment extends Fragment
     final public int getDefaultPort() {return 1234;}
     final public String getDefaultServer() {return "10.0.2.2";}
 
-    
     public void setServerName(String name)
     {
 	prefs = getActivity().getSharedPreferences("nSettings", Context.MODE_PRIVATE); 

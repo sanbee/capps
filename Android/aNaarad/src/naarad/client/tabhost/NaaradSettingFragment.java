@@ -53,6 +53,17 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 				       Bundle savedInstanceState) 
     {
 	setRetainInstance(true);	
+	if (mView != null)
+	    {
+		// Do not inflate the layout again.
+		// The returned View of onCreateView will be added into the fragment.
+		// However it is not allowed to be added twice even if the parent is same.
+		// So we must remove root View (nView) from the existing parent view group
+		// (it will be added back).
+		((ViewGroup)mView.getParent()).removeView(mView);
+		return mView;
+	    }
+
 	mView = inflater.inflate(R.layout.activity_naarad_setting,
 				 container, false);
 	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
