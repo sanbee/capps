@@ -50,7 +50,7 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher_bg"
+       android:src="@drawable/lamp_off"
        android:layout_marginTop="50dp"
        android:layout_marginRight="165dp"
        android:longClickable="true"
@@ -61,7 +61,7 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher_bg"
+       android:src="@drawable/lamp_off"
        android:layout_marginTop="105dp"
        android:layout_marginRight="395dp"
        />
@@ -70,10 +70,12 @@
        android:layout_width="20dp"
        android:layout_height="20dp"
        android:layout_alignParentRight="true"
-       android:src="@drawable/ic_launcher_bg"
+       android:src="@drawable/lamp_off"
        android:layout_marginTop="140dp"
        android:layout_marginRight="330dp"
        />
 
 </RelativeLayout>
+       <!-- android:src="@drawable/lamp_off_crop" -->
+       <!-- android:src="@drawable/ic_launcher_bg" -->
        <!-- android:background="@android:color/transparent" -->

@@ -31,6 +31,21 @@ public abstract class NaaradAbstractFragment extends Fragment
     final public int getDefaultPort() {return 1234;}
     final public String getDefaultServer() {return "10.0.2.2";}
 
+    public boolean recreateView(View v)
+    {
+	if (v != null)
+	    {
+		// Do not inflate the layout again.
+		// The returned View of onCreateView will be added into the fragment.
+		// However it is not allowed to be added twice even if the parent is same.
+		// So we must remove root View (nView) from the existing parent view group
+		// (it will be added back).
+		((ViewGroup)v.getParent()).removeView(v);
+		return true;
+	    }
+	else return false;
+    }
+
     public void setServerName(String name)
     {
 	prefs = getActivity().getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
