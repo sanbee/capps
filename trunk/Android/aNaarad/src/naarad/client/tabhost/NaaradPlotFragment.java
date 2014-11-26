@@ -78,7 +78,8 @@ class DynamicDataSource implements Runnable
     }
 }
 
-public class NaaradPlotFragment extends Fragment 
+//public class NaaradPlotFragment extends Fragment 
+public class NaaradPlotFragment extends NaaradAbstractFragment
 {
     private XYMultipleSeriesDataset mDataset = new XYMultipleSeriesDataset();
     private XYMultipleSeriesRenderer mRenderer = new XYMultipleSeriesRenderer();
@@ -115,18 +116,8 @@ public class NaaradPlotFragment extends Fragment
 
 	setHasOptionsMenu(true);
 	setRetainInstance(true);
-	if (mView != null)
-	    {
-		// Do not inflate the layout again.
-		// The returned View of onCreateView will be added into the fragment.
-		// However it is not allowed to be added twice even if the parent is same.
-		// So we must remove root View (nView) from the existing parent view group
-		// (it will be added back).
-		((ViewGroup)mView.getParent()).removeView(mView);
-		return mView;
-	    }
-
-	mView = inflater.inflate(R.layout.activity_naarad_plot, container, false);
+	if (!recreateView(mView)) 
+	    mView = inflater.inflate(R.layout.activity_naarad_plot, container, false);
 	//
 	//--------------------------------------------------------------------------
 	//    
@@ -138,7 +129,7 @@ public class NaaradPlotFragment extends Fragment
 	//--------------------------------------------------------------------------
 	//    
 	plotButton = (ToggleButton)  mView.findViewById(R.id.plotButton); // reference to the send button
-	//	plotButton.setChecked(true);
+	//plotButton.setChecked(true);
 
 	// Button press event listener
 	//plotButton.setOnClickListener(new View.OnClickListener() 
@@ -160,9 +151,9 @@ public class NaaradPlotFragment extends Fragment
 	//
 	//--------------------------------------------------------------------------
 	//    
-
 	return mView;
     }
+
     @Override public void onResume() 
     {
         // // kick off the data generating thread:
@@ -234,6 +225,7 @@ public class NaaradPlotFragment extends Fragment
 	mRenderer.setXLabels(10); // No. of xtics
 	mRenderer.setClickEnabled(false);
 	mRenderer.setPanEnabled(false);
+	//multiRenderer.setMarginsColor(Color.argb(0x00, 0xff, 0x00, 0x00));
     }
     //
     //-----------------------------------------------------------------------------------------

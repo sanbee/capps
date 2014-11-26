@@ -1,7 +1,9 @@
 package naarad.client.tabhost;
+//import com.blahti.example.drag;
+import com.blahti.example.drag.DragController;
+import com.blahti.example.drag.DragLayer;
 
-
-import niko.dragdrop.view.DragDropView;
+//import niko.dragdrop.view.DragDropView;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -35,12 +37,20 @@ import android.content.res.Resources;
 import android.graphics.drawable.ColorDrawable;
 import java.lang.Integer;
 import android.view.MotionEvent;
+import android.support.v4.view.ViewPager;
+import android.support.v4.view.ViewCompat;
+import android.view.Gravity;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup.LayoutParams;
+import android.view.WindowManager;
+import android.graphics.drawable.Drawable;
 
 //public class NaaradControlFragment extends Fragment 
-public class NaaradControlFragment extends NaaradAbstractFragment
+public class NaaradControlFragment extends NaaradAbstractFragment implements OnTouchListener
 {
     private static View mView;
-    
+    private ViewGroup gViewGroup;
+
     private Socket client;
     private PrintWriter printwriter;
     //private EditText textField;
@@ -49,15 +59,26 @@ public class NaaradControlFragment extends NaaradAbstractFragment
     private ToggleButton[] lampArr;
     private ImageView bulb0, bulb1, bulb2;
     private ImageView[] bulbArr;
-
+    
     private String messsage, serverName;
     private int serverPort=1234;
     private Handler myHandler;
     final private String ALL_WELL="All well";
-    private DragDropView dragDropView;// = new DragDropView();
+    //    private DragDropView dragDropView;// = new DragDropView();
     private ImageView iv;
     private LayoutInflater li;
     private View.OnLongClickListener onLongPressListener;
+    
+    private DragLayer mDragLayer;             // The ViewGroup that supports drag-drop.
+    private DragController mDragController;
+    private boolean mLongClickStartsDrag = true;    // If true, it takes a long click to start the drag operation.
+                                                    // Otherwise, any touch event starts a drag.
+
+    public boolean touchFlag=false;
+    private View selected_item=null;
+    private int offset_x, offset_y;
+    //    private LayoutParams imageParams;
+    private int topy, leftX, rightX, bottomY;
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -74,23 +95,94 @@ public class NaaradControlFragment extends NaaradAbstractFragment
     //
     //-----------------------------------------------------------------------------------------
     //
+    public boolean onTouch(View v, MotionEvent event) 
+    {   
+	switch (event.getActionMasked()) 
+            {
+            case MotionEvent.ACTION_DOWN:
+		//Log.i(null,"Activity onTouch Down");
+                touchFlag=true;
+                // offset_x = (int) v.getWidth();//event.getX();
+                // offset_y = (int) v.getHeight();//event.getY();
+		System.err.println("Activity Down: "+v.getTop()+" "+event.getX());
+                selected_item = v;
+		//                imageParams=v.getLayoutParams();
+                break;
+            case MotionEvent.ACTION_UP:
+		Log.i(null,"Activity onTouch Up");
+                selected_item=null;
+                touchFlag=false;
+                break;
+            default:
+                break;
+            }       
+	return false;
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public void setBulbBG(View v,boolean on)
+    {
+	if (on)
+	    {
+		//((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_launcher_bg));
+		((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.lamp_off));
+	    }
+	else
+	    {
+		//((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_launcher));
+		((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.lamp_on));
+		//v.setBackgroundColor(Color.YELLOW);
+	    }
+	v.setBackgroundColor(Color.TRANSPARENT);
+	
+	
+	// if (on) v.setBackgroundColor(Color.TRANSPARENT);
+	// else    v.setBackgroundColor(Color.YELLOW);
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public boolean setLampBG(View v)
+    {
+	boolean on = ((ToggleButton)v).isChecked();
+	if (on) 
+	    {
+		//v.setBackgroundDrawable(getActivity().getResources().getDrawable(R.drawable.lamp_on));
+		v.getBackground().setAlpha(255);
+	    }
+	else    
+	    {
+		//		v.setBackgroundDrawable(R.drawable.lamp_off);
+		v.getBackground().setAlpha(128);
+	    }
+	return on;
+    }
+    public void toast (String msg)
+    {
+	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
+	Toast.makeText (getActivity(), msg, Toast.LENGTH_SHORT).show ();
+    } 
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     public void lampHandler0(View v)
     {
 	serverName = getServerName();
 	serverPort = getServerPort();
 	currentToggleButton = (ToggleButton)(v);
 	//Log.i("Ctrl Server: ", serverName+":"+serverPort);
-
+	
 	int tag = Integer.parseInt((String)v.getTag());
-	boolean on = ((ToggleButton)v).isChecked();
+	boolean on = setLampBG(v);
 	setBulbBG(bulbArr[tag],!on);
 	messsage="tell "+v.getTag()+" ";
-
+	
 	if (on)	messsage += "1";
 	else	messsage += "0";
-
+	
 	//	Log.i("Cmd: ",messsage);
-
+	
 	SendMessage sendMessageTask = new SendMessage();
 	sendMessageTask.execute();
     }
@@ -100,7 +192,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment
     @Override public void onSaveInstanceState(Bundle outState)
     {
 	Log.i("setInstance: ", "Setting 0");
-
+	
 	super.onSaveInstanceState(outState);
 	ColorDrawable cd=(ColorDrawable)(bulb2.getBackground());
 	outState.putInt("bg0", cd.getColor());
@@ -108,76 +200,65 @@ public class NaaradControlFragment extends NaaradAbstractFragment
     //
     //-----------------------------------------------------------------------------------------
     //
-    public void setBulbBG(View v,boolean on)
+    public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_p) 
     {
-	if (on)
-	    ((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_launcher_bg));
-	else
-	    ((ImageView)(v)).setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_launcher));
-	    
+	int crashX, crashY, w, h;
 
-	// if (on) v.setBackgroundColor(Color.TRANSPARENT);
-	// else    v.setBackgroundColor(Color.YELLOW);
-    }
-    //
-    //-----------------------------------------------------------------------------------------
-    //
-    private View.OnTouchListener OnTouchToDrag = new View.OnTouchListener() 
-	{
-	    @Override public boolean onTouch(View v, MotionEvent event) 
+	if(touchFlag_p==true)
 	    {
-		RelativeLayout.LayoutParams dragParam = (RelativeLayout.LayoutParams) v.getLayoutParams();
-		//RelativeLayout.LayoutParams dragParam = (RelativeLayout.LayoutParams) v.getContext().getResources().getLayout(R.id.controlRL)
-		// Log.i("RL_M: ",Integer.toString(dragParam.width)+" "+Integer.toString(dragParam.height)+" "+
-		//       Integer.toString(dragParam.topMargin)+" "+Integer.toString(dragParam.leftMargin));
-		dragParam.width=RelativeLayout.LayoutParams.MATCH_PARENT;
-		dragParam.height=RelativeLayout.LayoutParams.MATCH_PARENT;
-		// dragParam.width=800;
-		// dragParam.height=480;
-		//		dragParam.addRule(RelativeLayout.ALIGN_PARENT_LEFT, RelativeLayout.TRUE);
-		int vH=v.getHeight();
-		int vW=v.getWidth();
-		switch(event.getAction())
+		System.err.println("Display If  Part ::->"+touchFlag_p);
+		switch (event.getActionMasked()) 
 		    {
+		    case MotionEvent.ACTION_DOWN :
+			Log.i(null,"COT Down");
+			// topy=selected_item.getTop();//imageDrop.getTop();
+			// leftX=selected_item.getLeft();
+			// rightX=selected_item.getRight();   
+			// bottomY=selected_item.getBottom();
+			// w=selected_item.getWidth();//selected_item.getLayoutParams().width;
+			// h=selected_item.getLayoutParams().height;
+			// System.err.println("D Display Top-->"+topy);      
+			// System.err.println("D Display Left-->"+leftX);
+			// System.err.println("D Display Right-->"+rightX);
+			// System.err.println("D Display Bottom-->"+bottomY);                
+			// System.err.println("D Display Width-->"+w);                
+			// System.err.println("D Display Height-->"+h);                
+			break;
 		    case MotionEvent.ACTION_MOVE:
-			{
-			    int arr[] = new int[2];
-			    v.getLocationOnScreen(arr);
-			    Log.i("RL_M: ",Integer.toString(dragParam.width)+" "+Integer.toString(dragParam.height)+" "+
-				  Integer.toString((int)event.getRawX())+" "+Integer.toString((int)event.getRawY())+" "+
-				  Integer.toString(arr[0])+" "+Integer.toString(arr[1]));
-				  //Integer.toString((int)v.getLeft())+" "+Integer.toString((int)v.getTop()));
-			    dragParam.topMargin = (int)event.getRawY() - vH;
-			    dragParam.leftMargin = (int)event.getRawX() - vW/2;
-			    v.setLayoutParams(dragParam);
-			    break;
-			}
-		    case MotionEvent.ACTION_DOWN:
-			{
-			    Log.i("RL_D: ",Integer.toString(dragParam.width)+" "+Integer.toString(dragParam.height)+" "+
-				  Integer.toString((int)event.getRawX())+" "+Integer.toString((int)event.getRawY()));
-			    // dragParam.height = 50;
-			    // dragParam.width = 50;
-			    dragParam.topMargin = (int)event.getRawY() - vH;
-			    dragParam.leftMargin = (int)event.getRawX() - vW/2;
-		dragParam.leftMargin=400;
-		dragParam.topMargin=240;
-			    v.setLayoutParams(dragParam);
-			    break;
-			}
+			int x,y;
+			crashX=(int) event.getX();
+			crashY=(int) event.getY();
+
+			offset_x=selected_item.getHeight();
+			offset_y=selected_item.getWidth();
+
+			x=crashX - offset_x;
+			y=crashY - offset_y;
+			System.err.println("M Display Here X Value-->"+(x)+" "+crashX+" "+offset_x);
+			System.err.println("M Display Here Y Value-->"+(y)+" "+crashY+" "+offset_y);
+			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
+			    (
+			     new ViewGroup.MarginLayoutParams
+			     (RelativeLayout.LayoutParams.WRAP_CONTENT,
+			      RelativeLayout.LayoutParams.WRAP_CONTENT)
+			     );
+			lp.setMargins(x, y, 0, 0);                  
+			lp.height=30;
+			lp.width=30;
+			selected_item.setLayoutParams(lp);
+			break;  
 		    case MotionEvent.ACTION_UP:
-			{
-			    Log.i("RL_U: ",Integer.toString(dragParam.width)+" "+Integer.toString(dragParam.height)+" "+
-				  Integer.toString((int)event.getRawX())+" "+Integer.toString((int)event.getRawY()));
-			    // dragParam.height = 50;
-			    // dragParam.width = 50;
-			    //v.setLayoutParams(dragParam);
-			    break;
-			}
+			Log.i(null,"COT Up");
+			break;
+		    default:
+			break;
 		    }
-		return true;
-	    }
-	};
+	    }else
+	    {
+		System.err.println("Display Else Part ::->"+touchFlag);
+	    }               
+	return true;
+    };
 
     //
     //-----------------------------------------------------------------------------------------
@@ -187,11 +268,17 @@ public class NaaradControlFragment extends NaaradAbstractFragment
     {
 	super.onCreateView(inflater, container, savedInstanceState);
 	setRetainInstance(true);	
-
+	//
+	// This checks mView and recreates if it is null.  Otherwise
+	// returns the existing one.
+	//
+	gViewGroup = container;
+	if (recreateView(mView)) return mView;	
+	
 	final Resources res = getResources();
 	final int k0 = res.getInteger(R.integer.key0);
 	final int k1 = res.getInteger(R.integer.key1);
-
+	
 	View.OnClickListener lampHandler = new View.OnClickListener()
 	    {
 		public void onClick(View v) 
@@ -200,22 +287,12 @@ public class NaaradControlFragment extends NaaradAbstractFragment
 		}
 	    };
 	
-	if (mView != null)
-	    {
-		// Do not inflate the layout again.
-		// The returned View of onCreateView will be added into the fragment.
-		// However it is not allowed to be added twice even if the parent is same.
-		// So we must remove root View (nView) from the existing parent view group
-		// (it will be added back).
-		((ViewGroup)mView.getParent()).removeView(mView);
-		return mView;
-	    }
 	
 	mView = inflater.inflate(R.layout.activity_naarad_control, container, false);
-
+	
 	li=inflater;
-	dragDropView = new DragDropView(mView.getContext());
-
+	//dragDropView = new DragDropView(mView.getContext());
+	
 	lampArr = new ToggleButton[3];
 	bulbArr = new ImageView[3];
 	lampArr[0]  = lamp0 = (ToggleButton) mView.findViewById(R.id.lamp0); // reference to the send button
@@ -224,30 +301,16 @@ public class NaaradControlFragment extends NaaradAbstractFragment
 	bulbArr[0]  = bulb0 = (ImageView) mView.findViewById(R.id.iv1); // reference to the send button
 	bulbArr[1]  = bulb1 = (ImageView) mView.findViewById(R.id.iv2); // reference to the send button
 	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); // reference to the send button
-
 	
-	// iv = new ImageView(getActivity());
-	// iv.setImageDrawable(getActivity().getResources().getDrawable(R.drawable.ic_launcher));
-
-	// RelativeLayout rl = (RelativeLayout) mView.findViewById(R.id.controlRL);
-	// rl.setLayoutParams(new RelativeLayout.LayoutParams(200,600));//LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-	// rl.removeView(bulbArr[0]);
-
-	// dragDropView.AddDraggableView(iv, 50, 50, 300, 600);//rl.getLayoutParams().width, rl.getLayoutParams().height);
-	// FrameLayout preview = (FrameLayout) inflater.inflate(android.R.id.tabcontent,null);
-	// //	FrameLayout preview = (FrameLayout) mView.findViewById(android.R.id.tabcontent);
-	// if (preview == null) Log.i("Preview: "," is NULL");
-	// else preview.addView(dragDropView);
-
-
 	for (int i=0; i<lampArr.length; i++)
 	    {
 		lampArr[i].setTag(Integer.toString(i)); 
 		lampArr[i].setOnClickListener(lampHandler);
+		setLampBG(lampArr[i]);
+		//lampArr[i].setOnTouchListener(OnTouchToDrag);
 	    }
-
-
-
+	
+	
 	View.OnClickListener bulbOnClickListener = new View.OnClickListener()
 	    {
 		public void onClick(View v)
@@ -258,82 +321,53 @@ public class NaaradControlFragment extends NaaradAbstractFragment
 		    setBulbBG(v, on);
 		    lampArr[tag].setChecked(!on);
 		    lampHandler0(lampArr[tag]);
-		};
-	    };
-	onLongPressListener = new View.OnLongClickListener()
-	    {
-		public boolean onLongClick(View v)
-		{
-		    //FrameLayout preview = (FrameLayout) v.findViewById(R.id.controlRL);
-		    // FrameLayout preview = (FrameLayout) li.inflate(android.R.id.tabcontent,null);
-		    // if (preview == null)
-		    // 	Log.i("Preview: "," is NULL");
-		    // else
-		    // 	Log.i("Preview: "," is GOOD");
-		    // dragDropView.AddDraggableView(v, 50, 50, 300, 600);//rl.getLayoutParams().width, rl.getLayoutParams().height);
-		    // mView.addView(dragDropView);
-		    
-		    int tag=(Integer)(v.getTag(R.integer.key0));
-		    
-		    Log.i("Test: ","IV"+Integer.toString(tag)+" long clicked");
-		    return true;
+		    if (mLongClickStartsDrag) 
+			{
+			    // Tell the user that it takes a long click to start dragging.
+			    toast ("Press and hold to drag an image.");
+			}
 		};
 	    };
 
+	//container.setOnTouchListener(OnTouchToDrag);
+	// container.setOnTouchListener(new View.OnTouchListener() 
+        //     {
+        //         public boolean onTouch(View v, MotionEvent event) 
+        //         {
+	// 	    return containerOnTouch(v, event,touchFlag);
+	// 	}
+	//     });
+	
+	
 	for (int i=0; i<bulbArr.length; i++)
 	    {
 		bulbArr[i].setTag(R.integer.key0,i);//Integer.toString(i)); 	
 		bulbArr[i].setTag(R.integer.key1,"0");
 		
-		bulbArr[i].setOnClickListener(bulbOnClickListener);
-		bulbArr[i].setOnLongClickListener(onLongPressListener);
-		//		bulbArr[i].setOnTouchListener(OnTouchToDrag);
-	    }
+		//bulbArr[i].setOnClickListener(bulbOnClickListener);
 
+
+		//bulbArr[i].setOnLongClickListener(onLongPressListener);
+		//bulbArr[i].setOnTouchListener(OnTouchToDrag);
+
+		// This installs the onTouch handler, which records
+		// the object clicked and return false (transfering
+		// control to container's onTouch handler).
+
+		//		bulbArr[i].setOnTouchListener(this); 
+	    }
+	
 	if(savedInstanceState != null)
 	    {
 		Log.i("BG: ",Integer.toString(savedInstanceState.getInt("bg0")));
 		bulb2.setBackgroundColor(savedInstanceState.getInt("bg0"));//		mEditText.setText(savedInstanceState.getString("textKey"));
 	    }
-
-	// bulb2.setOnClickListener(new View.OnClickListener()
-	//     {
-	// 	public void onClick(View v)
-	// 	{
-	// 	    boolean on = lamp2.isChecked();
-	// 	    setBulbBG(bulb2, on);
-	// 	    lamp2.setChecked(!on);
-	// 	    lampHandler0(lamp2);
-	// 	};
-	//     });
-	// bulb2.setOnLongClickListener(new View.OnLongClickListener()
-	//     {
-	// 	public boolean onLongClick(View v)
-	// 	{
-	// 	    Log.i("Test: ","IV0 long clicked");
-	// 	    return true;
-	// 	};
-	//     });
-
-
-	// Button press event listener
-	// sendButton.setOnClickListener(new View.OnClickListener() 
-	//     {
-	// 	public void onClick(View v) 
-	// 	{
-	// 	    messsage = textField.getText().toString(); // get the text message on the text field
-	// 	    textField.setText(""); // Reset the text field to blank
-	// 	    SendMessage sendMessageTask = new SendMessage();
-	// 	    sendMessageTask.execute();
-	// 	}
-	//     });
-	
-	// TextView txtSampleText = (TextView) mView
-	//     .findViewById(R.id.txtViewSample);
-	// txtSampleText.setText(sampleText);
 	
 	return mView;
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
     private String mkMessage(String message) 
     {
 	Integer n, totalLen;

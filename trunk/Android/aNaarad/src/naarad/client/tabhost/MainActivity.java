@@ -10,6 +10,7 @@ import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
+//import java.lang.Integer;
 
 /**
  * ---------------------------------------------------------------------------------------Freely inspired by: 
@@ -66,6 +67,13 @@ public class MainActivity extends FragmentActivity implements
     {
 	int pos = this.mViewPager.getCurrentItem();
 	this.mTabHost.setCurrentTab(pos);
+
+	// Log.i("Main: ","Tab no. "+Integer.toString(pos));
+
+	// fragmentTransaction.setCustomAnimations(animEnter, animExit, animPopEnter, animPopExit);
+	// fragmentTransaction.add(android.R.id.content, fragment,"MyStringIdentifierTag");
+	// fragmentTransaction.addToBackStack(null);
+	// fragmentTransaction.commit();
     }
     
     @Override public void onPageSelected(int arg0) 
