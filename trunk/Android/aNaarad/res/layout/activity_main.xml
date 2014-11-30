@@ -27,7 +27,7 @@
          android:layout_height="0dp"
          android:layout_weight="0" />
       
-      <android.support.v4.view.ViewPager
+      <naarad.client.tabhost.MyViewPager
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:launcher="http://schemas.android.com/apk/res/com.android.launcher"
          android:id="@+id/viewpager"

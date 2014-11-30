@@ -22,7 +22,7 @@ public class MainActivity extends FragmentActivity implements
 {
     
     MyPageAdapter pageAdapter;
-    private ViewPager mViewPager;
+    private MyViewPager mViewPager;
     private TabHost mTabHost;
     
     @Override
@@ -31,7 +31,7 @@ public class MainActivity extends FragmentActivity implements
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.activity_main);
 	
-	mViewPager = (ViewPager) findViewById(R.id.viewpager);
+	mViewPager = (MyViewPager) findViewById(R.id.viewpager);
 	
 	// Tab Initialization
 	initialiseTabHost();
