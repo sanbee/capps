@@ -6,7 +6,7 @@ import java.util.List;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.ViewPager;
+// import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.widget.TabHost;
 import android.widget.TabHost.OnTabChangeListener;
@@ -22,16 +22,21 @@ public class MainActivity extends FragmentActivity implements
 {
     
     MyPageAdapter pageAdapter;
-    private MyViewPager mViewPager;
+    private MyViewPager mViewPager=null;
     private TabHost mTabHost;
     
-    @Override
-	protected void onCreate(Bundle savedInstanceState) 
+    @Override protected void onResume()
+    {
+	super.onResume();
+	if (this.mViewPager == null) this.mViewPager = (MyViewPager) findViewById(R.id.viewpager);
+    }
+    @Override protected void onCreate(Bundle savedInstanceState) 
     {
 	super.onCreate(savedInstanceState);
 	setContentView(R.layout.activity_main);
 	
-	mViewPager = (MyViewPager) findViewById(R.id.viewpager);
+	if (this.mViewPager == null)
+	    this.mViewPager = (MyViewPager) findViewById(R.id.viewpager);
 	
 	// Tab Initialization
 	initialiseTabHost();
@@ -39,8 +44,10 @@ public class MainActivity extends FragmentActivity implements
 	// Fragments and ViewPager Initialization
 	List<Fragment> fragments = getFragments();
 	pageAdapter = new MyPageAdapter(getSupportFragmentManager(), fragments);
-	mViewPager.setAdapter(pageAdapter);
-	mViewPager.setOnPageChangeListener(MainActivity.this);
+	this.mViewPager.setAdapter(pageAdapter);
+	this.mViewPager.setOnPageChangeListener(MainActivity.this);
+	// ((NaaradControlFragment)fragments.get(0)).setViewPager(this.mViewPager);
+	// ((NaaradControlFragment)fragments.get(0)).setActivity(this);
     }
     
     // Method to add a TabHost
