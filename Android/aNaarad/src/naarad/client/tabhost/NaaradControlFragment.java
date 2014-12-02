@@ -1,4 +1,5 @@
 package naarad.client.tabhost;
+import android.app.Application;
 // import com.blahti.example.drag;
 // import com.blahti.example.drag.DragController;
 // import com.blahti.example.drag.DragLayer;
@@ -45,6 +46,7 @@ import android.view.View.OnTouchListener;
 import android.graphics.drawable.Drawable;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.GestureDetector;
+import android.app.Activity;
 
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment implements OnTouchListener
@@ -84,6 +86,23 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     private GestureDetector myGestureDetector;
     private View.OnTouchListener myOnTouchListener;
     private boolean touchFlag_p;
+    private Activity mActivity0=null;        
+    //private MyViewPager mViewPager=null;
+    public NaaradApp myApp;
+
+    // public void setViewPager(MyViewPager v)
+    // {if (mViewPager == null) mViewPager = v;}
+
+    // public void setActivity(Activity a)
+    // {
+    // 	if (mActivity0 == null)
+    // 	mActivity0 = a;
+    // }
+    // @Override public void onAttach(Activity activity) 
+    // {
+    //     super.onAttach(activity);
+    //     mActivity0 = activity;
+    // }
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -133,13 +152,13 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	    {
 		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.ic_launcher_bg));
 		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_off));
-		((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_off));
+		((ImageView)(v)).setImageDrawable(mActivity0.getResources().getDrawable(R.drawable.lamp_off));
 	    }
 	else
 	    {
 		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.ic_launcher));
 		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_on));
-		((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_on));
+		((ImageView)(v)).setImageDrawable(mActivity0.getResources().getDrawable(R.drawable.lamp_on));
 		//v.setBackgroundColor(Color.YELLOW);
 	    }
 	v.setBackgroundColor(Color.TRANSPARENT);
@@ -169,7 +188,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     public void toast (String msg)
     {
 	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
-	Toast.makeText (mActivity, msg, Toast.LENGTH_SHORT).show ();
+	Toast.makeText (mActivity0, msg, Toast.LENGTH_SHORT).show ();
     } 
     //
     //-----------------------------------------------------------------------------------------
@@ -291,29 +310,32 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 
 	    @Override public void onLongPress(MotionEvent e)
 	    {
-		//		Log.i("Gesture: ","LongPress");
+		Log.i("Gesture: ","LongPress");
 		super.onLongPress(e);
 		touchFlag_p=true;
 		((ImageView)selected_item).setAlpha(100);
 		selected_item.setBackgroundColor(Color.GREEN);
 		selected_item.getBackground().setAlpha(100);
-		((MyViewPager)mActivity.findViewById(R.id.viewpager)).enableSwipe(false);
+		//mViewPager = ((MyViewPager)mActivity0.findViewById(R.id.viewpager));
+		//mViewPager.enableSwipe(false);
+		myApp.setSwipeState(false);
+		//mViewPager.enableSwipe(false);
 
 		//containerOnTouch(selected_item, e, touchFlag_p);
 		return;
 	    }
-	    // @Override public boolean onDown(MotionEvent e)
-	    // {
-	    // 	Log.i("Gesture: ","onDown");
-	    // 	super.onDown(e);  
-	    // 	    // int tag=(Integer)(selected_item.getTag(R.integer.key0));
-	    // 	    // //Log.i("Tag: ",Integer.toString(tag));//R.integer.key0);
-	    // 	    // boolean on = lampArr[tag].isChecked();
-	    // 	    // setBulbBG(selected_item, on);
-	    // 	    // lampArr[tag].setChecked(!on);
-	    // 	    // lampHandler0(lampArr[tag]);
-	    // 	return true;
-	    // }
+	    @Override public boolean onDown(MotionEvent e)
+	    {
+	    	Log.i("Gesture: ","onDown");
+	    	super.onDown(e);  
+	    	    // int tag=(Integer)(selected_item.getTag(R.integer.key0));
+	    	    // //Log.i("Tag: ",Integer.toString(tag));//R.integer.key0);
+	    	    // boolean on = lampArr[tag].isChecked();
+	    	    // setBulbBG(selected_item, on);
+	    	    // lampArr[tag].setChecked(!on);
+	    	    // lampHandler0(lampArr[tag]);
+	    	return true;
+	    }
 
 	    // @Override public boolean onDoubleTap(MotionEvent e)
 	    // {
@@ -329,17 +351,20 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 				       Bundle savedInstanceState) 
     {
 	super.onCreateView(inflater, container, savedInstanceState);
+	myApp = (NaaradApp) getActivity().getApplication();
+
 	setRetainInstance(true);	
+	//getRetainInstance();
+	final Resources res = getResources();
+	final int k0 = res.getInteger(R.integer.key0);
+	final int k1 = res.getInteger(R.integer.key1);
 	//
 	// This checks mView and recreates if it is null.  Otherwise
 	// returns the existing one.
 	//
-	if (recreateView(mView)) return mView;	
+	mActivity0 = getActivity();
 
-	final Resources res = getResources();
-	final int k0 = res.getInteger(R.integer.key0);
-	final int k1 = res.getInteger(R.integer.key1);
-	
+	if (recreateView(mView)) return mView;	
 
 	myOnTouchListener = new View.OnTouchListener() 
             {
@@ -367,19 +392,17 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 			// 	return true;
 			case MotionEvent.ACTION_MOVE:
 			    if (touchFlag_p)
-				{
-				    //((MyViewPager)mActivity.findViewById(R.id.viewpager)).enableSwipe(false);
-				    ret=containerOnTouch(selected_item, event,true);
-				    //((MyViewPager)mActivity.findViewById(R.id.viewpager)).enableSwipe(true);
-				}
+				ret=containerOnTouch(selected_item, event,true);
 			    break;
 			case MotionEvent.ACTION_UP:
+			    Log.i("onTouch: ","UP "+Integer.toString(tag));//R.integer.key0);
 			    touchFlag_p=false;
-			    //Log.i("onTouch: ","UP "+Integer.toString(tag));//R.integer.key0);
 			    ((ImageView)selected_item).setAlpha(255);
 			    selected_item.setBackgroundColor(Color.TRANSPARENT);
 			    selected_item=null;
-			    ((MyViewPager)mActivity.findViewById(R.id.viewpager)).enableSwipe(true);
+			    //mViewPager = ((MyViewPager)mActivity0.findViewById(R.id.viewpager));
+			    //mViewPager.enableSwipe(true);
+			    myApp.setSwipeState(true);
 			    break;
 			};
 		    //Log.i("onTouch: ","Touched");//R.integer.key0);
@@ -388,7 +411,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 		    return ret;
 		}
 	    };
-	myGestureDetector = new GestureDetector(mActivity, myGestureListener);
+	myGestureDetector = new GestureDetector(mActivity0, myGestureListener);
 	
 	View.OnClickListener lampHandler = new View.OnClickListener()
 	    {
@@ -562,7 +585,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 		super.onPostExecute(result);
 		if (result != ALL_WELL)		
 		    {
-			Toast.makeText(mActivity, result, Toast.LENGTH_SHORT).show();
+			Toast.makeText(mActivity0, result, Toast.LENGTH_SHORT).show();
 			boolean on = currentToggleButton.isChecked();
 			int tag = Integer.parseInt((String)currentToggleButton.getTag());
 			

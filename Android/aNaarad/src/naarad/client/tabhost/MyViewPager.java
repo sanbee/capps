@@ -1,20 +1,27 @@
 package naarad.client.tabhost;
+
+import android.util.Log;
 import android.content.Context;
 import android.view.MotionEvent;
 import android.util.AttributeSet;
 import android.support.v4.view.ViewPager;
+import android.app.Application;
 
 public class MyViewPager extends ViewPager {
 
     private boolean enabled;
+    private NaaradApp myApp;
 
     public MyViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
+	myApp = (NaaradApp) context.getApplicationContext();
         this.enabled = true;
     }
 
     public MyViewPager(Context context) {
         super(context);
+
+	myApp = (NaaradApp) context.getApplicationContext();
         this.enabled = false;
     }
 
@@ -33,9 +40,14 @@ public class MyViewPager extends ViewPager {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent event) {
-        if (this.enabled) {
-            return super.onInterceptTouchEvent(event);
-        }
+	if (myApp == null) Log.i("intercept: ", "app is null");
+	else
+	    if (myApp.getSwipeState()) Log.i("intercept:"," on");
+	    else             Log.i("intercept:"," off");
+
+        //if (this.enabled) 
+	if (myApp.getSwipeState()) 
+	    return super.onInterceptTouchEvent(event);
 
         return false;
     }

@@ -12,7 +12,7 @@ import android.util.Log;
 public abstract class NaaradAbstractFragment extends Fragment 
 {
     private SharedPreferences prefs; 
-    protected Activity mActivity;        
+    private Activity mActivity=null;        
     // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
     // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
     final public int getDefaultPort() {return 1234;}
@@ -27,6 +27,7 @@ public abstract class NaaradAbstractFragment extends Fragment
     @Override public void onAttach(Activity activity) 
     {
         super.onAttach(activity);
+	if (mActivity==null)
         mActivity = activity;
     }
 
