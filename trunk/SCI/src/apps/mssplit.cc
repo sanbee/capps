@@ -136,10 +136,61 @@ int main(int argc, char **argv)
   //
   //---------------------------------------------------
   //
+  try
+    {
+      //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
+      //
+      // Setup the MSSelection thingi
+      //
+      MSInterface msInterface(ms);
+      MSSelection msSelection;
+      MSSelectionLogError mssLE;
+      msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
+
+      msSelection.reset(msInterface,MSSelection::PARSE_NOW,
+			timeStr,baselineStr,fieldStr,spwStr,
+			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+			stateObsModeStr,observationStr);
+      // MSSelection msSelection(ms,MSSelection::PARSE_NOW,
+      // 			      timeStr,baselineStr,fieldStr,spwStr,
+      // 			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+      // 			      stateObsModeStr,observationStr);
+
+      printInfo(msSelection);
+
+      if (!msSelection.getSelectedMS(selectedMS))
+	{
+	  cerr << "###Informational:  Nothing selected.  ";
+	  if (OutMSBuf != "")
+	    cout << "New MS not written." << endl;
+	  else
+	    cout << endl;
+	}
+      else
+	if (OutMSBuf != "")
+	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
+	  else          selectedMS.rename(OutMSBuf,Table::New);
+      cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
+    }
+  catch (clError& x) // Command-line interface library errors
+    {
+      x << x.what() << endl;
+      restartUI=True;
+    }
+  catch (MSSelectionError& x)  // Errors from the MSSelection module
+    {
+      cerr << "###MSSelectionError: " << x.getMesg() << endl;
+      restartUI=True;
+    }
+  catch (AipsError& x) // All other errors
+    {
+      cerr << "###AipsError: " << x.getMesg() << endl;
+      restartUI=True;
+    }
   //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
-  
   //
-  // Make a new scope, outside which there should be no tables lefts open.
+  // Make a new scope, outside which there should be no tables left open.
   //
   {
     MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
@@ -151,7 +202,7 @@ int main(int argc, char **argv)
     MSSelection msSelection;
     MSSelectionLogError mssLEA,mssLES;
     msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
-    msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
+    //msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
     try
       {
 	// msSelection.reset(ms,MSSelection::PARSE_NOW,
