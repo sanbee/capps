@@ -1,9 +1,11 @@
 package naarad.client.tabhost;
 import android.app.Application;
+import android.util.DisplayMetrics;
 
 public class NaaradApp extends Application 
 {
-    private boolean swipeEnabled=true;
+    public boolean swipeEnabled=true;
+    public int densityDpi;
 
     public boolean getSwipeState()
     {
@@ -18,6 +20,9 @@ public class NaaradApp extends Application
     @Override public void onCreate() 
     {
         super.onCreate();
+	DisplayMetrics dm = getResources().getDisplayMetrics(); 
+	densityDpi = dm.densityDpi;
+
 	swipeEnabled=true;
     }
 }

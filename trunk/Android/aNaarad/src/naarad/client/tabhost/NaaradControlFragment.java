@@ -18,52 +18,39 @@ import android.app.Application;
 //import android.view.ViewGroup.LayoutParams;
 //import android.view.WindowManager;
 
-import android.os.Bundle;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.view.View.OnTouchListener;
 import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.net.Socket;
 import java.net.UnknownHostException;
-import android.widget.Button;
+import android.widget.RelativeLayout;
+import android.view.ViewGroup.MarginLayoutParams;
+import android.content.res.Resources;
+import android.view.GestureDetector;
+import android.view.LayoutInflater;
 import android.widget.ToggleButton;
-import android.util.Log;
+import android.view.MotionEvent;
+import android.widget.ImageView;
+import android.graphics.Canvas;
 import android.os.SystemClock;
+import android.view.ViewGroup;
+import android.graphics.Color;
+import android.widget.Button;
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.widget.Toast;
-
-import android.widget.RelativeLayout;
-import android.widget.ImageView;
-import android.graphics.Color;
-import android.content.res.Resources;
-import android.graphics.drawable.ColorDrawable;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.Integer;
-import android.view.MotionEvent;
-import android.view.View.OnTouchListener;
-import android.graphics.drawable.Drawable;
-import android.view.GestureDetector.SimpleOnGestureListener;
-import android.view.GestureDetector;
-import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.util.Log;
+import java.net.Socket;
 
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment implements OnTouchListener
 {
-    //private EditText textField;
-    //private Button sendButton,initButton;
-    //    private Handler myHandler;
-    //    private DragDropView dragDropView;// = new DragDropView();
-    //private LayoutInflater li;
-    //    private View.OnLongClickListener onLongPressListener;
-
-    //private DragLayer mDragLayer;             // The ViewGroup that supports drag-drop.
-    //private DragController mDragController;
-    // private boolean mLongClickStartsDrag = true;    // If true, it takes a long click to start the drag operation.
-                                                    // Otherwise, any touch event starts a drag.
-    //    private LayoutParams imageParams;
-
     private static View mView;
 
     private Socket client;
@@ -80,29 +67,51 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 
     public boolean touchFlag=false;
     private View selected_item=null;
-    private int offset_x, offset_y;
-    private int topy, leftX, rightX, bottomY;
+    private int longPress_x, longPress_y;
 
-    private GestureDetector myGestureDetector;
-    private View.OnTouchListener myOnTouchListener;
+    private GestureDetector gGestureDetector;
+    private View.OnTouchListener gOnTouchListener;
+    private View.OnClickListener gLampHandler;
+    //private View.OnClickListener gBulbOnClickListener;
     private boolean touchFlag_p;
     private Activity mActivity0=null;        
     //private MyViewPager mViewPager=null;
     public NaaradApp myApp;
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    private void resizeView(View v, MotionEvent event, int xSizeDP, int ySizeDP)
+    {
+	int x,y,pX,pY, oX=0, oY=0, iX,iY;
+	int xsdp,ysdp;
+	xsdp = (int)(xSizeDP*myApp.densityDpi/160.0);
+	ysdp = (int)(ySizeDP*myApp.densityDpi/160.0);
+	
+	pX=(int) event.getX();
+	pY=(int) event.getY();
 
-    // public void setViewPager(MyViewPager v)
-    // {if (mViewPager == null) mViewPager = v;}
+	oX=v.getHeight()*2;
+	oY=v.getWidth();
+	oX = xsdp*2;
+	oY = ysdp;
+	iX=v.getRight();
+	iY=v.getTop();
+	x=pX - oX + iX;
+	y=pY - oY + iY;
+	// System.err.println("M Display Here X Value-->"+(x)+" "+pX+" "+oX+" "+iX);
+	// System.err.println("M Display Here Y Value-->"+(y)+" "+pY+" "+oY+" "+iY);
 
-    // public void setActivity(Activity a)
-    // {
-    // 	if (mActivity0 == null)
-    // 	mActivity0 = a;
-    // }
-    // @Override public void onAttach(Activity activity) 
-    // {
-    //     super.onAttach(activity);
-    //     mActivity0 = activity;
-    // }
+	RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
+	    (
+	     new ViewGroup.MarginLayoutParams
+	     (RelativeLayout.LayoutParams.WRAP_CONTENT,
+	      RelativeLayout.LayoutParams.WRAP_CONTENT)
+	     );
+	lp.setMargins(x, y, 0, 0);                  
+	lp.height=xsdp;
+	lp.width=ysdp;
+	v.setLayoutParams(lp);
+    }
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -127,9 +136,6 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
             case MotionEvent.ACTION_DOWN:
     		//Log.i(null,"Activity onTouch Down");
                 touchFlag=true;
-                // offset_x = (int) v.getWidth();//event.getX();
-                // offset_y = (int) v.getHeight();//event.getY();
-    		//System.err.println("Activity Down: "+v.getTop()+" "+event.getX());
                 selected_item = v;
     		//                imageParams=v.getLayoutParams();
                 break;
@@ -229,52 +235,58 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     //
     public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_p) 
     {
-	int crashX, crashY, w, h;
+	int w, h;
 
 	if ((touchFlag_p==true) && (selected_item != null))
 	    {
 		//System.err.println("Display If  Part ::->"+touchFlag_p);
 		switch (event.getActionMasked()) 
 		    {
-		    // case MotionEvent.ACTION_DOWN :
-		    // 	//Log.i(null,"COT Down");
-		    // 	// topy=selected_item.getTop();//imageDrop.getTop();
-		    // 	// leftX=selected_item.getLeft();
-		    // 	// rightX=selected_item.getRight();   
-		    // 	// bottomY=selected_item.getBottom();
-		    // 	// w=selected_item.getWidth();//selected_item.getLayoutParams().width;
-		    // 	// h=selected_item.getLayoutParams().height;
-		    // 	// System.err.println("D Display Top-->"+topy);      
-		    // 	// System.err.println("D Display Left-->"+leftX);
-		    // 	// System.err.println("D Display Right-->"+rightX);
-		    // 	// System.err.println("D Display Bottom-->"+bottomY);                
-		    // 	// System.err.println("D Display Width-->"+w);                
-		    // 	// System.err.println("D Display Height-->"+h);                
-		    // 	break;
 		    case MotionEvent.ACTION_MOVE:
-			int x,y,pX,pY, oX=0, oY=0, iX,iY;
+			int x, y,pX,pY, oX=0, oY=0, iX,iY,dx,dy;
 			pX=(int) event.getX();
 			pY=(int) event.getY();
 
-			oX=selected_item.getHeight()*2;
-			oY=selected_item.getWidth();
+			w=selected_item.getHeight();
+			h=selected_item.getWidth();
+			oX=(int)(20*myApp.densityDpi/160.0);
+			oY=(int)(20*myApp.densityDpi/160.0);
+
 			iX=selected_item.getRight();
 			iY=selected_item.getTop();
+			// int[] loc = new int[2];
+			// selected_item.getLocationOnScreen(loc);
+			// iX = loc[0]; iY=loc[1];
+
 			x=pX - oX + iX;
 			y=pY - oY + iY;
-			System.err.println("M Display Here X Value-->"+(x)+" "+pX+" "+oX+" "+iX);
-			System.err.println("M Display Here Y Value-->"+(y)+" "+pY+" "+oY+" "+iY);
 
+			dx = oX*2 - pX;  dy = oY - pY;
+			//dx = -pX;      dy = -pY;
+			dx = -(pX - longPress_x) ;
+			dy = -(pY - longPress_y);
+			x  = iX - dx -54 ;  y  = iY - dy -24;
+			
+			System.err.println("M Display Here X Value-->"+(x)
+					   +" Px:"+pX+" deX:"+(pX - longPress_x)
+					   +" R:"+iX+" dx:"+dx+" X:"+(iX - dx));
+			System.err.println("M Display Here Y Value-->"+(y)
+					   +" Py:"+pY+" deY:"+(pY - longPress_y)
+					   +" T:"+iY+" dy:"+dy+" Y:"+(iY - dy));
 			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
-			    (
-			     new ViewGroup.MarginLayoutParams
-			     (RelativeLayout.LayoutParams.WRAP_CONTENT,
-			      RelativeLayout.LayoutParams.WRAP_CONTENT)
-			     );
-			lp.setMargins(x, y, 0, 0);                  
-			lp.height=30;
-			lp.width=30;
+			    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+							      RelativeLayout.LayoutParams.WRAP_CONTENT));
+			lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
+			//lp.rightMargin = x; lp.topMargin = y;
+			lp.height = oX;
+			lp.width  = oY;
 			selected_item.setLayoutParams(lp);
+			
+			// MarginLayoutParams params = (MarginLayoutParams) selected_item.getLayoutParams();
+			// params.topMargin = y; params.rightMargin = x;
+			// selected_item.setLayoutParams(params);
+
+			//resizeView(selected_item, event, 50,50);
 			break;  
 		    // case MotionEvent.ACTION_UP:
 		    // 	Log.i(null,"COT Up");
@@ -292,9 +304,15 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 
     //
     //-----------------------------------------------------------------------------------------
+    // Gesture listener with onSingleTapUp() and onLongPress() overloaded.  
     //
-    GestureDetector.SimpleOnGestureListener myGestureListener = new GestureDetector.SimpleOnGestureListener()
+    GestureDetector.SimpleOnGestureListener myGestureListener
+	= new GestureDetector.SimpleOnGestureListener()
 	{
+	    //
+	    // onSingleTap() on the lamp icons recreates the same
+	    // operation as click on the associated ToggleButtons.
+	    //
 	    @Override public boolean onSingleTapUp(MotionEvent e)
 	    {
 	    	super.onSingleTapUp(e);
@@ -307,43 +325,143 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 		lampHandler0(lampArr[tag]);
 	    	return false;
 	    }
-
+	    //
+	    // onLongPress() sets up the global variables used for the
+	    // MOVE operation (touchFlag_p, selected_item and
+	    // longPress_{x,y}) and disables the swiping of the
+	    // Fragements.
+	    //
 	    @Override public void onLongPress(MotionEvent e)
 	    {
-		Log.i("Gesture: ","LongPress");
+		// Log.i("Gesture: ","LongPress");
 		super.onLongPress(e);
 		touchFlag_p=true;
 		((ImageView)selected_item).setAlpha(100);
 		selected_item.setBackgroundColor(Color.GREEN);
 		selected_item.getBackground().setAlpha(100);
+		//resizeView(selected_item, e, 50, 50);
 		//mViewPager = ((MyViewPager)mActivity0.findViewById(R.id.viewpager));
 		//mViewPager.enableSwipe(false);
-		myApp.setSwipeState(false);
 		//mViewPager.enableSwipe(false);
+
+		myApp.setSwipeState(false);
+		// Location of the long press event on the screen (in
+		// the co-ordinate system of the Fragment display area
+		// -- i.e. minus any area of the screen occupied by
+		// the Tabs etc.).
+		//
+		// These co-ordinates are relative to the co-ordinate
+		// system of the View on which the LongPress was
+		// detected.  Therefore these need not be reset in the
+		// MOVE event handler.
+		longPress_x = (int)e.getX();
+		longPress_y = (int)e.getY();
+
+		int[] loc = new int[2];
+		selected_item.getLocationOnScreen(loc);
+		System.err.println("On screen (x,y): "
+				   +loc[0]+" "+loc[1]+" "
+				   +selected_item.getRight()+" "+selected_item.getTop()+" "
+				   +longPress_x+" "+longPress_y);
 
 		//containerOnTouch(selected_item, e, touchFlag_p);
 		return;
 	    }
-	    @Override public boolean onDown(MotionEvent e)
+	};
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    private boolean myOnTouchListener_p(View v, MotionEvent event)
+    {
+	    boolean ret=true;
+	    int act = event.getActionMasked();
+	    int tag=(Integer)(v.getTag(R.integer.key0));
+	    
+	    if (act != MotionEvent.ACTION_MOVE)	
+		gGestureDetector.onTouchEvent(event);
+		    
+	    // This handler sets up the global variable selected_item
+	    // to point to the view on which the events were detected.
+	    //
+	    // The MOVE event transfers control to containerOnTouch
+	    // which has the code to actually moving the icons.  The
+	    // UP event essentially finishes the MOVE event, setting
+	    // the global variables (toughFlag_p and selected_item),
+	    // resetting the background of the icon on the screen and
+	    // re-enabling the swiping of the TabHost Fragments).
+	    selected_item = v;
+
+	    switch(act)
+		{
+		case MotionEvent.ACTION_MOVE:
+		    if (touchFlag_p)
+			ret=containerOnTouch(selected_item, event,true);
+		    break;
+		case MotionEvent.ACTION_UP:
+		    touchFlag_p=false;
+		    ((ImageView)selected_item).setAlpha(255);
+		    selected_item.setBackgroundColor(Color.TRANSPARENT);
+		    selected_item=null;
+		    myApp.setSwipeState(true);
+		    break;
+		};
+	    return ret;
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    private void makeHandlers(Activity activity)
+			      // View.OnClickListener lampHandler, 
+			      // View.OnTouchListener onTouchListener, 
+			      // GestureDetector gestureDetector)
+    {
+	// The following handles events on the toggle buttons
+	gLampHandler = new View.OnClickListener()
 	    {
-	    	Log.i("Gesture: ","onDown");
-	    	super.onDown(e);  
-	    	    // int tag=(Integer)(selected_item.getTag(R.integer.key0));
-	    	    // //Log.i("Tag: ",Integer.toString(tag));//R.integer.key0);
-	    	    // boolean on = lampArr[tag].isChecked();
-	    	    // setBulbBG(selected_item, on);
-	    	    // lampArr[tag].setChecked(!on);
-	    	    // lampHandler0(lampArr[tag]);
-	    	return true;
+		public void onClick(View v) 
+		{
+		    lampHandler0(v);
+		}
+	    };
+	
+	// The following two handlers handle gestures (SingleTap,
+	// LongPress) on lamp icons.
+	gOnTouchListener = new View.OnTouchListener() 
+            {
+                public boolean onTouch(View v, MotionEvent event) 
+                {
+		    return myOnTouchListener_p(v,event);
+		}
+	    };
+	gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
+	
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    private void installHandlers(View.OnClickListener lampHandler, 
+				 View.OnTouchListener onTouchListener, 
+				 ToggleButton[] lampArr, 
+				 ImageView[] bulbArr)
+    {
+	// Set up the handlers for events on the toggle buttons
+	// (Single click).
+	for (int i=0; i<lampArr.length; i++)
+	    {
+		lampArr[i].setTag(Integer.toString(i)); 
+		lampArr[i].setOnClickListener(lampHandler);
+		setLampBG(lampArr[i]);
 	    }
 
-	    // @Override public boolean onDoubleTap(MotionEvent e)
-	    // {
-	    // 	Log.i("Gesture: ","onDoubleTab");
-	    // 	super.onDoubleTap(e);  
-	    // 	return false;
-	    // }
-	};
+	// Set up the handlers to handle gestures (SingleTap,
+	// LongPress) on the icons for the lamps.
+	for (int i=0; i<bulbArr.length; i++)
+	    {
+		bulbArr[i].setTag(R.integer.key0,i);
+		bulbArr[i].setTag(R.integer.key1,"0");
+		bulbArr[i].setOnTouchListener(onTouchListener);
+	    }
+    }	
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -352,159 +470,36 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     {
 	super.onCreateView(inflater, container, savedInstanceState);
 	myApp = (NaaradApp) getActivity().getApplication();
+	//Log.i("dpi: ",Integer.toString(myApp.densityDpi));
 
 	setRetainInstance(true);	
-	//getRetainInstance();
-	final Resources res = getResources();
-	final int k0 = res.getInteger(R.integer.key0);
-	final int k1 = res.getInteger(R.integer.key1);
-	//
-	// This checks mView and recreates if it is null.  Otherwise
-	// returns the existing one.
-	//
 	mActivity0 = getActivity();
 
 	if (recreateView(mView)) return mView;	
 
-	myOnTouchListener = new View.OnTouchListener() 
-            {
-                public boolean onTouch(View v, MotionEvent event) 
-                {
-		    boolean ret=true;
-		    int act = event.getActionMasked();
-		    int tag=(Integer)(v.getTag(R.integer.key0));
-		    //Log.i("onTouch: ",Integer.toString(tag));//R.integer.key0);
-
-		    if (act != MotionEvent.ACTION_MOVE)
-		    	myGestureDetector.onTouchEvent(event);
-		    
-		    selected_item = v;
-
-		    switch(act)
-			{
-			// case MotionEvent.ACTION_DOWN:
-			// 	Log.i("onTouch: ","DOWN "+Integer.toString(tag));//R.integer.key0);
-
-			// 	boolean on = lampArr[tag].isChecked();
-			// 	setBulbBG(selected_item, on);
-			// 	lampArr[tag].setChecked(!on);
-			// 	lampHandler0(lampArr[tag]);
-			// 	return true;
-			case MotionEvent.ACTION_MOVE:
-			    if (touchFlag_p)
-				ret=containerOnTouch(selected_item, event,true);
-			    break;
-			case MotionEvent.ACTION_UP:
-			    Log.i("onTouch: ","UP "+Integer.toString(tag));//R.integer.key0);
-			    touchFlag_p=false;
-			    ((ImageView)selected_item).setAlpha(255);
-			    selected_item.setBackgroundColor(Color.TRANSPARENT);
-			    selected_item=null;
-			    //mViewPager = ((MyViewPager)mActivity0.findViewById(R.id.viewpager));
-			    //mViewPager.enableSwipe(true);
-			    myApp.setSwipeState(true);
-			    break;
-			};
-		    //Log.i("onTouch: ","Touched");//R.integer.key0);
-
-		    //return containerOnTouch(v, event,touchFlag_p);
-		    return ret;
-		}
-	    };
-	myGestureDetector = new GestureDetector(mActivity0, myGestureListener);
-	
-	View.OnClickListener lampHandler = new View.OnClickListener()
-	    {
-		public void onClick(View v) 
-		{
-		    lampHandler0(v);
-		}
-	    };
-	
-	
 	mView = inflater.inflate(R.layout.activity_naarad_control, container, false);
 	
-	//li=inflater;
-	//dragDropView = new DragDropView(mView.getContext());
-	
+	//
+	// To add more icons/buttons, adding to the following arrays
+	// would be sufficient.
+	//
 	lampArr = new ToggleButton[3];
 	bulbArr = new ImageView[3];
-	lampArr[0]  = lamp0 = (ToggleButton) mView.findViewById(R.id.lamp0); // reference to the send button
-	lampArr[1]  = lamp1 = (ToggleButton) mView.findViewById(R.id.lamp1); // reference to the send button
-	lampArr[2]  = lamp2 = (ToggleButton) mView.findViewById(R.id.lamp2); // reference to the send button
-	bulbArr[0]  = bulb0 = (ImageView) mView.findViewById(R.id.iv1); // reference to the send button
-	bulbArr[1]  = bulb1 = (ImageView) mView.findViewById(R.id.iv2); // reference to the send button
-	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); // reference to the send button
-	
-	for (int i=0; i<lampArr.length; i++)
-	    {
-		lampArr[i].setTag(Integer.toString(i)); 
-		lampArr[i].setOnClickListener(lampHandler);
-		setLampBG(lampArr[i]);
-		//lampArr[i].setOnTouchListener(OnTouchToDrag);
-	    }
-	
-	
-	View.OnClickListener bulbOnClickListener = new View.OnClickListener()
-	    {
-		public void onClick(View v)
-		{
-		    int tag=(Integer)(v.getTag(R.integer.key0));
-		    //Log.i("Tag: ",Integer.toString(tag));//R.integer.key0);
-		    boolean on = lampArr[tag].isChecked();
-		    setBulbBG(v, on);
-		    lampArr[tag].setChecked(!on);
-		    lampHandler0(lampArr[tag]);
-		    // if (mLongClickStartsDrag) 
-		    // 	{
-		    // 	    // Tell the user that it takes a long click to start dragging.
-		    // 	    toast ("Press and hold to drag an image.");
-		    // 	}
-		};
-	    };
 
-	//container.setOnTouchListener(myOnTouchListener);
-	// container.setOnTouchListener(new View.OnTouchListener() 
-        //     {
-        //         public boolean onTouch(View v, MotionEvent event) 
-        //         {
-	// 	    //		    int tag=(Integer)(v.getTag(R.integer.key0));
-	// 	    //		    Log.i("onTouch: ",Integer.toString(tag));//R.integer.key0);
-	// 	    Log.i("onTouch: ","Touched");//R.integer.key0);
-	// 	    selected_item = v;
-	// 	    myGestureDetector.onTouchEvent(event);
-	// 	    return false;
-	// 	    //return containerOnTouch(v, event,touchFlag);
-	// 	}
-	//     });
+	lampArr[0]  = lamp0 = (ToggleButton) mView.findViewById(R.id.lamp0);
+	lampArr[1]  = lamp1 = (ToggleButton) mView.findViewById(R.id.lamp1);
+	lampArr[2]  = lamp2 = (ToggleButton) mView.findViewById(R.id.lamp2);
+	bulbArr[0]  = bulb0 = (ImageView) mView.findViewById(R.id.iv1); 
+	bulbArr[1]  = bulb1 = (ImageView) mView.findViewById(R.id.iv2); 
+	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); 
 	
-	
-	for (int i=0; i<bulbArr.length; i++)
-	    {
-		bulbArr[i].setTag(R.integer.key0,i);//Integer.toString(i)); 	
-		bulbArr[i].setTag(R.integer.key1,"0");
-		
-		//bulbArr[i].setOnClickListener(bulbOnClickListener);
+	// Makes the handles accessed via the global variables
+	// gLampHandler, gOnTouchListener, gGestureDetector;
+	makeHandlers(mActivity0);
 
-
-		//bulbArr[i].setOnLongClickListener(onLongPressListener);
-		//bulbArr[i].setOnTouchListener(OnTouchToDrag);
-
-		// This installs the onTouch handler, which records
-		// the object clicked and return false (transfering
-		// control to container's onTouch handler).
-		
-		//bulbArr[i].setOnTouchListener(this); 
-		//bulbArr[i].setOnLongClickListener(this);
-
-		bulbArr[i].setOnTouchListener(myOnTouchListener);
-	    }
-	
-	// if(savedInstanceState != null)
-	//     {
-	// 	Log.i("BG: ",Integer.toString(savedInstanceState.getInt("bg0")));
-	// 	bulb2.setBackgroundColor(savedInstanceState.getInt("bg0"));//		mEditText.setText(savedInstanceState.getString("textKey"));
-	//     }
+	// Install the gLampHandler, gOnTouchListener,
+	// gGestureDetector event/gesture handlers.
+	installHandlers(gLampHandler, gOnTouchListener, lampArr, bulbArr);
 	
 	return mView;
     }
@@ -629,6 +624,25 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 
 // iv.setVisibility(View.VISIBLE);
 // rl.addView(iv, params);
+
+	//getRetainInstance();
+	// final Resources res = getResources();
+	// final int k0 = res.getInteger(R.integer.key0);
+	// final int k1 = res.getInteger(R.integer.key1);
+	//
+	// This checks mView and recreates if it is null.  Otherwise
+	// returns the existing one.
+	//
+
+
+	// if(savedInstanceState != null)
+	//     {
+	// 	Log.i("BG: ",Integer.toString(savedInstanceState.getInt("bg0")));
+	// 	bulb2.setBackgroundColor(savedInstanceState.getInt("bg0"));//		mEditText.setText(savedInstanceState.getString("textKey"));
+	//     }
+	
+
 //
 //=====================TEST CODE===================================
 //
+
