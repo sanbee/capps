@@ -18,13 +18,29 @@ import android.widget.TabHost.OnTabChangeListener;
  */
 
 public class MainActivity extends FragmentActivity implements
-						       OnTabChangeListener, OnPageChangeListener 
+						       OnTabChangeListener, OnPageChangeListener,
+						       NaaradPlotFragment.nPlotDataArrivalListener 
 {
     
     MyPageAdapter pageAdapter;
     private MyViewPager mViewPager=null;
     private TabHost mTabHost;
+    private NaaradControlFragment gControlFragment;
     
+    public void onDataArrival(String json)
+    {
+	//System.err.println("From MainActivity: "+json);
+	NaaradControlFragment frag = (NaaradControlFragment)pageAdapter.getItem(0);
+	// NaaradControlFragment frag = (NaaradControlFragment)
+	//     getSupportFragmentManager()
+	//     .findFragmentById(R.id.viewpager);
+	if (frag==null)
+	    System.err.println("$@#%@# - it's NULL!");
+	else
+	    //gControlFragment.setSensorValues(json);
+	    frag.setSensorValues(json);
+    }
+
     @Override protected void onResume()
     {
 	super.onResume();
@@ -94,9 +110,12 @@ public class MainActivity extends FragmentActivity implements
 	// TODO Put here your Fragments
 	//MySampleFragment f1 = MySampleFragment.newInstance("Sample Fragment 1");
 	NaaradControlFragment f1 = NaaradControlFragment.newInstance("Naarad Control Fragment");
+        // Capture the article fragment from the activity layout
+        gControlFragment = f1;
 	
 	//MySampleFragment f2 = MySampleFragment.newInstance("Sample Fragment 2");
 	NaaradPlotFragment    f2 = NaaradPlotFragment.newInstanceNPF("Naarad Plot Fragment");
+
 	
 	//MySampleFragment f3 = MySampleFragment.newInstance("Sample Fragment 3");
 	NaaradSettingFragment f3 = NaaradSettingFragment.newInstanceNSF("Naarad Setting Fragment");

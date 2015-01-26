@@ -1,37 +1,20 @@
 package naarad.client.tabhost;
 import android.app.Application;
-// import com.blahti.example.drag;
-// import com.blahti.example.drag.DragController;
-// import com.blahti.example.drag.DragLayer;
-// import android.os.Handler;
-// import niko.dragdrop.view.DragDropView;
-//import android.widget.TextView;
-//import android.widget.EditText;
-//import android.content.SharedPreferences;
-//import android.content.Context;
-//import android.widget.FrameLayout;
-//import android.view.LayoutInflater;
-//import android.support.v4.view.ViewPager;
-//import android.support.v4.view.ViewCompat;
-//import android.view.Gravity;
-//import android.view.View.OnLongClickListener;
-//import android.view.ViewGroup.LayoutParams;
-//import android.view.WindowManager;
-
 import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.ViewGroup.MarginLayoutParams;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.view.View.OnTouchListener;
 import android.support.v4.app.Fragment;
 import java.net.UnknownHostException;
 import android.widget.RelativeLayout;
-import android.view.ViewGroup.MarginLayoutParams;
 import android.content.res.Resources;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.widget.ToggleButton;
 import android.view.MotionEvent;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.graphics.Canvas;
 import android.os.SystemClock;
 import android.view.ViewGroup;
@@ -48,8 +31,14 @@ import android.view.View;
 import android.util.Log;
 import java.net.Socket;
 
+import android.util.TypedValue;
+import org.json.JSONException;
+import org.json.JSONObject;
+import android.text.Html;
+
+
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
-public class NaaradControlFragment extends NaaradAbstractFragment implements OnTouchListener
+public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
 {
     private static View mView;
 
@@ -59,24 +48,26 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     private ToggleButton[] lampArr;
     private ImageView bulb0, bulb1, bulb2;
     private ImageView[] bulbArr;
-    
+    private TextView[] tempBubbleArr;
     private String messsage, serverName;
     private int serverPort=1234;
+    private boolean tempInDegC=true;
     final private String ALL_WELL="All well";
     private ImageView iv;
 
-    public boolean touchFlag=false;
-    private View selected_item=null;
-    private int longPress_x, longPress_y;
+    //public boolean touchFlag=false;
+    //private View selected_item=null;
+    //private int longPress_x, longPress_y;
 
-    private GestureDetector gGestureDetector;
-    private View.OnTouchListener gOnTouchListener;
+    private GestureDetector gGestureDetector, gBubbleGestureListener;
+    private View.OnTouchListener gOnTouchListener, gBubbleOnTouchListener;
     private View.OnClickListener gLampHandler;
     //private View.OnClickListener gBulbOnClickListener;
-    private boolean touchFlag_p;
+    //private boolean touchFlag_p;
     private Activity mActivity0=null;        
     //private MyViewPager mViewPager=null;
     public NaaradApp myApp;
+    public NaaradDnDParameters gDnDParams;
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -128,26 +119,78 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     //
     //-----------------------------------------------------------------------------------------
     //
-    public boolean onTouch(View v, MotionEvent event) 
-    //@Override public boolean onLongClick(View v, MotionEvent event) 
-    {   
-    	switch (event.getActionMasked()) 
-            {
-            case MotionEvent.ACTION_DOWN:
-    		//Log.i(null,"Activity onTouch Down");
-                touchFlag=true;
-                selected_item = v;
-    		//                imageParams=v.getLayoutParams();
-                break;
-            case MotionEvent.ACTION_UP:
-    		//Log.i(null,"Activity onTouch Up");
-                selected_item=null;
-                touchFlag=false;
-                break;
-            default:
-                break;
-            }       
-    	return false;
+    // public boolean onTouch(View v, MotionEvent event) 
+    // //@Override public boolean onLongClick(View v, MotionEvent event) 
+    // {   
+    // 	switch (event.getActionMasked()) 
+    //         {
+    //         case MotionEvent.ACTION_DOWN:
+    // 		//Log.i(null,"Activity onTouch Down");
+    //             gDnDParams.touchFlag_p=true;
+    //             selected_item = v;
+    // 		//                imageParams=v.getLayoutParams();
+    //             break;
+    //         case MotionEvent.ACTION_UP:
+    // 		//Log.i(null,"Activity onTouch Up");
+    //             selected_item=null;
+    //             gDnDParams.touchFlag_p=false;
+    //             break;
+    //         default:
+    //             break;
+    //         }       
+    // 	return false;
+    // }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public void setSensorValues(String jsonStr)
+    {
+	//System.err.println("From NCF: "+jsonStr);
+	float temp, svolt, rssi;
+	int nodeid;
+	try 
+	    {
+		JSONObject json = new JSONObject(jsonStr);
+		temp   = (float)json.getDouble("degc");
+		if (!tempInDegC) temp = temp * 9.0F/5.0F + 32.0F;
+		// svolt  = (float)json.getDouble("node_v");
+		// rssi   = (float)json.getDouble("node_p");
+		nodeid = json.getInt("node_id");
+		setBubbleValue(nodeid, temp);
+	    }
+	catch (JSONException e) 
+	    {
+		//throw new RuntimeException(e);
+		System.err.println(e.getMessage());
+	    }
+    }
+    public void setBubbleValue(int nodeid, float temp)
+    {
+	class myRunnable implements Runnable
+	{
+	    int thisID=0;
+	    String thisText,tmp;
+	    
+	    //tempBubbleArr[thisID].setText(thisText);
+	    myRunnable(int id, String text) 
+	    {
+		thisID=id; thisText = text;
+		tmp = Html.fromHtml("<b>"+thisText+"</b>");
+	    }
+	    public void run()  
+	    {
+		//tempBubbleArr[thisID].setText(thisText);
+		tempBubbleArr[thisID].setText(tmp);
+	    } 
+	};
+	int bubbleID=0;
+	String text=String.format("%.2f",temp);
+	if (tempInDegC) text = text+'C'; else text = text + 'F';
+	if (nodeid == 1)      bubbleID = 0;
+	else if (nodeid == 3) bubbleID = 1;
+	myRunnable setTVText=new myRunnable(bubbleID,text);
+
+	tempBubbleArr[bubbleID].post(setTVText);
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -156,19 +199,14 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     {
 	if (on)
 	    {
-		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.ic_launcher_bg));
-		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_off));
 		((ImageView)(v)).setImageDrawable(mActivity0.getResources().getDrawable(R.drawable.lamp_off));
 	    }
 	else
 	    {
-		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.ic_launcher));
-		//((ImageView)(v)).setImageDrawable(mActivity.getResources().getDrawable(R.drawable.lamp_on));
 		((ImageView)(v)).setImageDrawable(mActivity0.getResources().getDrawable(R.drawable.lamp_on));
 		//v.setBackgroundColor(Color.YELLOW);
 	    }
 	v.setBackgroundColor(Color.TRANSPARENT);
-	
 	
 	// if (on) v.setBackgroundColor(Color.TRANSPARENT);
 	// else    v.setBackgroundColor(Color.YELLOW);
@@ -230,16 +268,18 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
     // 	ColorDrawable cd=(ColorDrawable)(bulb2.getBackground());
     // 	outState.putInt("bg0", cd.getColor());
     // }
-    //
+    /*
+    // This is now re-factored into the DnD class
     //-----------------------------------------------------------------------------------------
     //
-    public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_p) 
+    public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_l) 
     {
 	int w, h;
 
-	if ((touchFlag_p==true) && (selected_item != null))
+	//	if ((touchFlag_l==true) && (selected_item != null))
+	if ((touchFlag_l==true) && (v != null))
 	    {
-		//System.err.println("Display If  Part ::->"+touchFlag_p);
+		//System.err.println("Display If  Part ::->"+touchFlag_l);
 		switch (event.getActionMasked()) 
 		    {
 		    case MotionEvent.ACTION_MOVE:
@@ -247,31 +287,32 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 			pX=(int) event.getX();
 			pY=(int) event.getY();
 
-			w=selected_item.getHeight();
-			h=selected_item.getWidth();
+			// w=selected_item.getHeight();
+			// h=selected_item.getWidth();
+			w=v.getHeight();
+			h=v.getWidth();
 			oX=(int)(20*myApp.densityDpi/160.0);
 			oY=(int)(20*myApp.densityDpi/160.0);
 
-			iX=selected_item.getRight();
-			iY=selected_item.getTop();
-			// int[] loc = new int[2];
-			// selected_item.getLocationOnScreen(loc);
-			// iX = loc[0]; iY=loc[1];
+			// iX=selected_item.getRight();
+			// iY=selected_item.getTop();
+			iX=v.getRight();
+			iY=v.getTop();
 
 			x=pX - oX + iX;
 			y=pY - oY + iY;
 
 			dx = oX*2 - pX;  dy = oY - pY;
 			//dx = -pX;      dy = -pY;
-			dx = -(pX - longPress_x) ;
-			dy = -(pY - longPress_y);
+			dx = -(pX - gDnDParams.longPress_x) ;
+			dy = -(pY - gDnDParams.longPress_y);
 			x  = iX - dx -54 ;  y  = iY - dy -24;
 			
 			System.err.println("M Display Here X Value-->"+(x)
-					   +" Px:"+pX+" deX:"+(pX - longPress_x)
+					   +" Px:"+pX+" deX:"+(pX - gDnDParams.longPress_x)
 					   +" R:"+iX+" dx:"+dx+" X:"+(iX - dx));
 			System.err.println("M Display Here Y Value-->"+(y)
-					   +" Py:"+pY+" deY:"+(pY - longPress_y)
+					   +" Py:"+pY+" deY:"+(pY - gDnDParams.longPress_y)
 					   +" T:"+iY+" dy:"+dy+" Y:"+(iY - dy));
 			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
 			    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
@@ -280,7 +321,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 			//lp.rightMargin = x; lp.topMargin = y;
 			lp.height = oX;
 			lp.width  = oY;
-			selected_item.setLayoutParams(lp);
+			//selected_item.setLayoutParams(lp);
+			v.setLayoutParams(lp);
 			
 			// MarginLayoutParams params = (MarginLayoutParams) selected_item.getLayoutParams();
 			// params.topMargin = y; params.rightMargin = x;
@@ -301,7 +343,45 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	//     }               
 	return true;
     };
+*/
+    GestureDetector.SimpleOnGestureListener bubbleGestureListener
+	= new GestureDetector.SimpleOnGestureListener()
+	    {
+		@Override public boolean onSingleTapUp(MotionEvent e)
+		{
+		    super.onSingleTapUp(e);
+		    tempInDegC = !tempInDegC;
+		    if (tempInDegC) toast("Temp. in degC");
+		    else toast("Temp. in F");
+			
+		    return false;
+		}
+		@Override public void onLongPress(MotionEvent e)
+		{
+		    // Log.i("Gesture: ","LongPress");
+		    super.onLongPress(e);
+		    toast("DnD on long press");
 
+		    gDnDParams.touchFlag_p=true;
+		    //((TextView)gDnDParams.selected_item).setAlpha(100);
+		    //gDnDParams.selected_item.setBackgroundColor(Color.GREEN);
+		    //gDnDParams.selected_item.getBackground().setAlpha(100);
+		    
+		    myApp.setSwipeState(false);
+
+		    gDnDParams.longPress_x = (int)e.getX();
+		    gDnDParams.longPress_y = (int)e.getY();
+
+		    // int[] loc = new int[2];
+		    // gDnDParams.selected_item.getLocationOnScreen(loc);
+		    // System.err.println("On screen (x,y): "
+		    // 		       +loc[0]+" "+loc[1]+" "
+		    // 		       +gDnDParams.selected_item.getRight()+" "+gDnDParams.selected_item.getTop()+" "
+		    // 		       +gDnDParams.longPress_x+" "+gDnDParams.longPress_y);
+
+		return;
+		};
+	    };
     //
     //-----------------------------------------------------------------------------------------
     // Gesture listener with onSingleTapUp() and onLongPress() overloaded.  
@@ -317,10 +397,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	    {
 	    	super.onSingleTapUp(e);
 		//		Log.i("Gesture: ","TapUp");
-		int tag=(Integer)(selected_item.getTag(R.integer.key0));
+		int tag=(Integer)(gDnDParams.selected_item.getTag(R.integer.key0));
 		//Log.i("Tag: ",Integer.toString(tag));//R.integer.key0);
 		boolean on = lampArr[tag].isChecked();
-		setBulbBG(selected_item, on);
+		setBulbBG(gDnDParams.selected_item, on);
 		lampArr[tag].setChecked(!on);
 		lampHandler0(lampArr[tag]);
 	    	return false;
@@ -335,10 +415,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	    {
 		// Log.i("Gesture: ","LongPress");
 		super.onLongPress(e);
-		touchFlag_p=true;
-		((ImageView)selected_item).setAlpha(100);
-		selected_item.setBackgroundColor(Color.GREEN);
-		selected_item.getBackground().setAlpha(100);
+		gDnDParams.touchFlag_p=true;
+		((ImageView)gDnDParams.selected_item).setAlpha(100);
+		gDnDParams.selected_item.setBackgroundColor(Color.GREEN);
+		gDnDParams.selected_item.getBackground().setAlpha(100);
 		//resizeView(selected_item, e, 50, 50);
 		//mViewPager = ((MyViewPager)mActivity0.findViewById(R.id.viewpager));
 		//mViewPager.enableSwipe(false);
@@ -354,15 +434,15 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 		// system of the View on which the LongPress was
 		// detected.  Therefore these need not be reset in the
 		// MOVE event handler.
-		longPress_x = (int)e.getX();
-		longPress_y = (int)e.getY();
+		gDnDParams.longPress_x = (int)e.getX();
+		gDnDParams.longPress_y = (int)e.getY();
 
 		int[] loc = new int[2];
-		selected_item.getLocationOnScreen(loc);
+		gDnDParams.selected_item.getLocationOnScreen(loc);
 		System.err.println("On screen (x,y): "
 				   +loc[0]+" "+loc[1]+" "
-				   +selected_item.getRight()+" "+selected_item.getTop()+" "
-				   +longPress_x+" "+longPress_y);
+				   +gDnDParams.selected_item.getRight()+" "+gDnDParams.selected_item.getTop()+" "
+				   +gDnDParams.longPress_x+" "+gDnDParams.longPress_y);
 
 		//containerOnTouch(selected_item, e, touchFlag_p);
 		return;
@@ -370,7 +450,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	};
     //
     //-----------------------------------------------------------------------------------------
-    //
+    // This is now re-factored in the DnD class
+    /*
     private boolean myOnTouchListener_p(View v, MotionEvent event)
     {
 	    boolean ret=true;
@@ -394,11 +475,11 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	    switch(act)
 		{
 		case MotionEvent.ACTION_MOVE:
-		    if (touchFlag_p)
+		    if (gDnDParams.touchFlag_p)
 			ret=containerOnTouch(selected_item, event,true);
 		    break;
 		case MotionEvent.ACTION_UP:
-		    touchFlag_p=false;
+		    gDnDParams.touchFlag_p=false;
 		    ((ImageView)selected_item).setAlpha(255);
 		    selected_item.setBackgroundColor(Color.TRANSPARENT);
 		    selected_item=null;
@@ -407,6 +488,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 		};
 	    return ret;
     }
+    */
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -426,15 +508,19 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	
 	// The following two handlers handle gestures (SingleTap,
 	// LongPress) on lamp icons.
-	gOnTouchListener = new View.OnTouchListener() 
-            {
-                public boolean onTouch(View v, MotionEvent event) 
-                {
-		    return myOnTouchListener_p(v,event);
-		}
-	    };
+	// gOnTouchListener = new View.OnTouchListener() 
+        //     {
+        //         public boolean onTouch(View v, MotionEvent event) 
+        //         {
+	// 	    return myOnTouchListener_p(v,event);
+	// 	}
+	//     };
+
 	gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
+	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F); //Test code
 	
+	gBubbleGestureListener = new GestureDetector(mActivity0, bubbleGestureListener);
+	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,1.5F); //Test code
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -474,6 +560,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 
 	setRetainInstance(true);	
 	mActivity0 = getActivity();
+	gDnDParams = new NaaradDnDParameters();
 
 	if (recreateView(mView)) return mView;	
 
@@ -485,6 +572,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	//
 	lampArr = new ToggleButton[3];
 	bulbArr = new ImageView[3];
+	tempBubbleArr = new TextView[2];
 
 	lampArr[0]  = lamp0 = (ToggleButton) mView.findViewById(R.id.lamp0);
 	lampArr[1]  = lamp1 = (ToggleButton) mView.findViewById(R.id.lamp1);
@@ -492,7 +580,12 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	bulbArr[0]  = bulb0 = (ImageView) mView.findViewById(R.id.iv1); 
 	bulbArr[1]  = bulb1 = (ImageView) mView.findViewById(R.id.iv2); 
 	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); 
-	
+	tempBubbleArr[0] = (TextView) mView.findViewById(R.id.tv1);
+	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+	tempBubbleArr[0].setText("----C");
+	tempBubbleArr[1] = (TextView) mView.findViewById(R.id.tv2);
+	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+	tempBubbleArr[1].setText("----C");
 	// Makes the handles accessed via the global variables
 	// gLampHandler, gOnTouchListener, gGestureDetector;
 	makeHandlers(mActivity0);
@@ -500,24 +593,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment implements OnT
 	// Install the gLampHandler, gOnTouchListener,
 	// gGestureDetector event/gesture handlers.
 	installHandlers(gLampHandler, gOnTouchListener, lampArr, bulbArr);
-	
+	tempBubbleArr[0].setOnTouchListener(gBubbleOnTouchListener);
+	tempBubbleArr[1].setOnTouchListener(gBubbleOnTouchListener);
+
 	return mView;
-    }
-    //
-    //-----------------------------------------------------------------------------------------
-    //
-    private String mkMessage(String message) 
-    {
-	Integer n, totalLen;
-	n = message.length();
-	String msg,lenStr;
-	
-	lenStr=Integer.toString(n);
-	totalLen =lenStr.length() + n + 1;
-	lenStr=Integer.toString(totalLen);
-	msg = lenStr + " " + message;
-	//Log.i("Message: ",msg);
-	return msg;
     }
     //
     //-----------------------------------------------------------------------------------------
