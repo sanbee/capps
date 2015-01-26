@@ -10,72 +10,109 @@
 		android:alpha="0.7"
 		android:id="@+id/controlRL"
 		tools:context=".NaaradClientActivity">
+  
+  <ToggleButton
+     android:id="@+id/lamp0"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_centerVertical="true"
+     android:layout_alignParentRight="true"
+     android:layout_alignParentTop="true"
+     android:textOn="Lamp 0"
+     android:textOff="Lamp 0"
+     android:minHeight="0dp"
+     android:minWidth="0dp"
+     android:text="Lamp1" />
+  <ToggleButton
+     android:id="@+id/lamp1"
+     style="?android:attr/borderlessButtonStyle"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_centerVertical="true"
+     android:layout_alignParentRight="true"
+     android:layout_below="@+id/lamp0"
+     android:minHeight="0dp"
+     android:minWidth="0dp"
+     android:textOn="Lamp 1"
+     android:textOff="Lamp 1"
+     android:text="Lamp2" />
+  <ToggleButton
+     android:id="@+id/lamp2"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_centerVertical="true"
+     android:layout_alignParentRight="true"
+     android:layout_below="@+id/lamp1"
+     android:minHeight="0dp"
+     android:minWidth="0dp"
+     android:textOn="Lamp 2"
+     android:textOff="Lamp 2"
+     android:text="Lamp3" />
+  <ToggleButton
+     android:id="@+id/plotoverlay"
+     android:layout_width="wrap_content"
+     android:layout_height="wrap_content"
+     android:layout_centerVertical="true"
+     android:layout_alignParentRight="true"
+     android:layout_below="@+id/lamp2"
+     android:minHeight="0dp"
+     android:minWidth="0dp"
+     android:textOn="Plot Off"
+     android:textOff="Plot On "
+     android:text="Plot" />
+  
+  <ImageView
+     android:id="@+id/iv3"
+     android:layout_width="20dp"
+     android:layout_height="20dp"
+     android:layout_alignParentRight="true"
+     android:src="@drawable/lamp_off"
+     android:layout_marginTop="50dp"
+     android:layout_marginRight="165dp"
+     android:longClickable="true"
+     android:background="#0000ff00"
+     />
+  <ImageView
+     android:id="@+id/iv1"
+     android:layout_width="20dp"
+     android:layout_height="20dp"
+     android:layout_alignParentRight="true"
+     android:src="@drawable/lamp_off"
+     android:layout_marginTop="105dp"
+     android:layout_marginRight="395dp"
+     />
+  <ImageView
+     android:id="@+id/iv2"
+     android:layout_width="20dp"
+     android:layout_height="20dp"
+     android:layout_alignParentRight="true"
+     android:src="@drawable/lamp_off"
+     android:layout_marginTop="140dp"
+     android:layout_marginRight="330dp"
+     />
+  <TextView
+     android:id="@+id/tv2"
+     android:layout_width="35dp"
+     android:layout_height="22dp"
+     android:layout_alignParentRight="true"
+     android:background="@drawable/speech_bubble_l_orange"
+     android:text="Test"
+     android:layout_marginTop="120dp"
+     android:layout_marginRight="295dp"
+     />
+  <TextView
+     android:id="@+id/tv1"
+     android:layout_width="35dp"
+     android:layout_height="22dp"
+     android:layout_alignParentRight="true"
+     android:background="@drawable/speech_bubble_l_orange"
+     android:text="Test"
+     android:layout_marginTop="25dp"
+     android:layout_marginRight="135dp"
+     />
 
-      <ToggleButton
-       android:id="@+id/lamp0"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_centerVertical="true"
-       android:layout_alignParentRight="true"
-       android:layout_alignParentTop="true"
-       android:textOn="Lamp 0"
-       android:textOff="Lamp 0"
-       android:minHeight="0dp"
-       android:minWidth="0dp"
-       android:text="Lamp1" />
-    <ToggleButton
-       android:id="@+id/lamp1"
-       style="?android:attr/borderlessButtonStyle"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_centerVertical="true"
-       android:layout_alignParentRight="true"
-       android:layout_below="@+id/lamp0"
-       android:textOn="Lamp 1"
-       android:textOff="Lamp 1"
-       android:text="Lamp2" />
-    <ToggleButton
-       android:id="@+id/lamp2"
-       android:layout_width="wrap_content"
-       android:layout_height="wrap_content"
-       android:layout_centerVertical="true"
-       android:layout_alignParentRight="true"
-       android:layout_below="@+id/lamp1"
-       android:textOn="Lamp 2"
-       android:textOff="Lamp 2"
-       android:text="Lamp3" />
-
-    <ImageView
-       android:id="@+id/iv3"
-       android:layout_width="20dp"
-       android:layout_height="20dp"
-       android:layout_alignParentRight="true"
-       android:src="@drawable/lamp_off"
-       android:layout_marginTop="50dp"
-       android:layout_marginRight="165dp"
-       android:longClickable="true"
-       android:background="#0000ff00"
-       />
-    <ImageView
-       android:id="@+id/iv1"
-       android:layout_width="20dp"
-       android:layout_height="20dp"
-       android:layout_alignParentRight="true"
-       android:src="@drawable/lamp_off"
-       android:layout_marginTop="105dp"
-       android:layout_marginRight="395dp"
-       />
-    <ImageView
-       android:id="@+id/iv2"
-       android:layout_width="20dp"
-       android:layout_height="20dp"
-       android:layout_alignParentRight="true"
-       android:src="@drawable/lamp_off"
-       android:layout_marginTop="140dp"
-       android:layout_marginRight="330dp"
-       />
-
+  
 </RelativeLayout>
-       <!-- android:src="@drawable/lamp_off_crop" -->
-       <!-- android:src="@drawable/ic_launcher_bg" -->
-       <!-- android:background="@android:color/transparent" -->
+<!-- android:src="@drawable/lamp_off_crop" -->
+<!-- android:src="@drawable/ic_launcher_bg" -->
+<!-- android:background="@android:color/transparent" -->
