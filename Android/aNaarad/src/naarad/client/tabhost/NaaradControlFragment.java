@@ -35,7 +35,7 @@ import android.util.TypedValue;
 import org.json.JSONException;
 import org.json.JSONObject;
 import android.text.Html;
-
+import android.text.Spanned;
 
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
@@ -169,7 +169,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	class myRunnable implements Runnable
 	{
 	    int thisID=0;
-	    String thisText,tmp;
+	    String thisText;
+	    Spanned tmp;
 	    
 	    //tempBubbleArr[thisID].setText(thisText);
 	    myRunnable(int id, String text) 
@@ -582,10 +583,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); 
 	tempBubbleArr[0] = (TextView) mView.findViewById(R.id.tv1);
 	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
-	tempBubbleArr[0].setText("----C");
+	tempBubbleArr[0].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	tempBubbleArr[1] = (TextView) mView.findViewById(R.id.tv2);
 	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
-	tempBubbleArr[1].setText("----C");
+	tempBubbleArr[1].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	// Makes the handles accessed via the global variables
 	// gLampHandler, gOnTouchListener, gGestureDetector;
 	makeHandlers(mActivity0);

@@ -193,8 +193,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     @Override public void onDestroy() 
     {
 	System.err.println("NPF destroyed");
-	mSensorDataSource.finish();
-        super.onResume();
+	if (mSensorDataSource != null) mSensorDataSource.finish();
+        super.onDestroy();
     }
     @Override public void onResume() 
     {
