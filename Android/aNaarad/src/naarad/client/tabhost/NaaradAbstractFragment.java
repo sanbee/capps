@@ -16,7 +16,8 @@ public abstract class NaaradAbstractFragment extends Fragment
     // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
     // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
     final public int getDefaultPort() {return 1234;}
-    final public String getDefaultServer() {return "10.0.2.2";}
+    //final public String getDefaultServer() {return "10.0.2.2";}
+    final public String getDefaultServer() {return "raspberrypi";}
 
     //
     // Hold a reference to the activity and use it in place of
@@ -73,5 +74,21 @@ public abstract class NaaradAbstractFragment extends Fragment
 	return prefs.getInt("serverPort",getDefaultPort());
     }
 
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public String mkMessage(String message) 
+    {
+	Integer n, totalLen;
+	n = message.length();
+	String msg,lenStr;
+	
+	lenStr=Integer.toString(n);
+	totalLen =lenStr.length() + n + 1;
+	lenStr=Integer.toString(totalLen);
+	msg = lenStr + " " + message;
+	//Log.i("Message: ",msg);
+	return msg;
+    }
     
 }

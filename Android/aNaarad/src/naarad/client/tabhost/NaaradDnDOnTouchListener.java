@@ -19,17 +19,19 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
     //public boolean touchFlag_p=false;
     //private int longPress_x, longPress_y;
     private NaaradDnDParameters gDnDParams;
-
+    private float myWidthFudgeFactor;
     
     // Construct with GestureDetector, the global DnDParameters object
     // and the global app object.
     public NaaradDnDOnTouchListener(GestureDetector thisGestureDetector,
 				    NaaradDnDParameters thisDnDParams,
-				    NaaradApp thisApp)
+				    NaaradApp thisApp,
+				    Float thisWidthFudgeFactor)
     {
 	gGestureDetector = thisGestureDetector;
 	gDnDParams = thisDnDParams;
 	myApp = thisApp;
+	myWidthFudgeFactor=thisWidthFudgeFactor;
 	//gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
     }
     
@@ -82,7 +84,7 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
 			//lp.rightMargin = x; lp.topMargin = y;
 			lp.height = oX;
-			lp.width  = oY;
+			lp.width  = (int)((float)oY*myWidthFudgeFactor);
 			//selected_item.setLayoutParams(lp);
 			v.setLayoutParams(lp);
 			
@@ -144,6 +146,7 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 
 		    // selected_item.setBackgroundColor(Color.TRANSPARENT);
 		    // selected_item=null;
+		    System.err.println("Drop pos.: "+v.getRight()+" "+v.getTop());
 		    myApp.setSwipeState(true);
 		    break;
 		};
