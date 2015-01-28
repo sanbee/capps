@@ -83,7 +83,7 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 							      RelativeLayout.LayoutParams.WRAP_CONTENT));
 			lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
 			//lp.rightMargin = x; lp.topMargin = y;
-			lp.height = oX;
+			lp.height = (int)(float)(oX*myWidthFudgeFactor*1.5)/2;
 			lp.width  = (int)((float)oY*myWidthFudgeFactor);
 			//selected_item.setLayoutParams(lp);
 			v.setLayoutParams(lp);

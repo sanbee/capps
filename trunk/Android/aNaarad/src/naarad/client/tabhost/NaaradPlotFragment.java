@@ -190,19 +190,18 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	//    
 	return mView;
     }
+    public void stopDataSource()
+    {
+	if (mSensorDataSource != null) mSensorDataSource.finish();
+    }
     @Override public void onDestroy() 
     {
 	System.err.println("NPF destroyed");
-	if (mSensorDataSource != null) mSensorDataSource.finish();
         super.onDestroy();
+	stopDataSource();
     }
     @Override public void onResume() 
     {
-        // // kick off the data generating thread:
-        // myThread = new Thread(dataSource);
-        // myThread.start();
-
-	//mUpdateTask0.execute();
 	System.err.println("NPF resumed");
         super.onResume();
     }
@@ -214,6 +213,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 
 	System.err.println("NPF paused");
 	super.onPause();
+	stopDataSource();
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -356,7 +356,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     //
     public void stopAllCharts(int n)
     {
-	mSensorDataSource.cancel(true);
+	if (mSensorDataSource != null) mSensorDataSource.cancel(true);
 	// if ((n == 0) || (n == -1))
 	//     {
 	// 	if (mUpdateTask0 != null) 
