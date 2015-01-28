@@ -93,7 +93,7 @@
   <TextView
      android:id="@+id/tv2"
      android:layout_width="35dp"
-     android:layout_height="22dp"
+     android:layout_height="30dp"
      android:layout_alignParentRight="true"
      android:background="@drawable/speech_bubble_l_orange"
      android:text="Test"
@@ -103,7 +103,7 @@
   <TextView
      android:id="@+id/tv1"
      android:layout_width="35dp"
-     android:layout_height="22dp"
+     android:layout_height="30dp"
      android:layout_alignParentRight="true"
      android:background="@drawable/speech_bubble_l_orange"
      android:text="Test"
