@@ -176,12 +176,14 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    myRunnable(int id, String text) 
 	    {
 		thisID=id; thisText = text;
-		tmp = Html.fromHtml("<b>"+thisText+"</b>");
+		tmp = Html.fromHtml("<p><b>"+thisText+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
 	    }
 	    public void run()  
 	    {
 		//tempBubbleArr[thisID].setText(thisText);
 		tempBubbleArr[thisID].setText(tmp);
+		tempBubbleArr[thisID].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+		tempBubbleArr[0].setTextColor(Color.parseColor("white"));
 	    } 
 	};
 	int bubbleID=0;
@@ -521,7 +523,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F); //Test code
 	
 	gBubbleGestureListener = new GestureDetector(mActivity0, bubbleGestureListener);
-	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,1.5F); //Test code
+	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.0F); //Test code
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -582,11 +584,13 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	bulbArr[1]  = bulb1 = (ImageView) mView.findViewById(R.id.iv2); 
 	bulbArr[2]  = bulb2 = (ImageView) mView.findViewById(R.id.iv3); 
 	tempBubbleArr[0] = (TextView) mView.findViewById(R.id.tv1);
-	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
 	tempBubbleArr[0].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	tempBubbleArr[0].setTextColor(Color.parseColor("white"));
 	tempBubbleArr[1] = (TextView) mView.findViewById(R.id.tv2);
-	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_SP, 8);
+	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
 	tempBubbleArr[1].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	tempBubbleArr[1].setTextColor(Color.parseColor("white"));
 	// Makes the handles accessed via the global variables
 	// gLampHandler, gOnTouchListener, gGestureDetector;
 	makeHandlers(mActivity0);
