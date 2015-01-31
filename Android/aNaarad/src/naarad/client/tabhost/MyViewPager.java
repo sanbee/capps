@@ -17,6 +17,9 @@ public class MyViewPager extends ViewPager
         super(context, attrs);
 	myApp = (NaaradApp) context.getApplicationContext();
         this.enabled = true;
+
+	// Keep all the three fragments in memory.  
+	setOffscreenPageLimit(2);
     }
 
     public MyViewPager(Context context) 
