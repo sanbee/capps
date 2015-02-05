@@ -381,11 +381,14 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	// 	}
 	//     };
 
+	// Gesture detection for the lamp icons
 	gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
-	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F); //Test code
+	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F,1.0F); //Test code
 	
+	// Gesture detection for the data-bubble icons.  Need for the
+	// height,width fudge factors (2.0, 1.5) should fixed.
 	gBubbleGestureListener = new GestureDetector(mActivity0, bubbleGestureListener);
-	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.0F); //Test code
+	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.0F,1.5F); //Test code
     }
     //
     //-----------------------------------------------------------------------------------------
