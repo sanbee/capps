@@ -19,19 +19,21 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
     //public boolean touchFlag_p=false;
     //private int longPress_x, longPress_y;
     private NaaradDnDParameters gDnDParams;
-    private float myWidthFudgeFactor;
+    private float myWidthFudgeFactor, myHeightFudgeFactor;
     
     // Construct with GestureDetector, the global DnDParameters object
     // and the global app object.
     public NaaradDnDOnTouchListener(GestureDetector thisGestureDetector,
 				    NaaradDnDParameters thisDnDParams,
 				    NaaradApp thisApp,
-				    Float thisWidthFudgeFactor)
+				    Float thisWidthFudgeFactor,
+				    Float thisHeightFudgeFactor)
     {
 	gGestureDetector = thisGestureDetector;
 	gDnDParams = thisDnDParams;
 	myApp = thisApp;
 	myWidthFudgeFactor=thisWidthFudgeFactor;
+	myHeightFudgeFactor=thisHeightFudgeFactor;
 	//gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
     }
     
@@ -83,7 +85,8 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 							      RelativeLayout.LayoutParams.WRAP_CONTENT));
 			lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
 			//lp.rightMargin = x; lp.topMargin = y;
-			lp.height = (int)(float)(oX*myWidthFudgeFactor*1.5)/2;
+			//lp.height = (int)(float)(oX*myWidthFudgeFactor*1.5)/2;
+			lp.height = (int)(float)(oX*myHeightFudgeFactor);
 			lp.width  = (int)((float)oY*myWidthFudgeFactor);
 			//selected_item.setLayoutParams(lp);
 			v.setLayoutParams(lp);
