@@ -1,0 +1,148 @@
+05 Feb. 2015
+============
+
+The Naarad Software Toolchain:
+=============================
+
+
+[Arduino sketch] <----------------> [Socket Sever] <-------->  [Client Sockets]
+   ^     |            (Serial          (R-Pi)                   (Unix/Android)
+   |     V             connection)
+   |   OOK Tx
+   V
+ RFM69CW
+
+
+Arduino sketch:  
+--------------
+
+   There are two sketches required in the Naarad system.  One that
+   runs on the UNO and one that runs on the ATTiny84 MCUs on the
+   remote stations.
+
+   The sketch on UNO is a server which takes commands from the serial
+   port and conveys them to OOK Tx.  It also loops (infinitely) to
+   receive data from RFM69CW.  Once it receives a packet from RFM69CW
+   radio, it packages in a JSON string with the value, units and
+   remote station ID (which comes along with the packet) and writes it
+   to the serial port.  It is therefore necessary in this architecture
+   that there be a listener on the other end of the serial port,
+   without which the UNO sketch eventually hangs once the serial
+   buffer is full.
+
+   The infinite loop in UNO sketch is OK for now since this is the
+   base station and not really starved of power (though it will be
+   good to reduce it's power consumption, as small as it already is).
+
+
+   The sketch on ATT84s is a simpler on which reads the sensor value
+   and transmits it via its own RFM69CW radio.  It then cuts the
+   power to the sensor and puts the MCU to sleep.  The time constant
+   for this can be different at each remote station.
+
+   The UNO sketch is in <ROOT>/Arduino/unoserver2/unoserver2.ino.
+   The ATT84 sketch is in <ROOT>/Arduino/TinyRxTx/TempTX_tiny/TempTX_tiny.ino.
+
+Socket Server:
+-------------
+ 
+   The Socket Server runs on R-Pi and is written in Python. 
+
+   The code is in <ROOT>/Arduino/unoserver2/serversoc4.py.
+
+   This has three components.  
+
+      1. The main thread which blocks for read on an advertised socket
+         (# 1234 for now), listening for connection request.
+
+         A connection request is expected to be immediately followed
+         by a string which is the name of the Topic the client wishes
+         to subscribed to (currently only "SensorDataSink" topic is
+         supported). A new thread (ClientThread) is then started.  The
+         client interacts with this thread for rest of the life of the
+         connection. The client connection is also added to the list
+         of the subscribers for the topic.
+
+      2. A thread (NaaradTopic) that blocks on read from the serial
+         port is also started.  This thread continuously reads the
+         serial port and writes the data that arrives in a database
+         (DB).  The DB currently is memory buffer in the server which
+         is overwritten, but can be replaced with a persistent and
+         real data base.
+
+         The data is also broadcasted to all the subscriber sockets
+         for various Topics (only one topic for now).  A global list
+         of topic-based subscribers is maintained and used in the
+         NaaradTopic and ClientThread.
+
+      3. The ClientThread thread services the client connected to
+         it. It services commands from the client (e.g. commands to
+         control the lights, issued by the client that should go to
+         the OOK Tx on Arduino).  It also handles exceptions that may
+         occur on the socket connection to the client
+         (e.g. unexpected drop of a socket connection). 
+
+         The data from the UNO serial port is send to this socket
+         connection, but by the NaaradTopic thread, which has a list
+         of topic-based subscribers.
+
+   The socket i/o is handled by the mySock class.  All exceptions are
+   detected on a write or read operation.  In the NaaradTopic thread,
+   an exception thrown by the mySock object results in the following
+   two operations:
+
+                a. The socket is closed.
+                b. The socket is removed from the subscribers list. 
+
+   Upon close of a socket by NaaradTopic thread, an exception is also
+   detected by the ClientThread thread which holds the socket, which
+   then closes the thread as well.
+
+
+Clients:
+-------
+
+   Currently there are two clients in the Naarad system:
+
+       1. The client for Linux in <ROOT>/Aruino/unoserver2/rx4.py.
+          This opens the socket connection to the Naarad system (port
+          1234 on R-Pi), subscribes to the "SensorDataSink" topic and
+          blocks for incoming data on the socket, incoming commands
+          on the /dev/shm/ppogo pipe and incoming commands on the
+          stdin.  
+
+          When a data packet arrives on the socket, a time stamp is
+          attached to the packet (the JSON string).  The packet is
+          then processed for plotting and the data is plotted using
+          matplotlib.
+
+       2. The client app for Android (in capps/Android/aNaarad on
+          GoogleCode project).  
+
+          This has three Fragments:
+ 
+              2.1 For control of lights in the house and display of
+                  instantaneous values of sensors in he house
+  
+                  The commands to control the lights are sent on the
+                  the server on R-Pi by opening a connection per
+                  command and immediately afterwards, closing it.
+                  This has proved to be very stable.
+
+                  This fragments gets the sensor data from the Sensor
+                  Fragment.
+
+             2.2. The Senor Fragment is meant to show live plots of
+                  the sensor data.  This the only place in the app
+                  which subscribes to a Naarad topic, receives the
+                  data async (via the select() call).  The data is
+                  also sent to the parent activity which can convey
+                  it to other Fragments if necessary.  Currently,
+                  this data is conveyed to the first Fragment
+                  (2.1). 
+
+             2.3  The Settings Fragment.  This is meant to hold user
+                  settings (like name and port of the server etc.).  
+
+
+
