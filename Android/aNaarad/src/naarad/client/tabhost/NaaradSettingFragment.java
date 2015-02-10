@@ -95,8 +95,12 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 			    Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT).show();
 			    setButton.setTextColor(Color.RED);
 			}
-		    setServerName(serverName);
-		    setServerPort(serverPort);
+		    //setServerName(serverName);
+		    setPreference("serverName",serverName);
+		    //setServerPort(serverPort);
+		    setPreference("serverPort", serverPort);
+		    setPreference("lamp0X", 100);
+		    setPreference("lamp0Y", 200);
 		}
 	    });
 	return mView;

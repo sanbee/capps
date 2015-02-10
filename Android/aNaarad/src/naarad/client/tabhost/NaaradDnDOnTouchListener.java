@@ -7,7 +7,12 @@ import android.view.GestureDetector;
 import android.widget.RelativeLayout;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.graphics.Color;
+// import android.preference.PreferenceManager;
+// import android.content.SharedPreferences;
+// import android.content.Context;
+
 //private View.OnTouchListener gOnTouchListener;
 
 public class NaaradDnDOnTouchListener implements View.OnTouchListener
@@ -36,7 +41,7 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 	myHeightFudgeFactor=thisHeightFudgeFactor;
 	//gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
     }
-    
+
     public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_l) 
     {
 	int w, h;
@@ -80,20 +85,22 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			// 		   +" Py:"+pY+" deY:"+(pY - gDnDParams.longPress_y)
 			// 		   +" T:"+iY+" dy:"+dy+" Y:"+(iY - dy));
 
-			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
-			    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
-							      RelativeLayout.LayoutParams.WRAP_CONTENT));
-			lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
-			//lp.rightMargin = x; lp.topMargin = y;
-			//lp.height = (int)(float)(oX*myWidthFudgeFactor*1.5)/2;
-			lp.height = (int)(float)(oX*myHeightFudgeFactor);
-			lp.width  = (int)((float)oY*myWidthFudgeFactor);
-			//selected_item.setLayoutParams(lp);
-			v.setLayoutParams(lp);
-			
-			// MarginLayoutParams params = (MarginLayoutParams) selected_item.getLayoutParams();
-			// params.topMargin = y; params.rightMargin = x;
-			// selected_item.setLayoutParams(params);
+			gDnDParams.moveView(v,x,y,
+					    oX,oY,
+					    myHeightFudgeFactor,
+					    myWidthFudgeFactor);
+
+			// Move the view
+			// RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
+			//     (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+			// 				      RelativeLayout.LayoutParams.WRAP_CONTENT));
+			// lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
+			// //lp.rightMargin = x; lp.topMargin = y;
+			// //lp.height = (int)(float)(oX*myWidthFudgeFactor*1.5)/2;
+			// lp.height = (int)(float)(oX*myHeightFudgeFactor);
+			// lp.width  = (int)((float)oY*myWidthFudgeFactor);
+			// //selected_item.setLayoutParams(lp);
+			// v.setLayoutParams(lp);
 
 			//resizeView(selected_item, event, 50,50);
 			break;  
@@ -146,10 +153,20 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			    ((ImageView)v).setAlpha(255);
 			    v.setBackgroundColor(Color.TRANSPARENT);
 			}
+		    else if (v instanceof TextView)
+			{
+			    //System.err.println("setting alpha");
+			    ((TextView)v).getBackground().setAlpha(100);
+			}
 
 		    // selected_item.setBackgroundColor(Color.TRANSPARENT);
 		    // selected_item=null;
 		    System.err.println("Drop pos.: "+v.getRight()+" "+v.getTop());
+		    {
+			
+		    }
+		    //SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context)
+		    //setPreference("posx",v.getRight());
 		    myApp.setSwipeState(true);
 		    break;
 		};
