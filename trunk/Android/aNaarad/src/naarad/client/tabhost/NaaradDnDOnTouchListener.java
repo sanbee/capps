@@ -87,8 +87,8 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 
 			gDnDParams.moveView(v,x,y,
 					    oX,oY,
-					    myHeightFudgeFactor,
-					    myWidthFudgeFactor);
+					    myWidthFudgeFactor,
+					    myHeightFudgeFactor);
 
 			// Move the view
 			// RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams

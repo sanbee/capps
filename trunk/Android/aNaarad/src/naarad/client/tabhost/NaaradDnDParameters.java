@@ -17,7 +17,7 @@ public class NaaradDnDParameters
     public boolean touchFlag_p=false; 
 
     public void moveView(View v, int x, int y, int w, int h,
-			 float hFudge, float wFudge)
+			 float wFudge, float hFudge)
     {
 	RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
 	    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
