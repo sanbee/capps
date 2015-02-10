@@ -271,7 +271,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		    gDnDParams.touchFlag_p=true;
 		    //((TextView)gDnDParams.selected_item).setAlpha(100);
 		    //gDnDParams.selected_item.setBackgroundColor(Color.GREEN);
-		    //gDnDParams.selected_item.getBackground().setAlpha(100);
+		    gDnDParams.selected_item.getBackground().setAlpha(80);
 		    
 		    myApp.setSwipeState(false);
 
@@ -388,7 +388,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	// Gesture detection for the data-bubble icons.  Need for the
 	// height,width fudge factors (2.0, 1.5) should fixed.
 	gBubbleGestureListener = new GestureDetector(mActivity0, bubbleGestureListener);
-	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.0F,1.5F); //Test code
+	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.3F,1.5F); //Test code
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -436,6 +436,25 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	bulbArr[0]  = bulb0 = (ImageView) thisView.findViewById(R.id.iv1); 
 	bulbArr[1]  = bulb1 = (ImageView) thisView.findViewById(R.id.iv2); 
 	bulbArr[2]  = bulb2 = (ImageView) thisView.findViewById(R.id.iv3); 
+	RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
+	    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
+					      RelativeLayout.LayoutParams.WRAP_CONTENT));
+	// Test code
+	int oX,oY,x=-2,y=-2, xMargin=54, yMargin=24;
+	oX=(int)(20*myApp.densityDpi/160.0);
+	oY=(int)(20*myApp.densityDpi/160.0);
+	for (int i=0;i<bulbArr.length;i++)
+	    {
+		x=getPreference("bulbX"+String.format("%d",i),-1);
+		y=getPreference("bulbY"+String.format("%d",i),-1);
+		System.err.println("bulb"+i+" "+x+" "+y);
+		if ((x != -1) && (y != -1))
+		    gDnDParams.moveView(bulbArr[i],x-xMargin,y-yMargin,oX,oY,1.0F,1.0F);
+	    }
+	// x=173-54; y=170-24;
+	// gDnDParams.moveView((View)bulbArr[0],x,y,oX,oY,1.0F,1.0F);
+	// Test code
+
 	tempBubbleArr[0] = (TextView) thisView.findViewById(R.id.tv1);
 	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
 	tempBubbleArr[0].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
@@ -511,12 +530,20 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
     {
 	super.onResume();
 	makeSensorIcons(mView);
+	getRetainInstance();
 	System.err.println("From NCF::onResume");
+
     }
     @Override public void onPause()
     {
 	super.onPause();
+	setRetainInstance(true);	
 	System.err.println("From NCF::onPause");
+	for(int i=0;i < lampArr.length; i++)
+	    {
+		setPreference("bulbX"+String.format("%d", i), bulbArr[i].getRight());
+		setPreference("bulbY"+String.format("%d", i), bulbArr[i].getTop());
+	    }
     }
     //
     //-----------------------------------------------------------------------------------------

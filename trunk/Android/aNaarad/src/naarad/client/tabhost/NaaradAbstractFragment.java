@@ -47,12 +47,35 @@ public abstract class NaaradAbstractFragment extends Fragment
 	else return false;
     }
 
-    public void setServerName(String name)
+    public void setPreference(String name, String value)
     {
 	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
 	SharedPreferences.Editor editor = prefs.edit();
-	editor.putString("serverName", name);  //or you can use putInt, putBoolean ... 
+	editor.putString(name, value);  //or you can use putInt, putBoolean ... 
+	//editor.apply();
 	editor.commit();
+    }
+    public void setPreference(String name, int value)
+    {
+	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
+	SharedPreferences.Editor editor = prefs.edit();
+	editor.putInt(name, value);  //or you can use putInt, putBoolean ... 
+	//editor.apply();
+	editor.commit();
+    }
+    public int getPreference(String name, int defValue)
+    {
+	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE);
+	return prefs.getInt(name,defValue);
+    }
+    public void setServerName(String name)
+    {
+	setPreference("serverName",name);
+	// prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
+	// SharedPreferences.Editor editor = prefs.edit();
+	// editor.putString("serverName", name);  //or you can use putInt, putBoolean ... 
+	// //editor.apply();
+	// editor.commit();
     }
     public String getServerName()    
     {
@@ -63,10 +86,12 @@ public abstract class NaaradAbstractFragment extends Fragment
 
     public void setServerPort(int port)
     {
-	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
-	SharedPreferences.Editor editor = prefs.edit();
-	editor.putInt("serverPort", port);  //or you can use putInt, putBoolean ... 
-	editor.commit();
+	setPreference("serverPort",port);
+	// prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE); 
+	// SharedPreferences.Editor editor = prefs.edit();
+	// editor.putInt("serverPort", port);  //or you can use putInt, putBoolean ... 
+	// //editor.apply();
+	// editor.commit();
     }
     public int getServerPort()    
     {
