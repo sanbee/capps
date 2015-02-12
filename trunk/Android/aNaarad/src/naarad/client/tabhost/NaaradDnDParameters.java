@@ -22,10 +22,10 @@ public class NaaradDnDParameters
 	RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams
 	    (new ViewGroup.MarginLayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT,
 					      RelativeLayout.LayoutParams.WRAP_CONTENT));
-	lp.setMargins(x, y, 0, 0);  // top, left, right, bottom
+	lp.setMargins(x, y, 0, 0);  // left, top, right, bottom
 	//lp.rightMargin = x; lp.topMargin = y;
-	lp.height = (int)(float)(h*hFudge);
-	lp.width  = (int)(float)(w*wFudge);
+	if (h > 0) lp.height = (int)(float)(h*hFudge);
+	if (w > 0) lp.width  = (int)(float)(w*wFudge);
 	//selected_item.setLayoutParams(lp);
 	v.setLayoutParams(lp);
     }

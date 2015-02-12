@@ -25,20 +25,22 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
     //private int longPress_x, longPress_y;
     private NaaradDnDParameters gDnDParams;
     private float myWidthFudgeFactor, myHeightFudgeFactor;
-    
+    private int mySizeXDP, mySizeYDP;
     // Construct with GestureDetector, the global DnDParameters object
     // and the global app object.
     public NaaradDnDOnTouchListener(GestureDetector thisGestureDetector,
 				    NaaradDnDParameters thisDnDParams,
 				    NaaradApp thisApp,
 				    Float thisWidthFudgeFactor,
-				    Float thisHeightFudgeFactor)
+				    Float thisHeightFudgeFactor,
+				    int sizeXDP, int sizeYDP)
     {
 	gGestureDetector = thisGestureDetector;
 	gDnDParams = thisDnDParams;
 	myApp = thisApp;
 	myWidthFudgeFactor=thisWidthFudgeFactor;
 	myHeightFudgeFactor=thisHeightFudgeFactor;
+	mySizeXDP=sizeXDP; mySizeYDP = sizeYDP;
 	//gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
     }
 
@@ -61,8 +63,8 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			// h=selected_item.getWidth();
 			w=v.getHeight();
 			h=v.getWidth();
-			oX=(int)(20*myApp.densityDpi/160.0);
-			oY=(int)(20*myApp.densityDpi/160.0);
+			oX=(int)(mySizeXDP*myApp.densityDpi);//160.0);
+			oY=(int)(mySizeYDP*myApp.densityDpi);//160.0);
 
 			// iX=selected_item.getRight();
 			// iY=selected_item.getTop();
@@ -86,9 +88,9 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			// 		   +" T:"+iY+" dy:"+dy+" Y:"+(iY - dy));
 
 			gDnDParams.moveView(v,x,y,
-					    oX,oY,
-					    myWidthFudgeFactor,
-					    myHeightFudgeFactor);
+					    oX,oY,1.0F,1.0F);
+					    // myWidthFudgeFactor,
+					    // myHeightFudgeFactor);
 
 			// Move the view
 			// RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams

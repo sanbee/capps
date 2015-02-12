@@ -30,7 +30,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.util.Log;
 import java.net.Socket;
-
+import android.view.View.MeasureSpec;
 import android.util.TypedValue;
 import org.json.JSONException;
 import android.text.Spanned;
@@ -383,12 +383,12 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 
 	// Gesture detection for the lamp icons
 	gGestureDetector = new GestureDetector(mActivity0, myGestureListener);
-	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F,1.0F); //Test code
+	gOnTouchListener = new NaaradDnDOnTouchListener(gGestureDetector, gDnDParams,myApp,1.0F,1.0F,20,20); //Test code
 	
 	// Gesture detection for the data-bubble icons.  Need for the
 	// height,width fudge factors (2.0, 1.5) should fixed.
 	gBubbleGestureListener = new GestureDetector(mActivity0, bubbleGestureListener);
-	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,2.3F,1.5F); //Test code
+	gBubbleOnTouchListener = new NaaradDnDOnTouchListener(gBubbleGestureListener, gDnDParams,myApp,1.0F,1.0F,45,25);//2.3F,1.5F); //Test code
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -439,7 +439,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 
 	tempBubbleArr[0] = (TextView) thisView.findViewById(R.id.tv1);
 	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-	tempBubbleArr[0].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	tempBubbleArr[0].setText(Html.fromHtml("<p><b>21.63C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	tempBubbleArr[0].setTextColor(Color.parseColor("white"));
 	tempBubbleArr[1] = (TextView) thisView.findViewById(R.id.tv2);
 	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
@@ -452,8 +452,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	// position and re-position the icons.
 	//
 	int oX,oY,x=-2,y=-2, xMargin=54, yMargin=24;
-	oX=(int)(20*myApp.densityDpi/160.0);
-	oY=(int)(20*myApp.densityDpi/160.0);
+	oX=(int)(20*myApp.densityDpi);///160.0);
+	oY=(int)(20*myApp.densityDpi);///160.0);
 	for (int i=0;i<bulbArr.length;i++)
 	    {
 		x=getPreference("bulbX"+String.format("%d",i),-1);
@@ -462,13 +462,28 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		if ((x != -1) && (y != -1))
 		    gDnDParams.moveView(bulbArr[i],x-xMargin,y-yMargin,oX,oY,1.0F,1.0F);
 	    }
+	xMargin = (int)(xMargin *myApp.densityDpi);
 	for (int i=0; i<tempBubbleArr.length; i++)
 	    {
+		tempBubbleArr[i].measure(MeasureSpec.UNSPECIFIED,MeasureSpec.UNSPECIFIED);
+		int width = tempBubbleArr[i].getMeasuredWidth();
+		int height = tempBubbleArr[i].getMeasuredHeight();
+		System.err.println("bubble"+i
+				   +" "+tempBubbleArr[i].getTotalPaddingRight()
+				   +" "+tempBubbleArr[i].getTotalPaddingLeft()
+				   +" "+tempBubbleArr[i].getTotalPaddingTop()
+				   +" "+tempBubbleArr[i].getTotalPaddingBottom()
+				   );
+		width=(int)(45*myApp.densityDpi);
+		height=(int)(25*myApp.densityDpi);
 		x=getPreference("bubbleX"+String.format("%d",i),-1);
 		y=getPreference("bubbleY"+String.format("%d",i),-1);
-		System.err.println("bubble"+i+" "+x+" "+y);
+		int xPadding = 10;//tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft();
 		if ((x != -1) && (y != -1))
-		    gDnDParams.moveView(tempBubbleArr[i],x-xMargin,y-yMargin,oX,oY,2.3F,1.5F);
+		    gDnDParams.moveView(tempBubbleArr[i],
+					//x,y,
+					x-xMargin-xPadding,y-yMargin,
+					width,height,1.0F,1.0F);
 	    }
 
 	// Makes the handles accessed via the global variables
