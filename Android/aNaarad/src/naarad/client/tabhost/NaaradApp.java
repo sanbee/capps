@@ -5,7 +5,7 @@ import android.util.DisplayMetrics;
 public class NaaradApp extends Application 
 {
     public boolean swipeEnabled=true;
-    public int densityDpi;
+    public float densityDpi;
 
     public boolean getSwipeState()
     {
@@ -20,8 +20,9 @@ public class NaaradApp extends Application
     @Override public void onCreate() 
     {
         super.onCreate();
-	DisplayMetrics dm = getResources().getDisplayMetrics(); 
-	densityDpi = dm.densityDpi;
+	//DisplayMetrics dm = getResources().getDisplayMetrics(); 
+	//densityDpi = dm.densityDpi;
+	densityDpi = getResources().getDisplayMetrics().density;
 
 	swipeEnabled=true;
     }
