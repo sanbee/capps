@@ -63,8 +63,8 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
 			// h=selected_item.getWidth();
 			w=v.getHeight();
 			h=v.getWidth();
-			oX=(int)(mySizeXDP*myApp.densityDpi);//160.0);
-			oY=(int)(mySizeYDP*myApp.densityDpi);//160.0);
+			oX=myApp.dpToPixel(mySizeXDP);//(int)(mySizeXDP*myApp.densityDpi);//160.0);
+			oY=myApp.dpToPixel(mySizeYDP);//(int)(mySizeYDP*myApp.densityDpi);//160.0);
 
 			// iX=selected_item.getRight();
 			// iY=selected_item.getTop();

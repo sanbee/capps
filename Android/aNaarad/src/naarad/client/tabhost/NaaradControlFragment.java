@@ -452,8 +452,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	// position and re-position the icons.
 	//
 	int oX,oY,x=-2,y=-2, xMargin=54, yMargin=24;
-	oX=(int)(20*myApp.densityDpi);///160.0);
-	oY=(int)(20*myApp.densityDpi);///160.0);
+	oX=oY=myApp.dpToPixel(20);//(int)(20*myApp.densityDpi);///160.0);
+
 	for (int i=0;i<bulbArr.length;i++)
 	    {
 		x=getPreference("bulbX"+String.format("%d",i),-1);
@@ -473,12 +473,13 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 				   +" "+tempBubbleArr[i].getTotalPaddingLeft()
 				   +" "+tempBubbleArr[i].getTotalPaddingTop()
 				   +" "+tempBubbleArr[i].getTotalPaddingBottom()
+				   +" "+((View)tempBubbleArr[i].getParent()).getLeft()
 				   );
-		width=(int)(45*myApp.densityDpi);
-		height=(int)(25*myApp.densityDpi);
+		width=myApp.dpToPixel(45);//(int)(45*myApp.densityDpi);
+		height=myApp.dpToPixel(25);//(int)(25*myApp.densityDpi);
 		x=getPreference("bubbleX"+String.format("%d",i),-1);
 		y=getPreference("bubbleY"+String.format("%d",i),-1);
-		int xPadding = 10;//tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft();
+		int xPadding = 1+tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft();
 		if ((x != -1) && (y != -1))
 		    gDnDParams.moveView(tempBubbleArr[i],
 					//x,y,
@@ -553,6 +554,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
     {
 	super.onResume();
 	makeSensorIcons(mView);
+	ViewGroup.MarginLayoutParams lp=(MarginLayoutParams)mView.getLayoutParams();
+	System.err.println("Offsets: "+
+			   lp.leftMargin+" "+
+			   lp.rightMargin);
 	getRetainInstance();
 	System.err.println("From NCF::onResume");
 
