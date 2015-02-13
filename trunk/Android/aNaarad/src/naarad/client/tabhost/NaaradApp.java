@@ -26,4 +26,8 @@ public class NaaradApp extends Application
 
 	swipeEnabled=true;
     }
+    public int dpToPixel(int dp)
+    {
+	return (int)(dp*densityDpi);
+    }
 }
