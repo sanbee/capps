@@ -128,10 +128,17 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    {
 		JSONObject json = new JSONObject(jsonStr);
 		temp   = (float)json.getDouble("degc");
-		if (!tempInDegC) temp = temp * 9.0F/5.0F + 32.0F;
+
 		// svolt  = (float)json.getDouble("node_v");
 		// rssi   = (float)json.getDouble("node_p");
 		nodeid = json.getInt("node_id");
+		int bubbleID=0;
+		if (nodeid == 1)      bubbleID = 0;
+		else if (nodeid == 3) bubbleID = 1;
+
+		String unit=(String)tempBubbleArr[bubbleID].getTag(R.integer.key1);
+		if (unit=="F") temp = temp * 9.0F/5.0F + 32.0F;
+
 		setBubbleValue(nodeid, temp);
 	    }
 	catch (JSONException e) 
@@ -146,28 +153,43 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	{
 	    int thisID=0;
 	    String thisText;
+	    TextView thisTV;
 	    Spanned tmp;
-	    
+
 	    //tempBubbleArr[thisID].setText(thisText);
-	    myRunnable(int id, String text) 
+	    //myRunnable(int id, String text) 
+	    myRunnable(TextView tv, String text) 
 	    {
-		thisID=id; thisText = text;
+		thisTV=tv; thisText = text;
 		tmp = Html.fromHtml("<p><b>"+thisText+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
 	    }
 	    public void run()  
 	    {
 		//tempBubbleArr[thisID].setText(thisText);
-		tempBubbleArr[thisID].setText(tmp);
-		tempBubbleArr[thisID].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-		tempBubbleArr[0].setTextColor(Color.parseColor("white"));
+		// tempBubbleArr[thisID].setText(tmp);
+		// tempBubbleArr[thisID].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+		// tempBubbleArr[0].setTextColor(Color.parseColor("white"));
+
+		thisTV.setText(tmp);
+		thisTV.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
+		thisTV.setTextColor(Color.parseColor("white"));
 	    } 
 	};
 	int bubbleID=0;
-	String text=String.format("%.2f",temp);
-	if (tempInDegC) text = text+'C'; else text = text + 'F';
 	if (nodeid == 1)      bubbleID = 0;
 	else if (nodeid == 3) bubbleID = 1;
-	myRunnable setTVText=new myRunnable(bubbleID,text);
+
+	String text=String.format("%.2f",temp), 
+	    unit=(String)tempBubbleArr[bubbleID].getTag(R.integer.key1);
+	text = text+unit;
+	// if (tempInDegC) {unit="C"; text = text+unit;}
+	// else            {unit="F"; text = text+unit;}
+
+
+	tempBubbleArr[bubbleID].setTag(R.integer.key0,temp);
+	//tempBubbleArr[bubbleID].setTag(R.integer.key1,unit);
+
+	myRunnable setTVText=new myRunnable(tempBubbleArr[bubbleID],text);
 
 	tempBubbleArr[bubbleID].post(setTVText);
     }
@@ -257,8 +279,29 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		{
 		    super.onSingleTapUp(e);
 		    tempInDegC = !tempInDegC;
-		    if (tempInDegC) toast("Temp. in degC");
-		    else toast("Temp. in F");
+		    // if (tempInDegC) toast("Temp. in degC");
+		    // else toast("Temp. in F");
+		    float tt    = ((Number)gDnDParams.selected_item.getTag(R.integer.key0)).floatValue();
+		    String unit = (String)gDnDParams.selected_item.getTag(R.integer.key1);
+		    int nodeid = (Integer)gDnDParams.selected_item.getTag();
+		    System.err.println("T: "+tt+unit+nodeid);
+		    if (unit == "C")
+			{
+			    tt = tt * 9.0F/5.0F + 32.0F;
+			    unit = "F";
+			}
+		    else
+			{
+			    tt = (tt-32.0f)*5.0f/9.0f;
+			    unit = "C";
+			}
+		    gDnDParams.selected_item.setTag(R.integer.key1,unit);
+		    // if (!tempInDegC) 
+		    // 	tt = tt * 9.0F/5.0F + 32.0F;
+		    //     //temp = temp * 9.0F/5.0F + 32.0F;
+		    // else
+		    // 	tt = (tt-32.0f)*5.0f/9.0f;
+		    setBubbleValue(nodeid,tt);
 			
 		    return false;
 		}
@@ -439,11 +482,18 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 
 	tempBubbleArr[0] = (TextView) thisView.findViewById(R.id.tv1);
 	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-	tempBubbleArr[0].setText(Html.fromHtml("<p><b>21.63C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	tempBubbleArr[0].setTag(R.integer.key1,"C");
+	tempBubbleArr[0].setTag(0);
+	setBubbleValue(1,20.63f);
+	//tempBubbleArr[0].setText(Html.fromHtml("<p><b>21.63C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	tempBubbleArr[0].setTextColor(Color.parseColor("white"));
+
 	tempBubbleArr[1] = (TextView) thisView.findViewById(R.id.tv2);
 	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
-	tempBubbleArr[1].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	//tempBubbleArr[1].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
+	tempBubbleArr[1].setTag(R.integer.key1,"C");
+	tempBubbleArr[1].setTag(3);
+	setBubbleValue(3,21.45f);
 	tempBubbleArr[1].setTextColor(Color.parseColor("white"));
 
 
