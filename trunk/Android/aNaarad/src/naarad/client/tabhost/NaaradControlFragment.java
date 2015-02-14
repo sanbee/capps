@@ -36,7 +36,7 @@ import org.json.JSONException;
 import android.text.Spanned;
 import org.json.JSONObject;
 import android.text.Html;
-
+import android.view.Gravity;
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
 {
@@ -233,7 +233,9 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
     public void toast (String msg)
     {
 	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
-	Toast.makeText (mActivity0, msg, Toast.LENGTH_SHORT).show ();
+	Toast mToast = Toast.makeText (mActivity0, msg, Toast.LENGTH_SHORT);
+	mToast.setGravity(Gravity.TOP|Gravity.RIGHT, 0, 0);
+	mToast.show();
     } 
     //
     //-----------------------------------------------------------------------------------------
@@ -309,7 +311,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		{
 		    // Log.i("Gesture: ","LongPress");
 		    super.onLongPress(e);
-		    toast("DnD on long press");
+		    toast("DnD activated");
 
 		    gDnDParams.touchFlag_p=true;
 		    //((TextView)gDnDParams.selected_item).setAlpha(100);
@@ -363,6 +365,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    @Override public void onLongPress(MotionEvent e)
 	    {
 		// Log.i("Gesture: ","LongPress");
+		toast("DnD activated");
 		super.onLongPress(e);
 		gDnDParams.touchFlag_p=true;
 		((ImageView)gDnDParams.selected_item).setAlpha(100);
