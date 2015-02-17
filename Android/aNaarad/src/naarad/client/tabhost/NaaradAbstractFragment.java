@@ -5,6 +5,8 @@ import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.view.ViewGroup;
 import android.app.Activity;
+import android.widget.Toast;
+import android.view.Gravity;
 import android.view.View;
 import android.util.Log;
 
@@ -12,7 +14,7 @@ import android.util.Log;
 public abstract class NaaradAbstractFragment extends Fragment 
 {
     private SharedPreferences prefs; 
-    private Activity mActivity=null;        
+    public Activity mActivity=null;        
     // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
     // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
     final public int getDefaultPort() {return 1234;}
@@ -115,5 +117,31 @@ public abstract class NaaradAbstractFragment extends Fragment
 	//Log.i("Message: ",msg);
 	return msg;
     }
-    
+    public void toast (String msg)
+    {
+	// //Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
+	// Toast.makeText (mActivity, msg, Toast.LENGTH_SHORT).show ();
+
+	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
+	Toast mToast = Toast.makeText (mActivity, msg, Toast.LENGTH_SHORT);
+	mToast.setGravity(Gravity.TOP|Gravity.RIGHT, 0, 0);
+	mToast.show();
+    } 
+
+    //
+    // Use from anywhere in the package (e.g., from inside anothe
+    // thread) to toast a message).  This always runs the Toast in the
+    // UI thread.
+    //
+    public void uiToast(String msg)
+    {
+	class mToast implements Runnable
+	{
+	    String thisText;
+	    mToast(String text)   {thisText = text;}
+	    public void run()  {toast(thisText);} 
+	};
+	
+	mActivity.runOnUiThread(new mToast(msg));
+    }
 }

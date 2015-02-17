@@ -22,7 +22,6 @@ import android.graphics.Color;
 import android.widget.Button;
 import android.app.Activity;
 import android.os.AsyncTask;
-import android.widget.Toast;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.Integer;
@@ -36,7 +35,6 @@ import org.json.JSONException;
 import android.text.Spanned;
 import org.json.JSONObject;
 import android.text.Html;
-import android.view.Gravity;
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
 {
@@ -230,13 +228,6 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    }
 	return on;
     }
-    public void toast (String msg)
-    {
-	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
-	Toast mToast = Toast.makeText (mActivity0, msg, Toast.LENGTH_SHORT);
-	mToast.setGravity(Gravity.TOP|Gravity.RIGHT, 0, 0);
-	mToast.show();
-    } 
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -693,7 +684,8 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		super.onPostExecute(result);
 		if (result != ALL_WELL)		
 		    {
-			Toast.makeText(mActivity0, result, Toast.LENGTH_SHORT).show();
+			//Toast.makeText(mActivity0, result, Toast.LENGTH_SHORT).show();
+			toast(result);
 			boolean on = currentToggleButton.isChecked();
 			int tag = Integer.parseInt((String)currentToggleButton.getTag());
 			

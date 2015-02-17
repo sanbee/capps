@@ -37,6 +37,7 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import org.achartengine.tools.PanListener;
 import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
+import android.widget.Toast;
 import android.graphics.Color;
 import android.widget.LinearLayout;
 import android.content.Context;
@@ -106,6 +107,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     private EditText textField;
     private ToggleButton plotButton;
     private String messsage;
+
     //private DynamicDataSource dataSource;
     private Thread myThread;
 
@@ -117,6 +119,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     protected ArrayList<Update> TaskList;
     protected Map nodeID2Ndx;
 
+    private boolean nConnected=false;
     nPlotDataArrivalListener mMainActivityCallback;
 
     // The container Activity must implement this interface so the frag can deliver messages
@@ -180,6 +183,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		    	}
 		    else 
 			stopAllCharts(1);
+		    ((ToggleButton)v).setChecked(nConnected);
 		}
 	    };
 	plotButton.setOnClickListener(plotButtonHandler);
@@ -324,6 +328,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		//re-used, it has to be construction afresh.  if
 		//(mSensorDataSource == null)
 		mSensorDataSource = new SensorDataSource();
+
 		if (apiLevel <= 9) mSensorDataSource.execute(mDataset.getSeriesAt(0));
 		else               mSensorDataSource.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
 
@@ -411,6 +416,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			socWriter.flush();
 			SystemClock.sleep(500);
 			allDone=false;
+			nConnected=true;
 			while(true && !allDone)
 			    {
 				//if (isCancelled()) {retStr="Done";return retStr;}
@@ -463,11 +469,13 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		catch (UnknownHostException e) 
 		    {
 			String msg = "Unknown host: "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+			uiToast(msg);
 			return msg;
 		    } 
 		catch (IOException e) 
 		    {
 			String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+			uiToast(msg);
 			return msg;
 		    }
 		
@@ -477,10 +485,12 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			socWriter.flush();
 			clientSoc.close();
 			SystemClock.sleep(500);
+			nConnected=false;
 		    }
 		catch (IOException e) 
 		    {
 			String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+			uiToast(msg);
 			return msg;
 		    }
 
