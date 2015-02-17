@@ -37,7 +37,6 @@ import org.achartengine.renderer.XYSeriesRenderer;
 import org.achartengine.tools.PanListener;
 import org.achartengine.tools.ZoomEvent;
 import org.achartengine.tools.ZoomListener;
-import android.widget.Toast;
 import android.graphics.Color;
 import android.widget.LinearLayout;
 import android.content.Context;
@@ -54,6 +53,7 @@ import org.json.JSONObject;
 import org.json.JSONException;
 import java.util.Map;
 import java.util.HashMap;
+import android.view.Gravity;
 
 // class DynamicDataSource implements Runnable 
 // {
@@ -469,13 +469,13 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		catch (UnknownHostException e) 
 		    {
 			String msg = "Unknown host: "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-			uiToast(msg);
+			uiToast(msg,Gravity.BOTTOM);
 			return msg;
 		    } 
 		catch (IOException e) 
 		    {
 			String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-			uiToast(msg);
+			uiToast(msg,Gravity.BOTTOM);
 			return msg;
 		    }
 		
@@ -490,7 +490,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		catch (IOException e) 
 		    {
 			String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-			uiToast(msg);
+			uiToast(msg,Gravity.BOTTOM);
 			return msg;
 		    }
 

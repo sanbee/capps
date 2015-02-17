@@ -117,14 +117,15 @@ public abstract class NaaradAbstractFragment extends Fragment
 	//Log.i("Message: ",msg);
 	return msg;
     }
-    public void toast (String msg)
+    public void toast (String msg, int gravity)
     {
 	// //Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
 	// Toast.makeText (mActivity, msg, Toast.LENGTH_SHORT).show ();
 
 	//Toast.makeText (getApplicationContext(), msg, Toast.LENGTH_SHORT).show ();
 	Toast mToast = Toast.makeText (mActivity, msg, Toast.LENGTH_SHORT);
-	mToast.setGravity(Gravity.TOP|Gravity.RIGHT, 0, 0);
+	//mToast.setGravity(Gravity.TOP|Gravity.RIGHT, 0, 0);
+	mToast.setGravity(gravity, 0, 0);
 	mToast.show();
     } 
 
@@ -133,15 +134,16 @@ public abstract class NaaradAbstractFragment extends Fragment
     // thread) to toast a message).  This always runs the Toast in the
     // UI thread.
     //
-    public void uiToast(String msg)
+    public void uiToast(String msg, int gravity)
     {
-	class mToast implements Runnable
+	class ToastOnUIThread implements Runnable
 	{
 	    String thisText;
-	    mToast(String text)   {thisText = text;}
-	    public void run()  {toast(thisText);} 
+	    int thisGravity;
+	    ToastOnUIThread(String text, int gravity)   {thisText = text;thisGravity=gravity;}
+	    public void run()  {toast(thisText,thisGravity);} 
 	};
 	
-	mActivity.runOnUiThread(new mToast(msg));
+	mActivity.runOnUiThread(new ToastOnUIThread(msg,gravity));
     }
 }
