@@ -35,6 +35,7 @@ import org.json.JSONException;
 import android.text.Spanned;
 import org.json.JSONObject;
 import android.text.Html;
+import android.view.Gravity;
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
 {
@@ -302,7 +303,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		{
 		    // Log.i("Gesture: ","LongPress");
 		    super.onLongPress(e);
-		    toast("DnD activated");
+		    toast("DnD activated",Gravity.TOP|Gravity.RIGHT);
 
 		    gDnDParams.touchFlag_p=true;
 		    //((TextView)gDnDParams.selected_item).setAlpha(100);
@@ -356,7 +357,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    @Override public void onLongPress(MotionEvent e)
 	    {
 		// Log.i("Gesture: ","LongPress");
-		toast("DnD activated");
+		toast("DnD activated",Gravity.TOP|Gravity.RIGHT);
 		super.onLongPress(e);
 		gDnDParams.touchFlag_p=true;
 		((ImageView)gDnDParams.selected_item).setAlpha(100);
@@ -685,7 +686,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		if (result != ALL_WELL)		
 		    {
 			//Toast.makeText(mActivity0, result, Toast.LENGTH_SHORT).show();
-			toast(result);
+			toast(result,Gravity.TOP|Gravity.RIGHT);
 			boolean on = currentToggleButton.isChecked();
 			int tag = Integer.parseInt((String)currentToggleButton.getTag());
 			
