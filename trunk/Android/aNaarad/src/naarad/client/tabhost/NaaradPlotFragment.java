@@ -426,39 +426,55 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 					int charsRead = 0;
 					char[] buffer = new char[1024];
 					char oneChar;
-					// socReader.read() is a
-					// blocking call, which is
-					// what we want since this is
-					// in a separate thread and
-					// all that this thread does
-					// is wait for data to arrive,
-					// and supply it to the
-					// plotter
-					while ((int)(oneChar = (char)socReader.read()) != -1)
+					// socReader.read() is a blocking call, which is
+					// what we want since this is in a separate thread and
+					// all that this thread does is wait for data to arrive,
+					// and supply it to the plotter
+					while (((int)(oneChar = (char)socReader.read()) != -1) &&
+					       (charsRead < 1024)
+					       )
 					    {
-						if (oneChar != '}') message += oneChar;
+						if (oneChar != '}') 
+						    {
+							message += oneChar;
+							charsRead++;
+						    }
 						else break;
 					    }
-					message += oneChar + "\n";
-					String[] tokens = message.split(" ");
-					String jsonStr="";
-					for (int j=1;j<3;j++) jsonStr += tokens[j];
-					//System.err.println("JSON: "+jsonStr);
-					mMainActivityCallback.onDataArrival(jsonStr);
 					try 
 					    {
+						if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
+						message += oneChar + "\n";
+						String[] tokens = message.split(" ");
+						String jsonStr="";
+						for (int j=1;j<3;j++) jsonStr += tokens[j];
+						//System.err.println("JSON: "+jsonStr);
+						//mMainActivityCallback.onDataArrival(jsonStr);
 						JSONObject json = new JSONObject(jsonStr);
-						temp   = (float)json.getDouble("degc");
-						svolt  = (float)json.getDouble("node_v");
-						rssi   = (float)json.getDouble("node_p");
-						nodeid = json.getInt("node_id");
+						if (json.getInt("rf_fail") == 0) // Indicates that the packet is valid
+						    {
+							temp   = (float)json.getDouble("degc");
+							svolt  = (float)json.getDouble("node_v");
+							rssi   = (float)json.getDouble("node_p");
+							nodeid = json.getInt("node_id");
+						    }
+						else
+						    throw(new JSONException("Packet invalid (rf_fail=1)"));
+						mMainActivityCallback.onDataArrival(jsonStr);
 					    }
 					catch (JSONException e) 
 					    {
 						//throw new RuntimeException(e);
 						System.err.println(e.getMessage());
+						uiToast(e.getMessage(),Gravity.BOTTOM);
 						cancel(true);
 					    }
+					// catch (RuntimeException e)
+					//     {
+					// 	System.err.println(e.getMessage());
+					// 	uiToast(e.getMessage(),Gravity.BOTTOM);
+					// 	cancel(true);
+					//     }
 
 					//System.err.println("Read "+temp+" "+nodeid+" "+svolt+" "+rssi);
 				    }
