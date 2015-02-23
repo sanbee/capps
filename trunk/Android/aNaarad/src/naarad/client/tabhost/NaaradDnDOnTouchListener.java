@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.graphics.Rect;
 // import android.preference.PreferenceManager;
 // import android.content.SharedPreferences;
 // import android.content.Context;
@@ -47,6 +49,29 @@ public class NaaradDnDOnTouchListener implements View.OnTouchListener
     public boolean containerOnTouch(View v, MotionEvent event, boolean touchFlag_l) 
     {
 	int w, h;
+	// if ((ImageView)v != null) 
+	//     {
+	// 	Drawable drawable = ((ImageView)v).getDrawable();
+
+	// 	Rect imageBounds = drawable.getBounds();
+		
+	// 	//original height and width of the bitmap
+	// 	int intrinsicHeight = drawable.getIntrinsicHeight();
+	// 	int intrinsicWidth = drawable.getIntrinsicWidth();
+
+	// 	//height and width of the visible (scaled) image
+	// 	int scaledHeight = imageBounds.height();
+	// 	int scaledWidth = imageBounds.width();
+		
+	// 	//Find the ratio of the original image to the scaled image
+	// 	//Should normally be equal unless a disproportionate scaling
+	// 	//(e.g. fitXY) is used.
+	// 	float heightRatio = intrinsicHeight / scaledHeight;
+	// 	float widthRatio = intrinsicWidth / scaledWidth;
+
+	// 	System.err.println("hr,wr:"+heightRatio+" "+widthRatio);
+	//     }
+
 
 	//	if ((touchFlag_l==true) && (selected_item != null))
 	if ((touchFlag_l==true) && (v != null))

@@ -41,6 +41,12 @@ public class MainActivity extends FragmentActivity implements
 	    frag.setSensorValues(json);
     }
 
+    // @Override public void onPause()
+    // {
+    // 	super.onPause();
+    // 	System.err.println("MainActivity::onPause()");
+    // }
+
     @Override protected void onResume()
     {
 	super.onResume();
@@ -62,6 +68,7 @@ public class MainActivity extends FragmentActivity implements
 	pageAdapter = new MyPageAdapter(getSupportFragmentManager(), fragments);
 	this.mViewPager.setAdapter(pageAdapter);
 	this.mViewPager.setOnPageChangeListener(MainActivity.this);
+
 	// ((NaaradControlFragment)fragments.get(0)).setViewPager(this.mViewPager);
 	// ((NaaradControlFragment)fragments.get(0)).setActivity(this);
     }

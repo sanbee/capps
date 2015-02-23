@@ -14,14 +14,22 @@ import java.net.UnknownHostException;
 import android.widget.Button;
 import android.widget.ToggleButton;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.CheckBox;
 import android.util.Log;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.os.AsyncTask;
 import android.widget.EditText;
+//import android.widget.CheckedTextView;
 import java.lang.Integer;
 import android.widget.Toast;
 import android.graphics.Color;
+import android.view.Gravity;
+import android.widget.Toast;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.content.Context;
 
 //public class NaaradSettingFragment extends Fragment 
 public class NaaradSettingFragment extends NaaradAbstractFragment
@@ -32,7 +40,23 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     private PrintWriter printwriter;
     private EditText serverNameField, serverPortField;
     private Button setButton;
+    private CheckBox wakeButton;
+    public NaaradApp myApp;
+    //private TextView wakeText;
+    //    private CheckedTextView ctView;
     private String message;
+    private boolean wifiTurnedOnByMe=false;
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    @Override public void onPause()
+    {
+	super.onPause();
+	boolean giveMsg=false;
+	if (myApp.myWakeLock.isHeld()) {myApp.myWakeLock.release();giveMsg=true;}
+	if (myApp.myWifiLock.isHeld()) {myApp.myWifiLock.release();giveMsg=true;}
+	if (giveMsg) toast("Wake and Wifi locks released.",Gravity.BOTTOM);
+    }
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -45,6 +69,37 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	f.setArguments(b);
 	
 	return f;
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public void wakeLockClick(CheckBox v)
+    {
+	ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+	NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+	if (mWifi.isConnected()) 
+	    {
+		if (((CheckBox)v).isChecked())
+		    {
+			if (!myApp.myWakeLock.isHeld()) myApp.myWakeLock.acquire();
+			if (!myApp.myWifiLock.isHeld()) myApp.myWifiLock.acquire();
+			toast("Wake and Wifi locks set.",Gravity.BOTTOM);
+			
+			//System.err.println("Checked");
+		    }
+		else
+		    {
+			if (myApp.myWakeLock.isHeld()) myApp.myWakeLock.release();
+			if (myApp.myWifiLock.isHeld()) myApp.myWifiLock.release();
+			//System.err.println("UnChecked");
+		    }
+	    }
+	else
+	    {
+		v.setChecked(false);
+		toast("Wifi not connected.\nWake and Wifi locks not set.",Gravity.BOTTOM);
+	    }
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -63,14 +118,28 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 		((ViewGroup)mView.getParent()).removeView(mView);
 		return mView;
 	    }
+	myApp = (NaaradApp) getActivity().getApplication();
 
 	mView = inflater.inflate(R.layout.activity_naarad_setting,
 				 container, false);
 	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
 	serverPortField  = (EditText) mView.findViewById(R.id.serverPort); // reference to the text field
 	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button
+	//wakeText = (TextView) mView.findViewById(R.id.wakeText);
+	wakeButton = (CheckBox) mView.findViewById(R.id.wake);
+	//	ctView = (CheckedTextView) mView.findViewById(R.id.ctView);
 	serverPortField.setText(Integer.toString(getDefaultPort()));
 	serverNameField.setText(getDefaultServer());
+	wakeButton.setChecked(false);
+
+	//	if (wakeButton.isChecked()) wakeLockClick(wakeButton);
+	wakeButton.setOnClickListener(new View.OnClickListener()
+	    {
+		public void onClick(View v)
+		{
+		    wakeLockClick((CheckBox)v);
+		}
+	    });
 
 	// Button press event listener
 	setButton.setOnClickListener(new View.OnClickListener() 
@@ -99,8 +168,8 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 		    setPreference("serverName",serverName);
 		    //setServerPort(serverPort);
 		    setPreference("serverPort", serverPort);
-		    setPreference("lamp0X", 100);
-		    setPreference("lamp0Y", 200);
+		    // setPreference("lamp0X", 100);
+		    // setPreference("lamp0Y", 200);
 		}
 	    });
 	return mView;

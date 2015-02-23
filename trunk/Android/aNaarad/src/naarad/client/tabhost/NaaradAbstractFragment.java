@@ -1,9 +1,12 @@
 package naarad.client.tabhost;
 
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.support.v4.app.Fragment;
 import android.content.Context;
 import android.view.ViewGroup;
+import android.widget.Toast;
+import android.view.Gravity;
 import android.app.Activity;
 import android.widget.Toast;
 import android.view.Gravity;
@@ -32,6 +35,8 @@ public abstract class NaaradAbstractFragment extends Fragment
         super.onAttach(activity);
 	if (mActivity==null)
         mActivity = activity;
+	//mActivity.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
+	mActivity.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
 
     public boolean recreateView(View v)
