@@ -37,6 +37,14 @@
        android:layout_toRightOf="@+id/serverPort"
        android:text="Set" />
 
+    <CheckBox
+       android:id="@+id/wake"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/setButton"
+       android:text="Keep CPU + WiFi on in the background?" 
+       />
+
 
     <!-- <ToggleButton -->
     <!--    android:id="@+id/lamp0" -->

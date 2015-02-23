@@ -1,13 +1,18 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-		xmlns:tools="http://schemas.android.com/tools"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		tools:context=".MainActivity" >
+<RelativeLayout 
+   xmlns:android="http://schemas.android.com/apk/res/android"
+   xmlns:tools="http://schemas.android.com/tools"
+   android:layout_width="match_parent"
+   android:layout_height="match_parent"
+   tools:context=".MainActivity" 
+   >
+  
   
   <TabHost
      android:id="@android:id/tabhost"
      android:layout_width="fill_parent"
-     android:layout_height="wrap_content" >
+     android:layout_height="wrap_content" 
+     android:screenOrientation="landscape"
+     >
     
     <LinearLayout
        android:layout_width="fill_parent"
@@ -33,7 +38,9 @@
          android:id="@+id/viewpager"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content"
-         android:layout_gravity="bottom" />
+         android:layout_gravity="bottom" 
+	 android:configChanges="keyboardHidden|orientation|screenSize"
+	 />
       
     </LinearLayout>
   </TabHost>
