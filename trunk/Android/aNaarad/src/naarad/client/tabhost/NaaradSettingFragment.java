@@ -46,6 +46,8 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     //    private CheckedTextView ctView;
     private String message;
     private boolean wifiTurnedOnByMe=false;
+    private int gServerPort;
+    private String gServerName;
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -56,6 +58,8 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	if (myApp.myWakeLock.isHeld()) {myApp.myWakeLock.release();giveMsg=true;}
 	if (myApp.myWifiLock.isHeld()) {myApp.myWifiLock.release();giveMsg=true;}
 	if (giveMsg) toast("Wake and Wifi locks released.",Gravity.BOTTOM);
+	setPreference("serverName",gServerName);
+	setPreference("gServerPort",gServerPort);
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -147,13 +151,12 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	    {
 		public void onClick(View v) 
 		{
-		    String serverName;
-		    int serverPort=getDefaultPort();
-		    serverName = serverNameField.getText().toString(); // get the text message on the text field
+		    gServerPort=getDefaultPort();
+		    gServerName = serverNameField.getText().toString(); // get the text message on the text field
 		    try
 			{
-			    serverPort = Integer.parseInt(serverPortField.getText().toString()); // get the text message on the text field
-			    if (serverPort <= 0)
+			    gServerPort = Integer.parseInt(serverPortField.getText().toString()); // get the text message on the text field
+			    if (gServerPort <= 0)
 				throw (new NumberFormatException("Port number < 0"));
 			    else
 				setButton.setTextColor(Color.GREEN);
@@ -166,9 +169,9 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 			    setButton.setTextColor(Color.RED);
 			}
 		    //setServerName(serverName);
-		    setPreference("serverName",serverName);
+		    setPreference("serverName",gServerName);
 		    //setServerPort(serverPort);
-		    setPreference("serverPort", serverPort);
+		    setPreference("serverPort", gServerPort);
 		    // setPreference("lamp0X", 100);
 		    // setPreference("lamp0Y", 200);
 		}

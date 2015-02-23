@@ -22,9 +22,15 @@ public abstract class NaaradAbstractFragment extends Fragment
     public Activity mActivity=null;        
     // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
     // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
-    final public int getDefaultPort() {return 1234;}
+    public int getDefaultPort() 
+    {
+	return getPreference("serverPort",1234);
+    }
     //final public String getDefaultServer() {return "10.0.2.2";}
-    final public String getDefaultServer() {return "raspberrypi";}
+    public String getDefaultServer() 
+    {
+	return getPreference("serverName","raspberrypi");
+    }
 
     //
     // Hold a reference to the activity and use it in place of
@@ -76,6 +82,11 @@ public abstract class NaaradAbstractFragment extends Fragment
     {
 	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE);
 	return prefs.getInt(name,defValue);
+    }
+    public String getPreference(String name, String defValue)
+    {
+	prefs = mActivity.getSharedPreferences("nSettings", Context.MODE_PRIVATE);
+	return prefs.getString(name,defValue);
     }
     public void setServerName(String name)
     {
