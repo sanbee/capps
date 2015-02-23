@@ -75,10 +75,7 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     //
     public void wakeLockClick(CheckBox v)
     {
-	ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-	NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-	if (mWifi.isConnected()) 
+	if (isWifiConnected())
 	    {
 		if (((CheckBox)v).isChecked())
 		    {
@@ -108,20 +105,24 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 				       Bundle savedInstanceState) 
     {
 	setRetainInstance(true);	
-	if (mView != null)
-	    {
-		// Do not inflate the layout again.
-		// The returned View of onCreateView will be added into the fragment.
-		// However it is not allowed to be added twice even if the parent is same.
-		// So we must remove root View (nView) from the existing parent view group
-		// (it will be added back).
-		((ViewGroup)mView.getParent()).removeView(mView);
-		return mView;
-	    }
 	myApp = (NaaradApp) getActivity().getApplication();
-
-	mView = inflater.inflate(R.layout.activity_naarad_setting,
-				 container, false);
+	myApp.makeLocks();
+	// if (mView != null)
+	//     {
+	// 	// Do not inflate the layout again.
+	// 	// The returned View of onCreateView will be added into the fragment.
+	// 	// However it is not allowed to be added twice even if the parent is same.
+	// 	// So we must remove root View (nView) from the existing parent view group
+	// 	// (it will be added back).
+	// 	((ViewGroup)mView.getParent()).removeView(mView);
+	// 	return mView;
+	//     }
+	if (mView == null)
+	    mView = inflater.inflate(R.layout.activity_naarad_setting,
+				     container, false);
+	else
+	    ((ViewGroup)mView.getParent()).removeView(mView);
+	    
 	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
 	serverPortField  = (EditText) mView.findViewById(R.id.serverPort); // reference to the text field
 	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button

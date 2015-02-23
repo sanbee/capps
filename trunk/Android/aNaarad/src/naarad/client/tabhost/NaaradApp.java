@@ -6,6 +6,7 @@ import android.app.Application;
 import android.os.PowerManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WifiManager.WifiLock;
+import android.content.Context;
 
 public class NaaradApp extends Application 
 {
@@ -24,6 +25,19 @@ public class NaaradApp extends Application
 	swipeEnabled = b;
     }
 
+    public void makeLocks()
+    {
+	PowerManager wakeLockPM = (PowerManager) getSystemService(POWER_SERVICE);
+	WifiManager wifiLockPM = (WifiManager) getSystemService(WIFI_SERVICE);
+	//if (myWakeLock == null)
+	    {
+		myWakeLock = wakeLockPM.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
+		myWifiLock = wifiLockPM.createWifiLock(WifiManager.WIFI_MODE_FULL, "MyWifiLockTag");
+
+		System.err.println("Making wakelock");
+	    }
+    }
+
     @Override public void onCreate() 
     {
         super.onCreate();
@@ -32,16 +46,7 @@ public class NaaradApp extends Application
 	densityDpi = getResources().getDisplayMetrics().density;
 
 	swipeEnabled=true;
-
-	PowerManager wakeLockPM = (PowerManager) getSystemService(POWER_SERVICE);
-	WifiManager wifiLockPM = (WifiManager) getSystemService(WIFI_SERVICE);
-	if (myWakeLock == null)
-	    {
-		myWakeLock = wakeLockPM.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
-		myWifiLock = wifiLockPM.createWifiLock(WifiManager.WIFI_MODE_FULL, "MyWifiLockTag");
-
-		System.err.println("Making wakelock");
-	    }
+	makeLocks();
     }
     public int dpToPixel(int dp)
     {

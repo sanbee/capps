@@ -673,7 +673,9 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    } 
 	catch (UnknownHostException e) 
 	    {
-		String msg = "Unknown host: "+serverName+":"+Integer.toString(serverPort)+"\nCheck settings";
+		String msg="";
+		if (!isWifiConnected()) msg = "Wifi is not connected.\n";
+		msg = msg + "Unknown host: "+serverName+":"+Integer.toString(serverPort)+"\nCheck settings";
 		return msg;
 	    } 
 	catch (IOException e) 
