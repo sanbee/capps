@@ -36,6 +36,9 @@ import android.text.Spanned;
 import org.json.JSONObject;
 import android.text.Html;
 import android.view.Gravity;
+
+
+
 //public class NaaradControlFragment extends Fragment implements View.OnLongClickListener 
 public class NaaradControlFragment extends NaaradAbstractFragment //implements OnTouchListener
 {
@@ -503,6 +506,15 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    {
 		x=getPreference("bulbX"+String.format("%d",i),-1);
 		y=getPreference("bulbY"+String.format("%d",i),-1);
+		System.err.println("bulb"+i
+				   +" "+((View)bulbArr[i].getParent()).getLeft()
+				   // +" "+bulbArr[i].getTotalPaddingRight()
+				   // +" "+bulbArr[i].getTotalPaddingLeft()
+				   // +" "+bulbArr[i].getTotalPaddingTop()
+				   // +" "+bulbArr[i].getTotalPaddingBottom()
+				   // +" "+xPadding
+				   +" "+myApp.densityDpi
+				   );
 		System.err.println("bulb"+i+" "+x+" "+y);
 		if ((x != -1) && (y != -1))
 		    gDnDParams.moveView(bulbArr[i],x-xMargin,y-yMargin,oX,oY,1.0F,1.0F);
@@ -513,22 +525,26 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		tempBubbleArr[i].measure(MeasureSpec.UNSPECIFIED,MeasureSpec.UNSPECIFIED);
 		int width = tempBubbleArr[i].getMeasuredWidth();
 		int height = tempBubbleArr[i].getMeasuredHeight();
+		width=myApp.dpToPixel(45);//(int)(45*myApp.densityDpi);
+		height=myApp.dpToPixel(25);//(int)(25*myApp.densityDpi);
+		x=getPreference("bubbleX"+String.format("%d",i),-1);
+		y=getPreference("bubbleY"+String.format("%d",i),-1);
+		//int xPadding = 1+tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft();
+		int xPadding = (int)((1+tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft())),//*1.5F/2.0F),
+		    yPadding = (int)((1+tempBubbleArr[i].getTotalPaddingTop()+tempBubbleArr[i].getTotalPaddingBottom()));//*1.5F/2.0F);
 		System.err.println("bubble"+i
 				   +" "+tempBubbleArr[i].getTotalPaddingRight()
 				   +" "+tempBubbleArr[i].getTotalPaddingLeft()
 				   +" "+tempBubbleArr[i].getTotalPaddingTop()
 				   +" "+tempBubbleArr[i].getTotalPaddingBottom()
 				   +" "+((View)tempBubbleArr[i].getParent()).getLeft()
+				   +" "+xPadding+" "+yPadding
+				   +" "+myApp.densityDpi
 				   );
-		width=myApp.dpToPixel(45);//(int)(45*myApp.densityDpi);
-		height=myApp.dpToPixel(25);//(int)(25*myApp.densityDpi);
-		x=getPreference("bubbleX"+String.format("%d",i),-1);
-		y=getPreference("bubbleY"+String.format("%d",i),-1);
-		int xPadding = 1+tempBubbleArr[i].getTotalPaddingRight()+tempBubbleArr[i].getTotalPaddingLeft();
 		if ((x != -1) && (y != -1))
 		    gDnDParams.moveView(tempBubbleArr[i],
 					//x,y,
-					x-xMargin-xPadding,y-yMargin,
+					x-xMargin-xPadding,y-yMargin,//-xPadding,
 					width,height,1.0F,1.0F);
 	    }
 

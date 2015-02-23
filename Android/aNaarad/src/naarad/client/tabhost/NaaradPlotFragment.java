@@ -110,6 +110,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 
     //private DynamicDataSource dataSource;
     private Thread myThread;
+    public NaaradApp myApp;
 
     private XYSeries series0;//, series1;
     //private ArrayList<XYSeries> seriesList;
@@ -138,6 +139,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 
 	setHasOptionsMenu(true);
 	setRetainInstance(true);
+	myApp = (NaaradApp) getActivity().getApplication();
+
 	if (!recreateView(mView)) 
 	    mView = inflater.inflate(R.layout.activity_naarad_plot, container, false);
 
@@ -218,6 +221,11 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	System.err.println("NPF paused");
 	super.onPause();
 	stopDataSource();
+	if (myApp.myWakeLock.isHeld())
+	    {
+		myApp.myWakeLock.release();
+		System.err.println("Releasing wake lock");
+	    }
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -287,6 +295,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	LinearLayout layout = (LinearLayout) mView.findViewById(R.id.chart);
 	LayoutParams lp = new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT);
 	layout.addView(mTimeChartView,0, lp);
+	nConnected=true;
     }
     //
     //-----------------------------------------------------------------------------------------
