@@ -12,6 +12,8 @@ import android.widget.Toast;
 import android.view.Gravity;
 import android.view.View;
 import android.util.Log;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 
 
 public abstract class NaaradAbstractFragment extends Fragment 
@@ -150,5 +152,13 @@ public abstract class NaaradAbstractFragment extends Fragment
 	};
 	
 	mActivity.runOnUiThread(new ToastOnUIThread(msg,gravity));
+    }
+
+    public boolean isWifiConnected()
+    {
+	ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+	NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+	return mWifi.isConnected();
     }
 }
