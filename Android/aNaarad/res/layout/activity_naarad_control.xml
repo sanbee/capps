@@ -25,7 +25,6 @@
      android:text="Lamp1" />
   <ToggleButton
      android:id="@+id/lamp1"
-     style="?android:attr/borderlessButtonStyle"
      android:layout_width="wrap_content"
      android:layout_height="wrap_content"
      android:layout_centerVertical="true"
@@ -48,18 +47,6 @@
      android:textOn="Lamp 2"
      android:textOff="Lamp 2"
      android:text="Lamp3" />
-  <ToggleButton
-     android:id="@+id/plotoverlay"
-     android:layout_width="wrap_content"
-     android:layout_height="wrap_content"
-     android:layout_centerVertical="true"
-     android:layout_alignParentRight="true"
-     android:layout_below="@+id/lamp2"
-     android:minHeight="0dp"
-     android:minWidth="0dp"
-     android:textOn="Plot Off"
-     android:textOff="Plot On "
-     android:text="Plot" />
   
   <ImageView
      android:id="@+id/iv3"
@@ -116,3 +103,17 @@
 <!-- android:src="@drawable/lamp_off_crop" -->
 <!-- android:src="@drawable/ic_launcher_bg" -->
 <!-- android:background="@android:color/transparent" -->
+     <!-- style="?android:attr/borderlessButtonStyle" -->
+
+  <!-- <ToggleButton -->
+  <!--    android:id="@+id/plotoverlay" -->
+  <!--    android:layout_width="wrap_content" -->
+  <!--    android:layout_height="wrap_content" -->
+  <!--    android:layout_centerVertical="true" -->
+  <!--    android:layout_alignParentRight="true" -->
+  <!--    android:layout_below="@+id/lamp2" -->
+  <!--    android:minHeight="0dp" -->
+  <!--    android:minWidth="0dp" -->
+  <!--    android:textOn="Plot Off" -->
+  <!--    android:textOff="Plot On " -->
+  <!--    android:text="Plot" /> -->
