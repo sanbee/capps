@@ -133,6 +133,10 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	//wakeText = (TextView) mView.findViewById(R.id.wakeText);
 	wakeButton = (CheckBox) mView.findViewById(R.id.wake);
 	//	ctView = (CheckedTextView) mView.findViewById(R.id.ctView);
+	
+	// Get the default server and port names.  The
+	// NAF::getDefault{Port,Server}() methods look in the saved
+	// preferences first.
 	serverPortField.setText(Integer.toString(getDefaultPort()));
 	serverNameField.setText(getDefaultServer());
 	wakeButton.setChecked(false);
