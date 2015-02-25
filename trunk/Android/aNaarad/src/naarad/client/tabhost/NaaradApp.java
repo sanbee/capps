@@ -14,6 +14,7 @@ public class NaaradApp extends Application
     public float densityDpi;
     public WakeLock myWakeLock=null;
     public WifiLock myWifiLock=null;
+    public WifiManager myWifiManager=null;
 
     public boolean getSwipeState()
     {
@@ -24,15 +25,21 @@ public class NaaradApp extends Application
     {
 	swipeEnabled = b;
     }
+    
+    public void setWifiState(boolean turnON)
+    {
+	myWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+	myWifiManager.setWifiEnabled(turnON);
+    }
 
     public void makeLocks()
     {
 	PowerManager wakeLockPM = (PowerManager) getSystemService(POWER_SERVICE);
-	WifiManager wifiLockPM = (WifiManager) getSystemService(WIFI_SERVICE);
+	myWifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 	//if (myWakeLock == null)
 	    {
 		myWakeLock = wakeLockPM.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MyWakelockTag");
-		myWifiLock = wifiLockPM.createWifiLock(WifiManager.WIFI_MODE_FULL, "MyWifiLockTag");
+		myWifiLock = myWifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "MyWifiLockTag");
 
 		System.err.println("Making wakelock");
 	    }
