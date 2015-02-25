@@ -38,10 +38,17 @@
        android:text="Set" />
 
     <CheckBox
-       android:id="@+id/wake"
+       android:id="@+id/wifiControl"
        android:layout_width="wrap_content"
        android:layout_height="wrap_content"
        android:layout_below="@+id/setButton"
+       android:text="Turn wifi on/off?" 
+       />
+    <CheckBox
+       android:id="@+id/wake"
+       android:layout_width="wrap_content"
+       android:layout_height="wrap_content"
+       android:layout_below="@+id/wifiControl"
        android:text="Keep CPU + WiFi on in the background?" 
        />
 

@@ -40,12 +40,13 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     private PrintWriter printwriter;
     private EditText serverNameField, serverPortField;
     private Button setButton;
-    private CheckBox wakeButton;
+    private CheckBox wakeButton,wifiControl;
     public NaaradApp myApp;
     //private TextView wakeText;
     //    private CheckedTextView ctView;
     private String message;
     private boolean wifiTurnedOnByMe=false;
+    private int gWifiControl=0;
     private int gServerPort;
     private String gServerName;
     //
@@ -60,6 +61,12 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	if (giveMsg) toast("Wake and Wifi locks released.",Gravity.BOTTOM);
 	setPreference("serverName",gServerName);
 	setPreference("gServerPort",gServerPort);
+	setPreference("wifiControl", gWifiControl);
+	if (wifiTurnedOnByMe) 
+	    {
+		myApp.setWifiState(false);
+		toast("Turning off wifi...",Gravity.BOTTOM);
+	    }
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -73,6 +80,25 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	f.setArguments(b);
 	
 	return f;
+    }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    public void wifiControlClick(CheckBox v)
+    {
+	if (v.isChecked())
+	    {
+		if (!isWifiConnected())
+		    {
+			wifiTurnedOnByMe=true;
+			myApp.setWifiState(true);
+			toast("Turning on wifi...",Gravity.BOTTOM);
+		    }
+		gWifiControl=1;
+	    }
+	else
+	    gWifiControl=0;
+		
     }
     //
     //-----------------------------------------------------------------------------------------
@@ -129,17 +155,29 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	    
 	serverNameField  = (EditText) mView.findViewById(R.id.serverName); // reference to the text field
 	serverPortField  = (EditText) mView.findViewById(R.id.serverPort); // reference to the text field
-	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button
-	//wakeText = (TextView) mView.findViewById(R.id.wakeText);
-	wakeButton = (CheckBox) mView.findViewById(R.id.wake);
-	//	ctView = (CheckedTextView) mView.findViewById(R.id.ctView);
-	
-	// Get the default server and port names.  The
-	// NAF::getDefault{Port,Server}() methods look in the saved
-	// preferences first.
 	serverPortField.setText(Integer.toString(getDefaultPort()));
 	serverNameField.setText(getDefaultServer());
+
+	setButton = (Button)  mView.findViewById(R.id.setButton); // reference to the send button
+
+	wifiControl = (CheckBox) mView.findViewById(R.id.wifiControl);
+	wakeButton = (CheckBox) mView.findViewById(R.id.wake);
 	wakeButton.setChecked(false);
+
+	gWifiControl = getPreference("wifiControl",0);
+	if (gWifiControl == 1)
+	    {
+		wifiControl.setChecked(true);
+		wifiControlClick(wifiControl);
+	    }
+	wifiControl.setOnClickListener(new View.OnClickListener()
+	    {
+		public void onClick(View v)
+		{
+		    wifiControlClick((CheckBox)v);
+		}
+		    
+	    });
 
 	//	if (wakeButton.isChecked()) wakeLockClick(wakeButton);
 	wakeButton.setOnClickListener(new View.OnClickListener()
