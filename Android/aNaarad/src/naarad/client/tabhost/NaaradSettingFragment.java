@@ -92,12 +92,17 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 		    {
 			wifiTurnedOnByMe=true;
 			myApp.setWifiState(true);
-			toast("Turning on wifi...",Gravity.BOTTOM);
+			toast("Turning wifi on...",Gravity.BOTTOM);
 		    }
 		gWifiControl=1;
 	    }
 	else
-	    gWifiControl=0;
+	    {
+		if (isWifiConnected() && wifiTurnedOnByMe)
+		    myApp.setWifiState(false);
+		toast("Turning wifi off...",Gravity.BOTTOM);
+		gWifiControl=0;
+	    }
 		
     }
     //
