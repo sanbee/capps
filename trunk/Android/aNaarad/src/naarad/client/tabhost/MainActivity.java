@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.TabHost.OnTabChangeListener;
 import android.text.Spanned;
 import android.text.Html;
+import android.graphics.Color;
 //import java.lang.Integer;
 /**
  * ---------------------------------------------------------------------------------------Freely inspired by: 
@@ -51,15 +52,19 @@ public class MainActivity extends FragmentActivity implements
 	class mRunnable implements Runnable
 	{
 	    Spanned theText;
-	    public void setText(Spanned thisText) 
+	    String thisColor;
+	    
+	    public void setText(Spanned thisText,String color) 
 	    {
 		theText=thisText;
+		thisColor=color;
 	    }
 	    		
 	    public void run()
 	    {
 		TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-		label.setText(theText);
+		label.setTextColor(Color.parseColor(thisColor));
+		//		label.setText(theText);
 	    }
 	}
 	final Handler hUpdate = new Handler();
@@ -69,19 +74,19 @@ public class MainActivity extends FragmentActivity implements
 	    {
 		public void run() 
 		{
-		    for (int i=0;i<5;i++)
+		    //for (int i=0;i<5;i++)
 			{
-			    Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    rUpdate.setText(tmp);
+			    Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+			    rUpdate.setText(tmp,"green");
 			    hUpdate.post(rUpdate);
 
 			    SystemClock.sleep(500);
 
 			    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    tmp = Html.fromHtml("<p>"+"Sensors<b> "+"</b><font size =\"50\" color=\"yellow\"></font></p>");
-			    rUpdate.setText(tmp);
+			    tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"yellow\"></font></p>");
+			    rUpdate.setText(tmp,"white");
 			    hUpdate.post(rUpdate);
-			    SystemClock.sleep(2000);
+			    //SystemClock.sleep(2000);
 			}
 		}
 	    };
