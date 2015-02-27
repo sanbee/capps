@@ -4,14 +4,18 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.SystemClock;
+// import android.support.v4.view.ViewPager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-// import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.widget.TabHost;
+import android.widget.TextView;
 import android.widget.TabHost.OnTabChangeListener;
+import android.text.Spanned;
+import android.text.Html;
 //import java.lang.Integer;
-
 /**
  * ---------------------------------------------------------------------------------------Freely inspired by: 
  * --------------- http://thepseudocoder.wordpress.com/2011/10/13/android-tabs-viewpager-swipe-able-tabs-ftw/
@@ -34,11 +38,55 @@ public class MainActivity extends FragmentActivity implements
 	// NaaradControlFragment frag = (NaaradControlFragment)
 	//     getSupportFragmentManager()
 	//     .findFragmentById(R.id.viewpager);
+
 	if (frag==null)
 	    System.err.println("$@#%@# - it's NULL!");
 	else
 	    //gControlFragment.setSensorValues(json);
 	    frag.setSensorValues(json);
+
+	//
+	// Give a visual feedback for the arrival of a RF packet.  Blink a dot in the title of the sensor data tab.
+	//
+	class mRunnable implements Runnable
+	{
+	    Spanned theText;
+	    public void setText(Spanned thisText) 
+	    {
+		theText=thisText;
+	    }
+	    		
+	    public void run()
+	    {
+		TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+		label.setText(theText);
+	    }
+	}
+	final Handler hUpdate = new Handler();
+	final mRunnable rUpdate = new mRunnable();
+
+	Thread tUpdate = new Thread() 
+	    {
+		public void run() 
+		{
+		    for (int i=0;i<5;i++)
+			{
+			    Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+			    rUpdate.setText(tmp);
+			    hUpdate.post(rUpdate);
+
+			    SystemClock.sleep(500);
+
+			    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+			    tmp = Html.fromHtml("<p>"+"Sensors<b> "+"</b><font size =\"50\" color=\"yellow\"></font></p>");
+			    rUpdate.setText(tmp);
+			    hUpdate.post(rUpdate);
+			    SystemClock.sleep(2000);
+			}
+		}
+	    };
+
+	tUpdate.start();
     }
 
     // @Override public void onPause()
