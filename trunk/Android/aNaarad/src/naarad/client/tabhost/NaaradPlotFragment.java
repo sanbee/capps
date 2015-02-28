@@ -135,7 +135,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 				       Bundle savedInstanceState) 
     {
 	apiLevel=android.os.Build.VERSION.SDK_INT;
-	Log.i("API Level: ",android.os.Build.VERSION.RELEASE+" "+Integer.toString(apiLevel));
+	//Log.i("API Level: ",android.os.Build.VERSION.RELEASE+" "+Integer.toString(apiLevel));
 
 	setHasOptionsMenu(true);
 	setRetainInstance(true);
@@ -350,6 +350,9 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		// else
 		//     mUpdateTask0.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
 	    }
+			String tmp="{\"degc\":10.0, \"node_v\":2.9, \"node_p\":-30, \"node_id\":1}";
+			tmp="{\"rf_fail\":1}";
+			mMainActivityCallback.onDataArrival(tmp);			
 	// if ((n==1) || (n==-1))
 	//     {
 	// 	if (mUpdateTask1 != null) mUpdateTask1.cancel(true);
@@ -412,6 +415,47 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	protected int nodeid;
 	private boolean allDone=false;
 
+	public String reader(BufferedReader socReader)
+	{
+	    String message = "";
+	    int charsRead = 0;
+	    char[] buffer = new char[1024];
+	    char oneChar;
+	    // socReader.read() is a blocking call, which is
+	    // what we want since this is in a separate thread and
+	    // all that this thread does is wait for data to arrive,
+	    // and supply it to the plotter
+	    try
+		{
+		    while (((int)(oneChar = (char)socReader.read()) != -1) &&
+			   (charsRead < 1024)
+			   )
+			{
+			    if (oneChar != '}') 
+				{
+				    message += oneChar;
+				    charsRead++;
+				}
+			    else break;
+			}
+		    if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
+		    message += oneChar + "\n";
+		    return message;
+		}
+	    catch (IOException e) 
+		{
+		    String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+		    uiToast(msg,Gravity.BOTTOM);
+		    return msg;
+		}
+	    catch (JSONException e) 
+		{
+		    //throw new RuntimeException(e);
+		    System.err.println(e.getMessage());
+		    uiToast(e.getMessage(),Gravity.BOTTOM);
+		    return e.getMessage();
+		}
+	};
 	public void finish() {allDone=true;};
 	@Override protected String doInBackground(XYSeries... params) 
 	    {
