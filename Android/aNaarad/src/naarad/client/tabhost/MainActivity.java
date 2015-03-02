@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.SystemClock;
 // import android.support.v4.view.ViewPager;
 import android.support.v4.app.Fragment;
@@ -51,10 +52,11 @@ public class MainActivity extends FragmentActivity implements
 	//
 	class mRunnable implements Runnable
 	{
-	    Spanned theText;
-	    String thisColor;
+	    //Spanned theText;
+	    String theText, thisColor;
+
 	    
-	    public void setText(Spanned thisText,String color) 
+	    public void setText(String thisText,String color) 
 	    {
 		theText=thisText;
 		thisColor=color;
@@ -67,7 +69,7 @@ public class MainActivity extends FragmentActivity implements
 		//		label.setText(theText);
 	    }
 	}
-	final Handler hUpdate = new Handler();
+	final Handler hUpdate = new Handler(Looper.getMainLooper());
 	final mRunnable rUpdate = new mRunnable();
 
 	Thread tUpdate = new Thread() 
@@ -76,21 +78,29 @@ public class MainActivity extends FragmentActivity implements
 		{
 		    //for (int i=0;i<5;i++)
 			{
-			    Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    rUpdate.setText(tmp,"green");
+			    
+			    // TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+			    // int defColor = label.getCurrentTextColor();
+			    // //String hexColor = String.format("#%06X", (0xFFFFFF & defColor));
+			    // String hexColor = Integer.toHexString(defColor);
+
+			    //Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+			    rUpdate.setText("Sensors","green");
 			    hUpdate.post(rUpdate);
 
-			    SystemClock.sleep(500);
+			    SystemClock.sleep(100);
 
 			    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"yellow\"></font></p>");
-			    rUpdate.setText(tmp,"white");
+			    //tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"yellow\"></font></p>");
+
+			    rUpdate.setText("Sensors","white");
+			    //rUpdate.setText(tmp,hexColor);
+
 			    hUpdate.post(rUpdate);
 			    //SystemClock.sleep(2000);
 			}
 		}
 	    };
-
 	tUpdate.start();
     }
 

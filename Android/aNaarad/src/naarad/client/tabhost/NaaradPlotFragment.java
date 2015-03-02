@@ -54,6 +54,8 @@ import org.json.JSONException;
 import java.util.Map;
 import java.util.HashMap;
 import android.view.Gravity;
+//import android.widget.TabHost;
+
 
 // class DynamicDataSource implements Runnable 
 // {
@@ -117,6 +119,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     private XYSeriesRenderer renderer0;//,renderer1;
     protected Update mUpdateTask0, mUpdateTask1;
     protected SensorDataSource mSensorDataSource;
+    //protected SensorDataSourceSim mSensorDataSource;
     protected ArrayList<Update> TaskList;
     protected Map nodeID2Ndx;
 
@@ -128,6 +131,25 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
         /** Called by NaaradPlotFragment when OTA RF data arrives */
         public void onDataArrival(String json);
     }
+    //
+    //-----------------------------------------------------------------------------------------
+    //
+    //    @Override public void onViewCreated(View v, Bundle b) 
+    // @Override public void onActivityCreated(Bundle b) 
+    // {
+    // 	//super.onViewCreated(v,b);
+    // 	super.onActivityCreated(b);
+    // 	TextView tabLabel;
+    // 	//TabHost myTabHost = (TabHost) mView.findViewById(android.R.id.tabhost);
+    // 	TabHost myTabHost = ((MainActivity)getActivity()).getTabHost();
+    // 	if (myTabHost == null)
+    // 	    System.err.println("tabhost == null");
+    // 	else
+    // 	    {
+    // 		tabLabel = (TextView) myTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+    // 		tabLabel.setText("Sensors.");
+    // 	    }
+    // }
     //
     //-----------------------------------------------------------------------------------------
     //
@@ -143,6 +165,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 
 	if (!recreateView(mView)) 
 	    mView = inflater.inflate(R.layout.activity_naarad_plot, container, false);
+	
 
         // This makes sure that the container activity has implemented
         // the callback interface. If not, it throws an exception.
@@ -336,7 +359,9 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		//AsyncTask is not re-usable.  If it needs to be
 		//re-used, it has to be construction afresh.  if
 		//(mSensorDataSource == null)
+
 		mSensorDataSource = new SensorDataSource();
+		//mSensorDataSource = new SensorDataSourceSim();
 
 		if (apiLevel <= 9) mSensorDataSource.execute(mDataset.getSeriesAt(0));
 		else               mSensorDataSource.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
@@ -350,9 +375,6 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		// else
 		//     mUpdateTask0.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
 	    }
-			String tmp="{\"degc\":10.0, \"node_v\":2.9, \"node_p\":-30, \"node_id\":1}";
-			tmp="{\"rf_fail\":1}";
-			mMainActivityCallback.onDataArrival(tmp);			
 	// if ((n==1) || (n==-1))
 	//     {
 	// 	if (mUpdateTask1 != null) mUpdateTask1.cancel(true);
@@ -415,9 +437,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	protected int nodeid;
 	private boolean allDone=false;
 
-	public String reader(BufferedReader socReader)
+	public int naaradReader(BufferedReader socReader, String message) throws IOException
 	{
-	    String message = "";
 	    int charsRead = 0;
 	    char[] buffer = new char[1024];
 	    char oneChar;
@@ -440,23 +461,24 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			}
 		    if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
 		    message += oneChar + "\n";
-		    return message;
+		    return charsRead;
 		}
-	    catch (IOException e) 
-		{
-		    String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-		    uiToast(msg,Gravity.BOTTOM);
-		    return msg;
-		}
+	    // catch (IOException e) 
+	    // 	{
+	    // 	    String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+	    // 	    uiToast(msg,Gravity.BOTTOM);
+	    // 	    return msg;
+	    // 	}
 	    catch (JSONException e) 
-		{
-		    //throw new RuntimeException(e);
-		    System.err.println(e.getMessage());
-		    uiToast(e.getMessage(),Gravity.BOTTOM);
-		    return e.getMessage();
-		}
+	    	{
+	    	    //throw new RuntimeException(e);
+	    	    System.err.println(e.getMessage());
+	    	    uiToast(e.getMessage(),Gravity.BOTTOM);
+	    	    return -1;
+	    	}
 	};
 	public void finish() {allDone=true;};
+
 	@Override protected String doInBackground(XYSeries... params) 
 	    {
 		String retStr="AllOK";
@@ -470,19 +492,21 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			SystemClock.sleep(500);
 			allDone=false;
 			nConnected=true;
+			String message="";
 			while(true && !allDone)
 			    {
 				//if (isCancelled()) {retStr="Done";return retStr;}
 				//if (socReader.ready())
 				    {
-					String message = "";
+					message = "";
 					int charsRead = 0;
-					char[] buffer = new char[1024];
+					//char[] buffer = new char[1024];
 					char oneChar;
 					// socReader.read() is a blocking call, which is
 					// what we want since this is in a separate thread and
 					// all that this thread does is wait for data to arrive,
 					// and supply it to the plotter
+
 					while (((int)(oneChar = (char)socReader.read()) != -1) &&
 					       (charsRead < 1024)
 					       )
@@ -582,6 +606,171 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		//     {
 		// 	System.err.println("IOException caught in SensorDataSource::onCancelled()");
 		//     }
+		super.onCancelled();
+	    }
+    }
+
+    protected class SensorDataSourceSim extends AsyncTask<XYSeries, XYSeries, String> 
+    {
+	protected Socket clientSoc;
+	protected PrintWriter socWriter;
+	protected BufferedReader socReader;
+	protected float temp, svolt, rssi;
+	protected int nodeid;
+	private boolean allDone=false;
+	private String message = "";
+
+	public String naaradReader()
+	{
+	    String message="";
+	    SystemClock.sleep(6000);
+	    message="";
+	    message = "10 {\"rf_fail\":0,\"degc\":10.10,\"node_v\":2.2,\"node_p\":-50,\"node_id\":1 }";
+	    System.err.println("M: "+message);
+	    int charsRead = message.length();
+	    return message;
+	};
+	public void finish() {allDone=true;};
+
+	@Override protected String doInBackground(XYSeries... params) 
+	    {
+		String retStr="AllOK";
+		//try 
+		    {
+			// clientSoc = new Socket(getServerName(), getServerPort());
+			// socWriter = new PrintWriter(clientSoc.getOutputStream(), true);
+			// socReader = new BufferedReader(new InputStreamReader(clientSoc.getInputStream()));
+			// socWriter.write(mkMessage("SensorDataSink"));
+			// socWriter.flush();
+			SystemClock.sleep(500);
+			allDone=false;
+			nConnected=true;
+			//Handler mHandler = new Handler(Looper.getMainLooper());
+
+			// class mRunnable implements Runnable
+			// {
+			//     String theText;
+			//     String thisColor;
+	    
+			//     public void setText(String thisText,String color) 
+			//     {
+			// 	theText=thisText;
+			// 	thisColor=color;
+			//     }
+	    		
+			//     public void run()
+			//     {
+			// 	TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+			// 	label.setTextColor(Color.parseColor(thisColor));
+			// 	//		label.setText(theText);
+			//     }
+			// }
+			// final Handler hUpdate = new Handler(Looper.getMainLooper());
+			// final mRunnable rUpdate = new mRunnable();
+
+			// Thread tUpdate = new Thread() 
+			//     {
+			// 	public void run() 
+			// 	{
+			// 	    //for (int i=0;i<5;i++)
+			// 	    {
+			// 		String tmp = "Sensors";
+			// 		rUpdate.setText(tmp,"green");
+			// 		hUpdate.post(rUpdate);
+
+			// 		SystemClock.sleep(500);
+
+			// 		rUpdate.setText(tmp,"white");
+			// 		hUpdate.post(rUpdate);
+			// 		//SystemClock.sleep(2000);
+			// 	    }
+			// 	}
+			//     };
+			// tUpdate.start();
+
+
+
+
+
+
+
+
+			while(true && !allDone)
+			    {
+				{
+				    int charsRead = 0;
+				    char[] buffer = new char[1024];
+				    char oneChar;
+				    // socReader.read() is a blocking call, which is
+				    // what we want since this is in a separate thread and
+				    // all that this thread does is wait for data to arrive,
+				    // and supply it to the plotter
+				    
+				    while ((message = naaradReader()) != null)
+					{
+					    System.err.println("message="+message);
+					    break;
+					}
+				    try 
+					{
+					    //if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
+					    //message += oneChar + "\n";
+					    String[] tokens = message.split(" ");
+					    String jsonStr="";
+					    for (int j=1;j<3;j++) jsonStr += tokens[j];
+					    //System.err.println("JSON: "+jsonStr);
+					    //mMainActivityCallback.onDataArrival(jsonStr);
+					    JSONObject json = new JSONObject(jsonStr);
+					    if (json.getInt("rf_fail") == 0) // Indicates that the packet is valid
+						{
+						    temp   = (float)json.getDouble("degc");
+						    svolt  = (float)json.getDouble("node_v");
+						    rssi   = (float)json.getDouble("node_p");
+						    nodeid = json.getInt("node_id");
+						}
+					    else
+						throw(new JSONException("Packet invalid (rf_fail=1)"));
+					    mMainActivityCallback.onDataArrival(jsonStr);
+					}
+				    catch (JSONException e) 
+					{
+					    //throw new RuntimeException(e);
+					    System.err.println(e.getMessage());
+					    uiToast(e.getMessage(),Gravity.BOTTOM);
+					    cancel(true);
+					}
+				    // catch (RuntimeException e)
+				    //     {
+				    // 	System.err.println(e.getMessage());
+				    // 	uiToast(e.getMessage(),Gravity.BOTTOM);
+				    // 	cancel(true);
+				    //     }
+				    
+				    //System.err.println("Read "+temp+" "+nodeid+" "+svolt+" "+rssi);
+				}
+			    }
+		    }
+		
+		    //try 
+		    {
+			// socWriter.write(mkMessage("done"));
+			// socWriter.flush();
+			// clientSoc.close();
+			SystemClock.sleep(500);
+			nConnected=false;
+		    }
+		// catch (IOException e) 
+		//     {
+		// 	String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+		// 	uiToast(msg,Gravity.BOTTOM);
+		// 	return msg;
+		//     }
+
+		return retStr;
+	    }
+	@Override protected void onCancelled() 
+	    {
+		finish();
 		super.onCancelled();
 	    }
     }
