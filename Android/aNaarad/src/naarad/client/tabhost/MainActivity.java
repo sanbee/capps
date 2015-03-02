@@ -32,7 +32,8 @@ public class MainActivity extends FragmentActivity implements
     private MyViewPager mViewPager=null;
     private TabHost mTabHost;
     private NaaradControlFragment gControlFragment;
-    
+    //private int defTextColor1;
+
     public void onDataArrival(String json)
     {
 	//System.err.println("From MainActivity: "+json);
@@ -48,60 +49,84 @@ public class MainActivity extends FragmentActivity implements
 	    frag.setSensorValues(json);
 
 	//
-	// Give a visual feedback for the arrival of a RF packet.  Blink a dot in the title of the sensor data tab.
+	// Give a visual feedback for the arrival of a RF packet.
+	// Blink a dot in the title of the sensor data tab.  
+	//
+	// This is done by (1) creating a Handler attached to the
+	// looper in the UI thread, (2) making a Runnable object with
+	// the code to change the text of the tab label, (3) setting
+	// the Runnable with the label text, posting it and again
+	// setting up the Runnable with a "." in the label and posting
+	// it with a delay of 200 ms.  These posts via the Handler are
+	// queued and executed in the UI thread.
 	//
 	class mRunnable implements Runnable
 	{
 	    //Spanned theText;
-	    String theText, thisColor;
-
+	    String theText;
+	    String thisColor;
+	    //int iThisColor;
 	    
-	    public void setText(String thisText,String color) 
+	    public void setText(//Spanned thisText,
+				String thisText,
+				String color
+				//int iColor
+				) 
 	    {
 		theText=thisText;
 		thisColor=color;
+		//iThisColor=iColor;
 	    }
 	    		
 	    public void run()
 	    {
 		TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-		label.setTextColor(Color.parseColor(thisColor));
-		//		label.setText(theText);
+		if (thisColor != "") 
+		    label.setTextColor(Color.parseColor(thisColor));
+		//label.setTextColor(iThisColor);
+		
+		label.setText(theText);
 	    }
 	}
 	final Handler hUpdate = new Handler(Looper.getMainLooper());
 	final mRunnable rUpdate = new mRunnable();
+	rUpdate.setText("Sensors.","");	hUpdate.post(rUpdate);
+	rUpdate.setText("Sensors ","");	hUpdate.postDelayed(rUpdate, 200);
 
-	Thread tUpdate = new Thread() 
-	    {
-		public void run() 
-		{
-		    //for (int i=0;i<5;i++)
-			{
-			    
-			    // TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-			    // int defColor = label.getCurrentTextColor();
-			    // //String hexColor = String.format("#%06X", (0xFFFFFF & defColor));
-			    // String hexColor = Integer.toHexString(defColor);
 
-			    //Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    rUpdate.setText("Sensors","green");
-			    hUpdate.post(rUpdate);
+	// Thread tUpdate = new Thread() 
+	//     {
+	// 	public void run() 
+	// 	{
+	// 	    // TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+	// 	    // int defColor = label.getCurrentTextColor();
+		    
+	// 	    // //String hexColor = String.format("#%06X", (0xFFFFFF & defColor));
+	// 	    // String hexColor = Integer.toHexString(defColor);
 
-			    SystemClock.sleep(100);
+	// 	    //Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>."+"</b><font size =\"50\" color=\"green\"></font></p>");
+	// 	    //rUpdate.setText("Sensors","green");
+	// 	    //rUpdate.setText("Sensors.",Color.parseColor("green"));
+	// 	    //rUpdate.setText(tmp,"");
+	// 	    rUpdate.setText("Sensors.","");
+	// 	    hUpdate.post(rUpdate);
 
-			    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-			    //tmp = Html.fromHtml("<p>"+"Sensors<b>"+"</b><font size =\"50\" color=\"yellow\"></font></p>");
-
-			    rUpdate.setText("Sensors","white");
-			    //rUpdate.setText(tmp,hexColor);
-
-			    hUpdate.post(rUpdate);
-			    //SystemClock.sleep(2000);
-			}
-		}
-	    };
-	tUpdate.start();
+	// 	    //SystemClock.sleep(200);
+		    
+	// 	    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+	// 	    //tmp = Html.fromHtml("<p>"+"Sensors<b> "+"</b><font size =\"50\" color=\"white\"></font></p>");
+		    
+	// 	    //rUpdate.setText("Sensors","white");
+	// 	    //rUpdate.setText("Sensors",defTextColor1);
+	// 	    //rUpdate.setText("Sensors ",Color.parseColor("white"));
+	// 	    //rUpdate.setText(tmp,"");
+	// 	    rUpdate.setText("Sensors ","");
+		    
+	// 	    //hUpdate.post(rUpdate);
+	// 	    hUpdate.postDelayed(rUpdate,200);
+	// 	}
+	//     };
+	//tUpdate.start();
     }
 
     // @Override public void onPause()
@@ -149,10 +174,8 @@ public class MainActivity extends FragmentActivity implements
     {
 	int pos = this.mTabHost.getCurrentTab();
 	this.mViewPager.setCurrentItem(pos);
-    }
-    
-    @Override public void onPageScrollStateChanged(int arg0) 
-    {
+	// TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
+	// defTextColor1 = label.getCurrentTextColor();
     }
     
     // Manages the Page changes, synchronizing it with Tabs
@@ -169,9 +192,6 @@ public class MainActivity extends FragmentActivity implements
 	// fragmentTransaction.commit();
     }
     
-    @Override public void onPageSelected(int arg0) 
-    {
-    }
     
     private List<Fragment> getFragments() 
     {
@@ -216,4 +236,10 @@ public class MainActivity extends FragmentActivity implements
 	mTabHost.getTabWidget().getChildAt(2).getLayoutParams().height =40;
 	mTabHost.setOnTabChangedListener(this);
     }
+    //
+    // MainActivity is an abstract class and the following methods
+    // needs an implementation.
+    //
+    @Override public void onPageScrollStateChanged(int arg0) {}
+    @Override public void onPageSelected(int arg0) {}
 }
