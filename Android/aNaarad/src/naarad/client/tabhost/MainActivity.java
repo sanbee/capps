@@ -34,23 +34,25 @@ public class MainActivity extends FragmentActivity implements
     private NaaradControlFragment gControlFragment;
     private TextView b1;
     private TextView tab1Label;
-    private Handler hUpdate;
+    private Handler gUIHandler;
+    private mRunnable gRunnableBlinker;
+
+    // This class depends on private variables b1 nd tab1Label.
+    class mRunnable implements Runnable
+    {
+	String theText=null;
+	int theColor;
+	    
+	public void setText(String thisText, int thisColor) 
+	{theText=thisText; theColor=thisColor;}
+	
+	public void run()
+	{b1.setTextColor(theColor);tab1Label.setText(theText);}
+    }
 
     public void onDataArrival(String json)
     {
-	//NaaradControlFragment frag = (NaaradControlFragment)pageAdapter.getItem(0);
-	// NaaradControlFragment frag = (NaaradControlFragment)
-	//     getSupportFragmentManager()
-	//     .findFragmentById(R.id.viewpager);
-
-	// if (frag==null)
-	//     System.err.println("$@#%@# - it's NULL!");
-	// else
-	//     //gControlFragment.setSensorValues(json);
-	//     frag.setSensorValues(json);
-
-	b1 = (TextView) gControlFragment.setSensorValues(json);
-
+	//System.err.println("MainActivity::onDataArrival()");
 	//
 	// Give a visual feedback for the arrival of a RF packet.
 	// Blink a dot in the title of the sensor data tab.  
@@ -63,105 +65,23 @@ public class MainActivity extends FragmentActivity implements
 	// it with a delay of 200 ms.  These posts via the Handler are
 	// queued and executed in the UI thread.
 	//
-	class mRunnable implements Runnable
-	{
-	    //Spanned theSText=null;
-	    String theText=null;
-	    int thisColor;
-	    
-	    public void setText(String thisText, int color) 
-	    {
-		theText=thisText;
-		thisColor=color;
-	    }
-	    // public void setText(Spanned thisText,
-	    // 			int color
-	    // 			) 
-	    // {
-	    // 	theSText=thisText;
-	    // 	thisColor=color;
-	    // 	//iThisColor=iColor;
-	    // }
-	    		
-	    public void run()
-	    {
-		b1.setTextColor(thisColor);
-		// //b1.getBackground().setAlpha(thisAlpha);
-		// if (thisAlpha == 0)
-		//     {
-		// 	//b1.setBackgroundColor(Color.GREEN);
-		// 	//b1.setBackgroundResource(R.drawable.speech_bubble_green);
-		// 	// String text=b1.getText().toString();
-		// 	// theSText = Html.fromHtml("<p><b>"+text+"<sup>.</sup></b></p>");
-		// 	// b1.setText(theSText); theSText=null;
-		// 	b1.setTextColor(Color.GREEN);
-		//     }
-		// else
-		//     {
-		// 	//b1.setBackgroundColor(Color.RED);
-		// 	//b1.setBackgroundResource(R.drawable.speech_bubble_l_orange);
-		
-		// 	// String text=b1.getText().toString();
-		// 	// theSText = Html.fromHtml("<p><b>"+text+"</b></p>");
-		// 	// b1.setText(theSText); theSText=null;
-		// 	b1.setTextColor(Color.WHITE);
-		//     }
+	// Hold the TextView that this JSON string referrs to.
+	b1 = (TextView) gControlFragment.setSensorValues(json);
 
-		// if (theSText != null) label.setText(theSText);
-		// else                  
-		tab1Label.setText(theText);
-	    }
-	}
-	// final Handler hUpdate = new Handler(Looper.getMainLooper());
-	final mRunnable rUpdate = new mRunnable();
-
-	rUpdate.setText("Sensors .",Color.GREEN); hUpdate.post(rUpdate);
-	rUpdate.setText("Sensors  ",Color.WHITE); hUpdate.postDelayed(rUpdate, 250);
-	//Spanned tmp = Html.fromHtml("<p>Sensors<b> .</b></p>");
-	//rUpdate.setText(tmp,"");	hUpdate.post(rUpdate);
-	//	tmp = Html.fromHtml("<p>Sensors<b>  </b></p>");
-	//rUpdate.setText(tmp,"");	hUpdate.postDelayed(rUpdate, 250);
-
-
-	// Thread tUpdate = new Thread() 
-	//     {
-	// 	public void run() 
-	// 	{
-	// 	    // TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-	// 	    // int defColor = label.getCurrentTextColor();
-		    
-	// 	    // //String hexColor = String.format("#%06X", (0xFFFFFF & defColor));
-	// 	    // String hexColor = Integer.toHexString(defColor);
-
-	// 	    //Spanned tmp = Html.fromHtml("<p>"+"Sensors<b>."+"</b><font size =\"50\" color=\"green\"></font></p>");
-	// 	    //rUpdate.setText("Sensors","green");
-	// 	    //rUpdate.setText("Sensors.",Color.parseColor("green"));
-	// 	    //rUpdate.setText(tmp,"");
-	// 	    rUpdate.setText("Sensors.","");
-	// 	    hUpdate.post(rUpdate);
-
-	// 	    //SystemClock.sleep(200);
-		    
-	// 	    //tmp = Html.fromHtml("<p><b>"+"Sensors."+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
-	// 	    //tmp = Html.fromHtml("<p>"+"Sensors<b> "+"</b><font size =\"50\" color=\"white\"></font></p>");
-		    
-	// 	    //rUpdate.setText("Sensors","white");
-	// 	    //rUpdate.setText("Sensors",defTextColor1);
-	// 	    //rUpdate.setText("Sensors ",Color.parseColor("white"));
-	// 	    //rUpdate.setText(tmp,"");
-	// 	    rUpdate.setText("Sensors ","");
-		    
-	// 	    //hUpdate.post(rUpdate);
-	// 	    hUpdate.postDelayed(rUpdate,200);
-	// 	}
-	//     };
-	//tUpdate.start();
+	gRunnableBlinker.setText("Sensors .",Color.GREEN); gUIHandler.post(gRunnableBlinker);
+	gRunnableBlinker.setText("Sensors  ",Color.WHITE); gUIHandler.postDelayed(gRunnableBlinker, 250);
     }
 
     // @Override public void onPause()
     // {
     // 	super.onPause();
     // 	System.err.println("MainActivity::onPause()");
+    // 	b1=null;
+    // 	gBlinker=null;
+    // 	gUIHandler=null;
+    // 	gControlFragment=null;
+    // 	mTabHost=null;
+    // 	mViewPager=null;
     // }
 
     @Override protected void onResume()
@@ -189,7 +109,8 @@ public class MainActivity extends FragmentActivity implements
 	// ((NaaradControlFragment)fragments.get(0)).setViewPager(this.mViewPager);
 	// ((NaaradControlFragment)fragments.get(0)).setActivity(this);
 
-	hUpdate = new Handler(Looper.getMainLooper());
+	gUIHandler = new Handler(Looper.getMainLooper());
+	gRunnableBlinker = new mRunnable();
     }
     
     // Method to add a TabHost
