@@ -205,10 +205,14 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		    if (on) 
 		    	{
 			    //makeChart(mRenderer,mDataset);
+			    nConnected=true;
 			    startAllCharts(-1);
 		    	}
 		    else 
-			stopAllCharts(1);
+			{
+			    nConnected=false;
+			    stopAllCharts(1);
+			}
 		    ((ToggleButton)v).setChecked(nConnected);
 		}
 	    };
