@@ -46,7 +46,7 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
     //    private CheckedTextView ctView;
     private String message;
     private boolean wifiTurnedOnByMe=false;
-    private int gWifiControl=0;
+    private int gWifiControl=0, gWakeLockControl=0;
     private int gServerPort;
     private String gServerName;
     //
@@ -62,6 +62,7 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	setPreference("serverName",gServerName);
 	setPreference("gServerPort",gServerPort);
 	setPreference("wifiControl", gWifiControl);
+	setPreference("wakeControl", gWakeLockControl);
 	if (wifiTurnedOnByMe) 
 	    {
 		myApp.setWifiState(false);
@@ -117,19 +118,21 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 			if (!myApp.myWakeLock.isHeld()) myApp.myWakeLock.acquire();
 			if (!myApp.myWifiLock.isHeld()) myApp.myWifiLock.acquire();
 			toast("Wake and Wifi locks set.",Gravity.BOTTOM);
-			
+			gWakeLockControl=1;
 			//System.err.println("Checked");
 		    }
 		else
 		    {
 			if (myApp.myWakeLock.isHeld()) myApp.myWakeLock.release();
 			if (myApp.myWifiLock.isHeld()) myApp.myWifiLock.release();
+			gWakeLockControl=0;
 			//System.err.println("UnChecked");
 		    }
 	    }
 	else
 	    {
 		v.setChecked(false);
+		gWakeLockControl=0;
 		toast("Wifi not connected.\nWake and Wifi locks not set.",Gravity.BOTTOM);
 	    }
     }
@@ -169,8 +172,7 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	wakeButton = (CheckBox) mView.findViewById(R.id.wake);
 	wakeButton.setChecked(false);
 
-	gWifiControl = getPreference("wifiControl",0);
-	if (gWifiControl == 1)
+	if ((gWifiControl = getPreference("wifiControl",0)) == 1)
 	    {
 		wifiControl.setChecked(true);
 		wifiControlClick(wifiControl);
@@ -185,6 +187,12 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	    });
 
 	//	if (wakeButton.isChecked()) wakeLockClick(wakeButton);
+	if ((gWakeLockControl = getPreference("wakeControl",0)) == 1)
+	    {
+		wakeButton.setChecked(true);
+		wakeLockClick(wakeButton);
+	    }
+
 	wakeButton.setOnClickListener(new View.OnClickListener()
 	    {
 		public void onClick(View v)

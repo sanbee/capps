@@ -90,8 +90,8 @@ public class MainActivity extends FragmentActivity implements
 	}
 	final Handler hUpdate = new Handler(Looper.getMainLooper());
 	final mRunnable rUpdate = new mRunnable();
-	rUpdate.setText("Sensors.","");	hUpdate.post(rUpdate);
-	rUpdate.setText("Sensors ","");	hUpdate.postDelayed(rUpdate, 200);
+	rUpdate.setText("Sensors .","");	hUpdate.post(rUpdate);
+	rUpdate.setText("Sensors  ","");	hUpdate.postDelayed(rUpdate, 250);
 
 
 	// Thread tUpdate = new Thread() 
@@ -228,7 +228,7 @@ public class MainActivity extends FragmentActivity implements
 	MainActivity.AddTab(this, this.mTabHost,
 			    this.mTabHost.newTabSpec("Controls").setIndicator("Controls"));
 	MainActivity.AddTab(this, this.mTabHost,
-			    this.mTabHost.newTabSpec("Sensors").setIndicator("Sensors"));
+			    this.mTabHost.newTabSpec("Sensors  ").setIndicator("Sensors  "));
 	MainActivity.AddTab(this, this.mTabHost,
 			    this.mTabHost.newTabSpec("Settings").setIndicator("Settings"));
 	mTabHost.getTabWidget().getChildAt(0).getLayoutParams().height =40;
