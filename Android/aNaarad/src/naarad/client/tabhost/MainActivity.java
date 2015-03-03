@@ -33,7 +33,8 @@ public class MainActivity extends FragmentActivity implements
     private TabHost mTabHost;
     private NaaradControlFragment gControlFragment;
     private TextView b1;
-    //private int defTextColor1;
+    private TextView tab1Label;
+    private Handler hUpdate;
 
     public void onDataArrival(String json)
     {
@@ -64,28 +65,26 @@ public class MainActivity extends FragmentActivity implements
 	//
 	class mRunnable implements Runnable
 	{
-	    Spanned theSText=null;
+	    //Spanned theSText=null;
 	    String theText=null;
 	    int thisColor;
 	    
-	    public void setText(String thisText,
-				int color) 
+	    public void setText(String thisText, int color) 
 	    {
 		theText=thisText;
 		thisColor=color;
 	    }
-	    public void setText(Spanned thisText,
-				int color
-				) 
-	    {
-		theSText=thisText;
-		thisColor=color;
-		//iThisColor=iColor;
-	    }
+	    // public void setText(Spanned thisText,
+	    // 			int color
+	    // 			) 
+	    // {
+	    // 	theSText=thisText;
+	    // 	thisColor=color;
+	    // 	//iThisColor=iColor;
+	    // }
 	    		
 	    public void run()
 	    {
-		TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
 		b1.setTextColor(thisColor);
 		// //b1.getBackground().setAlpha(thisAlpha);
 		// if (thisAlpha == 0)
@@ -108,11 +107,12 @@ public class MainActivity extends FragmentActivity implements
 		// 	b1.setTextColor(Color.WHITE);
 		//     }
 
-		if (theSText != null) label.setText(theSText);
-		else                  label.setText(theText);
+		// if (theSText != null) label.setText(theSText);
+		// else                  
+		tab1Label.setText(theText);
 	    }
 	}
-	final Handler hUpdate = new Handler(Looper.getMainLooper());
+	// final Handler hUpdate = new Handler(Looper.getMainLooper());
 	final mRunnable rUpdate = new mRunnable();
 
 	rUpdate.setText("Sensors .",Color.GREEN); hUpdate.post(rUpdate);
@@ -188,6 +188,8 @@ public class MainActivity extends FragmentActivity implements
 
 	// ((NaaradControlFragment)fragments.get(0)).setViewPager(this.mViewPager);
 	// ((NaaradControlFragment)fragments.get(0)).setActivity(this);
+
+	hUpdate = new Handler(Looper.getMainLooper());
     }
     
     // Method to add a TabHost
@@ -231,7 +233,8 @@ public class MainActivity extends FragmentActivity implements
 	NaaradControlFragment f1 = NaaradControlFragment.newInstance("Naarad Control Fragment");
         // Capture the article fragment from the activity layout
         gControlFragment = f1;
-	
+	tab1Label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title);
+
 	//MySampleFragment f2 = MySampleFragment.newInstance("Sample Fragment 2");
 	NaaradPlotFragment    f2 = NaaradPlotFragment.newInstanceNPF("Naarad Plot Fragment");
 
