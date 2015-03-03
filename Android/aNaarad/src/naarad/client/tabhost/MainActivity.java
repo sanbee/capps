@@ -32,21 +32,23 @@ public class MainActivity extends FragmentActivity implements
     private MyViewPager mViewPager=null;
     private TabHost mTabHost;
     private NaaradControlFragment gControlFragment;
+    private TextView b1;
     //private int defTextColor1;
 
     public void onDataArrival(String json)
     {
-	//System.err.println("From MainActivity: "+json);
-	NaaradControlFragment frag = (NaaradControlFragment)pageAdapter.getItem(0);
+	//NaaradControlFragment frag = (NaaradControlFragment)pageAdapter.getItem(0);
 	// NaaradControlFragment frag = (NaaradControlFragment)
 	//     getSupportFragmentManager()
 	//     .findFragmentById(R.id.viewpager);
 
-	if (frag==null)
-	    System.err.println("$@#%@# - it's NULL!");
-	else
-	    //gControlFragment.setSensorValues(json);
-	    frag.setSensorValues(json);
+	// if (frag==null)
+	//     System.err.println("$@#%@# - it's NULL!");
+	// else
+	//     //gControlFragment.setSensorValues(json);
+	//     frag.setSensorValues(json);
+
+	b1 = (TextView) gControlFragment.setSensorValues(json);
 
 	//
 	// Give a visual feedback for the arrival of a RF packet.
@@ -62,18 +64,21 @@ public class MainActivity extends FragmentActivity implements
 	//
 	class mRunnable implements Runnable
 	{
-	    //Spanned theText;
-	    String theText;
-	    String thisColor;
-	    //int iThisColor;
+	    Spanned theSText=null;
+	    String theText=null;
+	    int thisColor;
 	    
-	    public void setText(//Spanned thisText,
-				String thisText,
-				String color
-				//int iColor
-				) 
+	    public void setText(String thisText,
+				int color) 
 	    {
 		theText=thisText;
+		thisColor=color;
+	    }
+	    public void setText(Spanned thisText,
+				int color
+				) 
+	    {
+		theSText=thisText;
 		thisColor=color;
 		//iThisColor=iColor;
 	    }
@@ -81,17 +86,41 @@ public class MainActivity extends FragmentActivity implements
 	    public void run()
 	    {
 		TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-		if (thisColor != "") 
-		    label.setTextColor(Color.parseColor(thisColor));
-		//label.setTextColor(iThisColor);
+		b1.setTextColor(thisColor);
+		// //b1.getBackground().setAlpha(thisAlpha);
+		// if (thisAlpha == 0)
+		//     {
+		// 	//b1.setBackgroundColor(Color.GREEN);
+		// 	//b1.setBackgroundResource(R.drawable.speech_bubble_green);
+		// 	// String text=b1.getText().toString();
+		// 	// theSText = Html.fromHtml("<p><b>"+text+"<sup>.</sup></b></p>");
+		// 	// b1.setText(theSText); theSText=null;
+		// 	b1.setTextColor(Color.GREEN);
+		//     }
+		// else
+		//     {
+		// 	//b1.setBackgroundColor(Color.RED);
+		// 	//b1.setBackgroundResource(R.drawable.speech_bubble_l_orange);
 		
-		label.setText(theText);
+		// 	// String text=b1.getText().toString();
+		// 	// theSText = Html.fromHtml("<p><b>"+text+"</b></p>");
+		// 	// b1.setText(theSText); theSText=null;
+		// 	b1.setTextColor(Color.WHITE);
+		//     }
+
+		if (theSText != null) label.setText(theSText);
+		else                  label.setText(theText);
 	    }
 	}
 	final Handler hUpdate = new Handler(Looper.getMainLooper());
 	final mRunnable rUpdate = new mRunnable();
-	rUpdate.setText("Sensors .","");	hUpdate.post(rUpdate);
-	rUpdate.setText("Sensors  ","");	hUpdate.postDelayed(rUpdate, 250);
+
+	rUpdate.setText("Sensors .",Color.GREEN); hUpdate.post(rUpdate);
+	rUpdate.setText("Sensors  ",Color.WHITE); hUpdate.postDelayed(rUpdate, 250);
+	//Spanned tmp = Html.fromHtml("<p>Sensors<b> .</b></p>");
+	//rUpdate.setText(tmp,"");	hUpdate.post(rUpdate);
+	//	tmp = Html.fromHtml("<p>Sensors<b>  </b></p>");
+	//rUpdate.setText(tmp,"");	hUpdate.postDelayed(rUpdate, 250);
 
 
 	// Thread tUpdate = new Thread() 

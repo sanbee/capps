@@ -121,7 +121,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
     //
     //-----------------------------------------------------------------------------------------
     //
-    public void setSensorValues(String jsonStr)
+    public TextView setSensorValues(String jsonStr)
     {
 	//System.err.println("From NCF: "+jsonStr);
 	float temp, svolt, rssi;
@@ -142,12 +142,14 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		if (unit=="F") temp = temp * 9.0F/5.0F + 32.0F;
 
 		setBubbleValue(nodeid, temp);
+		return tempBubbleArr[bubbleID];
 	    }
 	catch (JSONException e) 
 	    {
 		//throw new RuntimeException(e);
 		System.err.println(e.getMessage());
 	    }
+	return null;
     }
     public void setBubbleValue(int nodeid, float temp)
     {
@@ -164,6 +166,11 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	    {
 		thisTV=tv; thisText = text;
 		tmp = Html.fromHtml("<p><b>"+thisText+"</b><font size =\"50\" color=\"#0066FF\"></font></p>");
+	    }
+	    myRunnable(TextView tv, Spanned text) 
+	    {
+		thisTV=tv; 
+		tmp = text;
 	    }
 	    public void run()  
 	    {
@@ -184,13 +191,12 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	String text=String.format("%.2f",temp), 
 	    unit=(String)tempBubbleArr[bubbleID].getTag(R.integer.key1);
 	text = text+unit;
-	// if (tempInDegC) {unit="C"; text = text+unit;}
-	// else            {unit="F"; text = text+unit;}
-
 
 	tempBubbleArr[bubbleID].setTag(R.integer.key0,temp);
 	//tempBubbleArr[bubbleID].setTag(R.integer.key1,unit);
 
+	//Spanned tmp=Html.fromHtml("<p>"+text+"<sup><small>"+unit+"</small></sup></p>");
+	//myRunnable setTVText=new myRunnable(tempBubbleArr[bubbleID],tmp);
 	myRunnable setTVText=new myRunnable(tempBubbleArr[bubbleID],text);
 
 	tempBubbleArr[bubbleID].post(setTVText);
