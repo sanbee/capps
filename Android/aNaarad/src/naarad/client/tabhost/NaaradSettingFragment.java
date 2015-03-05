@@ -59,8 +59,8 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	if (myApp.myWakeLock.isHeld()) {myApp.myWakeLock.release();giveMsg=true;}
 	if (myApp.myWifiLock.isHeld()) {myApp.myWifiLock.release();giveMsg=true;}
 	if (giveMsg) toast("Wake and Wifi locks released.",Gravity.BOTTOM);
-	setPreference("serverName",gServerName);
-	setPreference("gServerPort",gServerPort);
+	setPreference("serverName", gServerName);
+	setPreference("gServerPort", gServerPort);
 	setPreference("wifiControl", gWifiControl);
 	setPreference("wakeControl", gWakeLockControl);
 	if (wifiTurnedOnByMe) 
