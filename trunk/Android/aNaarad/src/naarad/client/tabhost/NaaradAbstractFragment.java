@@ -18,7 +18,11 @@ import java.util.Map;
 import java.util.HashMap;
 import org.json.JSONException;
 import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.io.IOException;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import android.os.SystemClock;
 
 public abstract class NaaradAbstractFragment extends Fragment 
 {
@@ -269,4 +273,23 @@ public abstract class NaaradAbstractFragment extends Fragment
 		return null;
 	    }
     };
+
+    public void naaradWriter(PrintWriter socWriter, String message) throws IOException, UnknownHostException
+    {
+	socWriter.write(mkMessage(message)); socWriter.flush();
+    }
+
+    public Socket naaradSocket(String hostName, int port) throws IOException, UnknownHostException
+    {
+	Socket clientSoc = new Socket(hostName, port);
+	// int attempts = 0;
+	// if (!clientSoc.isConnected() && attempts < 10)
+	//     {
+	// 	SystemClock.sleep(10);
+	// 	attempts++;
+	//     }
+	// else
+	//     throw(new IOException("Naarad could not connection socket: \""+hostName+"\":"+port));
+	return clientSoc;
+    }
 }
