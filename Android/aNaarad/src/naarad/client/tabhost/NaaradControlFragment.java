@@ -134,9 +134,10 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 		// svolt  = (float)json.getDouble("node_v");
 		// rssi   = (float)json.getDouble("node_p");
 		nodeid = json.getInt("node_id");
-		int bubbleID=0;
-		if (nodeid == 1)      bubbleID = 0;
-		else if (nodeid == 3) bubbleID = 1;
+		int bubbleID=mapNodeID2Ndx(nodeid);
+		// if (nodeid == 1)      bubbleID = 0;
+		// else if (nodeid == 3) bubbleID = 1;
+		
 
 		String unit=(String)tempBubbleArr[bubbleID].getTag(R.integer.key1);
 		if (unit=="F") temp = temp * 9.0F/5.0F + 32.0F;
@@ -487,7 +488,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	tempBubbleArr[0] = (TextView) thisView.findViewById(R.id.tv1);
 	tempBubbleArr[0].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
 	tempBubbleArr[0].setTag(R.integer.key1,"C");
-	tempBubbleArr[0].setTag(0);
+	tempBubbleArr[0].setTag(0); // Set the default tag value
 	setBubbleValue(1,20.63f);
 	//tempBubbleArr[0].setText(Html.fromHtml("<p><b>21.63C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	tempBubbleArr[0].setTextColor(Color.parseColor("white"));
@@ -496,7 +497,7 @@ public class NaaradControlFragment extends NaaradAbstractFragment //implements O
 	tempBubbleArr[1].setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12);
 	//tempBubbleArr[1].setText(Html.fromHtml("<p><b>----C</b><font size =\"50\" color=\"#0066FF\"></font></p>"));
 	tempBubbleArr[1].setTag(R.integer.key1,"C");
-	tempBubbleArr[1].setTag(3);
+	tempBubbleArr[1].setTag(3); // Set the default tag value
 	setBubbleValue(3,21.45f);
 	tempBubbleArr[1].setTextColor(Color.parseColor("white"));
 

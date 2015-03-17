@@ -14,11 +14,17 @@ import android.view.View;
 import android.util.Log;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-
+import java.util.Map;
+import java.util.HashMap;
+import org.json.JSONException;
+import java.io.BufferedReader;
+import java.io.IOException;
 
 public abstract class NaaradAbstractFragment extends Fragment 
 {
     private SharedPreferences prefs; 
+    public HashMap<Integer, Integer> nodeID2Ndx;
+
     public Activity mActivity=null;        
     // client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
     // client = new Socket("raspberrypi", 1234); // connect to the Naarad server
@@ -32,6 +38,14 @@ public abstract class NaaradAbstractFragment extends Fragment
 	return getPreference("serverName","raspberrypi");
     }
 
+    public HashMap getNodeID2NdxMap()
+    {
+	nodeID2Ndx = new HashMap<Integer, Integer>();
+	nodeID2Ndx.put(1,0);
+	nodeID2Ndx.put(3,1);
+
+	return nodeID2Ndx;
+    }
     //
     // Hold a reference to the activity and use it in place of
     // getActivity().  This is required since getActivity() may return
@@ -45,6 +59,15 @@ public abstract class NaaradAbstractFragment extends Fragment
         mActivity = activity;
 	//mActivity.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE);
 	mActivity.setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+	
+	getNodeID2NdxMap();
+    }
+
+    public int mapNodeID2Ndx(int nodeid)
+    {
+	if (nodeid == 1)      return 0;
+	else if (nodeid == 3) return 1;
+	else return -1;
     }
 
     public boolean recreateView(View v)
@@ -172,4 +195,78 @@ public abstract class NaaradAbstractFragment extends Fragment
 
 	return mWifi.isConnected();
     }
+
+    public String naaradReader(BufferedReader socReader) throws IOException
+    {
+	int charsRead = 0;
+	//char[] buffer = new char[1024];
+	char oneChar;
+	String message="";
+	// socReader.read() is a blocking call, which is
+	// what we want since this is in a separate thread and
+	// all that this thread does is wait for data to arrive,
+	// and supply it to the plotter
+	try
+	    {
+		// First read the message length.  
+		while (((int)(oneChar = (char)socReader.read()) != -1) &&
+		       (charsRead < 1024))
+		    {
+			if ((oneChar == ' ') && (charsRead > 0))
+			    break;
+			else
+			    {
+				message += oneChar;
+				charsRead++;
+				//System.err.print(oneChar);
+			    }
+		    }
+		// Convert the message length string to integer
+		int msgLen;
+		try 
+		    {
+			msgLen = Integer.parseInt(message);
+		    } 
+		catch(NumberFormatException nfe)
+		    {
+			System.err.println("Error in converting message length to integer");
+			return null;
+		    }
+		// Add blank to the message so far.  The read and
+		// add next msgLen characters to the message
+		// string.
+		//System.err.println("Msglen:"+msgLen);
+		message+=" ";
+		while (((int)(oneChar = (char)socReader.read()) != -1) &&
+		       (charsRead < msgLen)
+		       )
+		    {
+			if (oneChar != '}') 
+			    {
+				message += oneChar;
+				charsRead++;
+			    }
+			else break;
+		    }
+		if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
+		message += oneChar + "\n";
+		
+		//System.err.println("Msg:"+message);
+		//return charsRead;
+		return message;
+	    }
+	// catch (IOException e) 
+	// 	{
+	// 	    String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
+	// 	    uiToast(msg,Gravity.BOTTOM);
+	// 	    return msg;
+	// 	}
+	catch (JSONException e) 
+	    {
+		//throw new RuntimeException(e);
+		System.err.println(e.getMessage());
+		uiToast(e.getMessage(),Gravity.BOTTOM);
+		return null;
+	    }
+    };
 }

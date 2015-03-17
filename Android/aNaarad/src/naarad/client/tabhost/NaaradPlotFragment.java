@@ -51,9 +51,9 @@ import java.io.PrintWriter;
 import java.io.InputStreamReader;
 import org.json.JSONObject;
 import org.json.JSONException;
+import android.view.Gravity;
 import java.util.Map;
 import java.util.HashMap;
-import android.view.Gravity;
 //import android.widget.TabHost;
 
 
@@ -121,7 +121,6 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     protected SensorDataSource mSensorDataSource;
     //protected SensorDataSourceSim mSensorDataSource;
     protected ArrayList<Update> TaskList;
-    protected Map nodeID2Ndx;
 
     private boolean nConnected=false;
     nPlotDataArrivalListener mMainActivityCallback;
@@ -217,8 +216,6 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		}
 	    };
 	plotButton.setOnClickListener(plotButtonHandler);
-	nodeID2Ndx = new HashMap();
-	nodeID2Ndx.put(1,0);
 	//
 	//--------------------------------------------------------------------------
 	//    
@@ -367,8 +364,14 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 		mSensorDataSource = new SensorDataSource();
 		//mSensorDataSource = new SensorDataSourceSim();
 
-		if (apiLevel <= 9) mSensorDataSource.execute(mDataset.getSeriesAt(0));
-		else               mSensorDataSource.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
+		//----------------Use this code -------------------------
+		// if (apiLevel <= 9) mSensorDataSource.execute(mDataset.getSeriesAt(0));
+		// else               mSensorDataSource.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset.getSeriesAt(0));
+		if (apiLevel <= 9) mSensorDataSource.execute(mDataset);
+		else               mSensorDataSource.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,mDataset);
+		//----------------Use this code -------------------------
+
+
 
 		// if (mUpdateTask0 != null) mUpdateTask0.cancel(true);
 		// mUpdateTask0 = new Update();
@@ -432,7 +435,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     //
     //-----------------------------------------------------------------------------------------
     //
-    protected class SensorDataSource extends AsyncTask<XYSeries, XYSeries, String> 
+    //protected class SensorDataSource extends AsyncTask<XYSeries, XYSeries, String> 
+    protected class SensorDataSource extends AsyncTask<XYMultipleSeriesDataset, XYSeries, String> 
     {
 	protected Socket clientSoc;
 	protected PrintWriter socWriter;
@@ -440,50 +444,19 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	protected float temp, svolt, rssi;
 	protected int nodeid;
 	private boolean allDone=false;
+	protected double x0,y0, xMax, xMin, yMax, yMin=100.0;
+	protected Boolean stopRecording=false;
+	protected XYSeries thisSeries;
 
-	public int naaradReader(BufferedReader socReader, String message) throws IOException
+	private void stopRecording(Boolean status)
 	{
-	    int charsRead = 0;
-	    char[] buffer = new char[1024];
-	    char oneChar;
-	    // socReader.read() is a blocking call, which is
-	    // what we want since this is in a separate thread and
-	    // all that this thread does is wait for data to arrive,
-	    // and supply it to the plotter
-	    try
-		{
-		    while (((int)(oneChar = (char)socReader.read()) != -1) &&
-			   (charsRead < 1024)
-			   )
-			{
-			    if (oneChar != '}') 
-				{
-				    message += oneChar;
-				    charsRead++;
-				}
-			    else break;
-			}
-		    if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
-		    message += oneChar + "\n";
-		    return charsRead;
-		}
-	    // catch (IOException e) 
-	    // 	{
-	    // 	    String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-	    // 	    uiToast(msg,Gravity.BOTTOM);
-	    // 	    return msg;
-	    // 	}
-	    catch (JSONException e) 
-	    	{
-	    	    //throw new RuntimeException(e);
-	    	    System.err.println(e.getMessage());
-	    	    uiToast(e.getMessage(),Gravity.BOTTOM);
-	    	    return -1;
-	    	}
-	};
+	    stopRecording = status;
+	}
+
 	public void finish() {allDone=true;};
 
-	@Override protected String doInBackground(XYSeries... params) 
+	//	@Override protected String doInBackground(XYSeries... params) 
+	@Override protected String doInBackground(XYMultipleSeriesDataset... params) 
 	    {
 		String retStr="AllOK";
 		try 
@@ -491,41 +464,86 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			clientSoc = new Socket(getServerName(), getServerPort());
 			socWriter = new PrintWriter(clientSoc.getOutputStream(), true);
 			socReader = new BufferedReader(new InputStreamReader(clientSoc.getInputStream()));
-			socWriter.write(mkMessage("SensorDataSink"));
-			socWriter.flush();
+			//socWriter.write(mkMessage("SensorDataSink")); socWriter.flush();
+
+			// This is not a supported NaaradTopic.  So
+			// will not receive packets as they arrive at
+			// the server, but will instead be sampled by
+			// the code below)
+			socWriter.write(mkMessage("SensorDataSync")); socWriter.flush();
+
 			SystemClock.sleep(500);
 			allDone=false;
 			nConnected=true;
 			String message="";
+			
+			thisSeries = params[0].getSeriesAt(0);
+
 			while(true && !allDone)
 			    {
 				//if (isCancelled()) {retStr="Done";return retStr;}
 				//if (socReader.ready())
 				    {
-					message = "";
-					int charsRead = 0;
-					//char[] buffer = new char[1024];
-					char oneChar;
-					// socReader.read() is a blocking call, which is
-					// what we want since this is in a separate thread and
-					// all that this thread does is wait for data to arrive,
-					// and supply it to the plotter
+					// message = "";
+					// int charsRead = 0;
+					// //char[] buffer = new char[1024];
+					// char oneChar;
+					// // socReader.read() is a blocking call, which is
+					// // what we want since this is in a separate thread and
+					// // all that this thread does is wait for data to arrive,
+					// // and supply it to the plotter
 
-					while (((int)(oneChar = (char)socReader.read()) != -1) &&
-					       (charsRead < 1024)
-					       )
-					    {
-						if (oneChar != '}') 
-						    {
-							message += oneChar;
-							charsRead++;
-						    }
-						else break;
-					    }
+					// while (((int)(oneChar = (char)socReader.read()) != -1) &&
+					//        (charsRead < 1024)
+					//        )
+					//     {
+					// 	if (oneChar != '}') 
+					// 	    {
+					// 		message += oneChar;
+					// 		charsRead++;
+					// 	    }
+					// 	else break;
+					//     }
 					try 
 					    {
-						if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
-						message += oneChar + "\n";
+						// message=naaradReader(socReader);
+						// if (message == null)
+						//     throw(new JSONException("JSON message is null"));
+						//System.err.println("Got: "+message);
+						// if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
+						// message += oneChar + "\n";
+
+
+						//HashMap id2ndx=getNodeID2NdxMap();
+						//for (int i=0;i<nodeID2Ndx.size();i++)
+
+						//======================================================
+						int tt[] = new int[2];
+						tt[0]=1;tt[1]=3;
+						for (int i=0;i<2;i++)
+						    {
+						    {
+							//if (nodeID2Ndx.get(i) != null)
+							    {
+								//String msg=mkMessage("getcpkt "+Integer.toString((int)nodeID2Ndx.get(i)));
+								//								String msg=mkMessage("getcpkt 1");
+								String msg=mkMessage("getcpkt "+Integer.toString(tt[i]));
+								System.err.println("Sending: "+msg);
+								socWriter.write(msg);
+								socWriter.flush();
+								msg = "";
+								SystemClock.sleep(100);
+								System.err.println("Receiving...");
+								if ((message = naaradReader(socReader)) == null)
+								    throw(new JSONException("JSON message is null"));
+								System.err.println("Got: "+message);
+							    }
+							// else
+							//     System.err.println("It's null");
+						    }
+						//======================================================
+
+
 						String[] tokens = message.split(" ");
 						String jsonStr="";
 						for (int j=1;j<3;j++) jsonStr += tokens[j];
@@ -538,10 +556,19 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 							svolt  = (float)json.getDouble("node_v");
 							rssi   = (float)json.getDouble("node_p");
 							nodeid = json.getInt("node_id");
+							x0 =  new Date().getTime();
+							y0 = temp;
+							int nn=-1;
+							if (nodeid == 1) nn=0;
+							else if (nodeid == 3) nn=1;
+							if (nn != -1)
+							    publishProgress(params[0].getSeriesAt(nn));
 						    }
 						else
 						    throw(new JSONException("Packet invalid (rf_fail=1)"));
 						mMainActivityCallback.onDataArrival(jsonStr);
+						   } 
+						SystemClock.sleep(60000);
 					    }
 					catch (JSONException e) 
 					    {
@@ -593,6 +620,79 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 
 		return retStr;
 	    }
+	//
+	//--------------------------------------------------------------------------
+	//    
+	public void addNewData(XYSeries thisSeries, double x,double y)
+	{
+	    double xMax,xMin, dX=0, dT=60000.0*300;
+	    int n;
+	    //mRenderer.setXAxisMax(x+360000.0);	    
+	    // xMax = thisSeries.getMaxX();
+	    // xMin = thisSeries.getMinX();
+	    // if (x > xMax) xMax = x;
+	    // if (x < xMin)) xMin = x;
+
+	    n=thisSeries.getItemCount();
+	    if (n>0)
+	    	{
+	    	    xMax = thisSeries.getX(n-1);
+	    	    xMin = thisSeries.getX(0);
+	    	    dX=xMax-xMin;
+	    	    Log.i("xrange0",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
+	    	    if (dX > dT) thisSeries.remove(0);
+	    	}
+	    if (y != MathHelper.NULL_VALUE)
+		{
+		    if (y > yMax) yMax = y;
+		    if (y < yMin) yMin = y;
+		}
+	    //System.err.println("Val: "+y+" "+yMax+" "+yMin);
+	    thisSeries.add(x, y);
+
+	    // if (dX > dT)
+	    // 	{
+	    // 	    xMax = mCurrentSeries.getX(n-1);
+	    // 	    xMin = mCurrentSeries.getX(0);
+	    // 	    dX=xMax-xMin;
+	    // 	    Log.i("xrange1",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
+	    // 	}
+	}
+	//
+	//--------------------------------------------------------------------------
+	//    
+	//	@Override protected void onProgressUpdate(Integer... values) 
+	@Override protected void onProgressUpdate(XYSeries... values) 
+	    {
+		super.onProgressUpdate(values);
+		
+		//mCurrentSeries.add(x, y);
+		//addNewData(mCurrentSeries,x0,y0);
+		//		Log.i("onProg: ",seriesTitle+Integer.toString(values[0].getItemCount()));
+		addNewData(values[0],x0,y0);
+		
+		if ((mTimeChartView != null) && (stopRecording==false))
+		    {
+			mTimeChartView.zoomReset();
+			mRenderer.setYAxisMax(yMax+0.2);
+			mRenderer.setYAxisMin(yMin-0.2);
+			// mRenderer.setYAxisMax(40.0);
+			// mRenderer.setYAxisMin(-10.0);
+			mTimeChartView.repaint();
+		    }
+		// Bitmap bitmap = mChartView.toBitmap();
+		// try {
+		// 	File file = new File(Environment.getExternalStorageDirectory(),
+		// 			"test" + index++ + ".png");
+		// 	FileOutputStream output = new FileOutputStream(file);
+		// 	bitmap.compress(CompressFormat.PNG, 100, output);
+		
+		// } catch (Exception e) {
+		// 	e.printStackTrace();
+		// }
+	    }
+
+
 	@Override protected void onCancelled() 
 	    {
 		finish();
@@ -631,6 +731,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	    stopRecording = status;
 	}
 
+	//@Override protected String doInBackground(XYSeries... params) 
 	@Override protected String doInBackground(XYSeries... params) 
 	    {
 		int i = 0;
@@ -715,8 +816,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			mTimeChartView.zoomReset();
 			// mRenderer.setYAxisMax(yMax);
 			// mRenderer.setYAxisMin(yMin);
-			mRenderer.setYAxisMax(500.0);
-			mRenderer.setYAxisMin(-500.0);
+			mRenderer.setYAxisMax(40.0);
+			mRenderer.setYAxisMin(-10.0);
 			mTimeChartView.repaint();
 		    }
 		// Bitmap bitmap = mChartView.toBitmap();
@@ -761,169 +862,170 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     // outside.  They are processed in this class and sent to the rest
     // of the app as necessary.
     //
-    // protected class SensorDataSourceSim extends AsyncTask<XYSeries, XYSeries, String> 
-    // {
-    // 	protected Socket clientSoc;
-    // 	protected PrintWriter socWriter;
-    // 	protected BufferedReader socReader;
-    // 	protected float temp, svolt, rssi;
-    // 	protected int nodeid;
-    // 	private boolean allDone=false;
-    // 	private String message = "";
+    protected class SensorDataSourceSim extends AsyncTask<XYMultipleSeriesDataset, XYSeries, String> 
+    {
+    	protected Socket clientSoc;
+    	protected PrintWriter socWriter;
+    	protected BufferedReader socReader;
+    	protected float temp, svolt, rssi;
+    	protected int nodeid;
+    	private boolean allDone=false;
+    	private String message = "";
+	protected double x0,y0, xMax, xMin, yMax, yMin;
+	protected Boolean stopRecording=false;
+	protected XYSeries thisSeries;
 
-    // 	public String naaradReader()
-    // 	{
-    // 	    String message="";
-    // 	    SystemClock.sleep(6000);
-    // 	    message="";
-    // 	    message = "10 {\"rf_fail\":0,\"degc\":10.10,\"node_v\":2.2,\"node_p\":-50,\"node_id\":1 }";
-    // 	    System.err.println("M: "+message);
-    // 	    int charsRead = message.length();
-    // 	    return message;
-    // 	};
-    // 	public void finish() {allDone=true;};
+	private void stopRecording(Boolean status)
+	{
+	    stopRecording = status;
+	}
 
-    // 	@Override protected String doInBackground(XYSeries... params) 
-    // 	    {
-    // 		String retStr="AllOK";
-    // 		//try 
-    // 		    {
-    // 			// clientSoc = new Socket(getServerName(), getServerPort());
-    // 			// socWriter = new PrintWriter(clientSoc.getOutputStream(), true);
-    // 			// socReader = new BufferedReader(new InputStreamReader(clientSoc.getInputStream()));
-    // 			// socWriter.write(mkMessage("SensorDataSink"));
-    // 			// socWriter.flush();
-    // 			SystemClock.sleep(500);
-    // 			allDone=false;
-    // 			nConnected=true;
-    // 			//Handler mHandler = new Handler(Looper.getMainLooper());
+    	public String naaradReader()
+    	{
+    	    String message="";
+    	    SystemClock.sleep(6000);
+    	    message="";
+	    double y0 = generateRandomNum(10)/10.0+20.10;
 
-    // 			// class mRunnable implements Runnable
-    // 			// {
-    // 			//     String theText;
-    // 			//     String thisColor;
-	    
-    // 			//     public void setText(String thisText,String color) 
-    // 			//     {
-    // 			// 	theText=thisText;
-    // 			// 	thisColor=color;
-    // 			//     }
-	    		
-    // 			//     public void run()
-    // 			//     {
-    // 			// 	TextView label = (TextView) mTabHost.getTabWidget().getChildAt(1).findViewById(android.R.id.title); 
-    // 			// 	label.setTextColor(Color.parseColor(thisColor));
-    // 			// 	//		label.setText(theText);
-    // 			//     }
-    // 			// }
-    // 			// final Handler hUpdate = new Handler(Looper.getMainLooper());
-    // 			// final mRunnable rUpdate = new mRunnable();
-
-    // 			// Thread tUpdate = new Thread() 
-    // 			//     {
-    // 			// 	public void run() 
-    // 			// 	{
-    // 			// 	    //for (int i=0;i<5;i++)
-    // 			// 	    {
-    // 			// 		String tmp = "Sensors";
-    // 			// 		rUpdate.setText(tmp,"green");
-    // 			// 		hUpdate.post(rUpdate);
-
-    // 			// 		SystemClock.sleep(500);
-
-    // 			// 		rUpdate.setText(tmp,"white");
-    // 			// 		hUpdate.post(rUpdate);
-    // 			// 		//SystemClock.sleep(2000);
-    // 			// 	    }
-    // 			// 	}
-    // 			//     };
-    // 			// tUpdate.start();
-
-
-
-
-
-
-
-
-    // 			while(true && !allDone)
-    // 			    {
-    // 				{
-    // 				    int charsRead = 0;
-    // 				    char[] buffer = new char[1024];
-    // 				    char oneChar;
-    // 				    // socReader.read() is a blocking call, which is
-    // 				    // what we want since this is in a separate thread and
-    // 				    // all that this thread does is wait for data to arrive,
-    // 				    // and supply it to the plotter
-				    
-    // 				    while ((message = naaradReader()) != null)
-    // 					{
-    // 					    System.err.println("message="+message);
-    // 					    break;
-    // 					}
-    // 				    try 
-    // 					{
-    // 					    //if (oneChar != '}')  throw(new JSONException("End \"}\" not found"));
-    // 					    //message += oneChar + "\n";
-    // 					    String[] tokens = message.split(" ");
-    // 					    String jsonStr="";
-    // 					    for (int j=1;j<3;j++) jsonStr += tokens[j];
-    // 					    //System.err.println("JSON: "+jsonStr);
-    // 					    //mMainActivityCallback.onDataArrival(jsonStr);
-    // 					    JSONObject json = new JSONObject(jsonStr);
-    // 					    if (json.getInt("rf_fail") == 0) // Indicates that the packet is valid
-    // 						{
-    // 						    temp   = (float)json.getDouble("degc");
-    // 						    svolt  = (float)json.getDouble("node_v");
-    // 						    rssi   = (float)json.getDouble("node_p");
-    // 						    nodeid = json.getInt("node_id");
-    // 						}
-    // 					    else
-    // 						throw(new JSONException("Packet invalid (rf_fail=1)"));
-    // 					    mMainActivityCallback.onDataArrival(jsonStr);
-    // 					}
-    // 				    catch (JSONException e) 
-    // 					{
-    // 					    //throw new RuntimeException(e);
-    // 					    System.err.println(e.getMessage());
-    // 					    uiToast(e.getMessage(),Gravity.BOTTOM);
-    // 					    cancel(true);
-    // 					}
-    // 				    // catch (RuntimeException e)
-    // 				    //     {
-    // 				    // 	System.err.println(e.getMessage());
-    // 				    // 	uiToast(e.getMessage(),Gravity.BOTTOM);
-    // 				    // 	cancel(true);
-    // 				    //     }
-				    
-    // 				    //System.err.println("Read "+temp+" "+nodeid+" "+svolt+" "+rssi);
-    // 				}
-    // 			    }
-    // 		    }
+    	    message = "10 {\"rf_fail\":0,\"node_v\":2.2,\"node_p\":-50,\"node_id\":1,\"degc\":"+Double.toString(y0)+" }";
+    	    System.err.println("M: "+message);
+    	    int charsRead = message.length();
+    	    return message;
+    	};
+    	public void finish() {allDone=true;};
+	
+    	@Override protected String doInBackground(XYMultipleSeriesDataset... params) 
+    	    {
+    		String retStr="AllOK";
+		{
+		    thisSeries = params[0].getSeriesAt(0);
+		    SystemClock.sleep(500);
+		    allDone=false;
+		    nConnected=true;
+		    
+		    
+		    while(true && !allDone)
+			{
+			    {
+				int charsRead = 0;
+				char[] buffer = new char[1024];
+				char oneChar;
+				
+				while ((message = naaradReader()) != null)
+				    {
+					System.err.println("message="+message);
+					break;
+				    }
+				try 
+				    {
+					String[] tokens = message.split(" ");
+					String jsonStr="";
+					for (int j=1;j<3;j++) jsonStr += tokens[j];
+					
+					JSONObject json = new JSONObject(jsonStr);
+					if (json.getInt("rf_fail") == 0) // Indicates that the packet is valid
+					    {
+						temp   = (float)json.getDouble("degc");
+						svolt  = (float)json.getDouble("node_v");
+						rssi   = (float)json.getDouble("node_p");
+						nodeid = json.getInt("node_id");
+						x0 =  new Date().getTime();
+						y0 = temp;
+						publishProgress(thisSeries);
+					    }
+					else
+					    throw(new JSONException("Packet invalid (rf_fail=1)"));
+					mMainActivityCallback.onDataArrival(jsonStr);
+				    }
+				catch (JSONException e) 
+				    {
+					System.err.println(e.getMessage());
+					uiToast(e.getMessage(),Gravity.BOTTOM);
+					cancel(true);
+				    }
+			    }
+			}
+		}
 		
-    // 		    //try 
-    // 		    {
-    // 			// socWriter.write(mkMessage("done"));
-    // 			// socWriter.flush();
-    // 			// clientSoc.close();
-    // 			SystemClock.sleep(500);
-    // 			nConnected=false;
-    // 		    }
-    // 		// catch (IOException e) 
-    // 		//     {
-    // 		// 	String msg = "Error connecting to "+getServerName()+":"+Integer.toString(getServerPort())+"\nCheck settings";
-    // 		// 	uiToast(msg,Gravity.BOTTOM);
-    // 		// 	return msg;
-    // 		//     }
+		{
+		    SystemClock.sleep(500);
+		    nConnected=false;
+		}
+		
+    		return retStr;
+    	    }
+	//
+	//--------------------------------------------------------------------------
+	//    
+	public void addNewData(XYSeries thisSeries, double x,double y)
+	{
+	    double xMax,xMin, dX=0, dT=60000.0*10;
+	    int n;
+	    //mRenderer.setXAxisMax(x+360000.0);	    
+	    // xMax = thisSeries.getMaxX();
+	    // xMin = thisSeries.getMinX();
+	    // if (x > xMax) xMax = x;
+	    // if (x < xMin)) xMin = x;
 
-    // 		return retStr;
-    // 	    }
-    // 	@Override protected void onCancelled() 
-    // 	    {
-    // 		finish();
-    // 		super.onCancelled();
-    // 	    }
-    // }
+	    n=thisSeries.getItemCount();
+	    if (n>0)
+	    	{
+	    	    xMax = thisSeries.getX(n-1);
+	    	    xMin = thisSeries.getX(0);
+	    	    dX=xMax-xMin;
+	    	     // Log.i("xrange0",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
+	    	    if (dX > dT) thisSeries.remove(0);
+	    	}
+	    if ((y != MathHelper.NULL_VALUE) && (y > yMax)) yMax = y;
+	    if ((y != MathHelper.NULL_VALUE) && (y < yMin)) yMin = y;
+	    thisSeries.add(x, y);
+
+	    // if (dX > dT)
+	    // 	{
+	    // 	    xMax = mCurrentSeries.getX(n-1);
+	    // 	    xMin = mCurrentSeries.getX(0);
+	    // 	    dX=xMax-xMin;
+	    // 	    Log.i("xrange1",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
+	    // 	}
+	}
+	//
+	//--------------------------------------------------------------------------
+	//    
+	//	@Override protected void onProgressUpdate(Integer... values) 
+	@Override protected void onProgressUpdate(XYSeries... values) 
+	    {
+		super.onProgressUpdate(values);
+		
+		//mCurrentSeries.add(x, y);
+		//addNewData(mCurrentSeries,x0,y0);
+		//		Log.i("onProg: ",seriesTitle+Integer.toString(values[0].getItemCount()));
+		addNewData(values[0],x0,y0);
+		
+		if ((mTimeChartView != null) && (stopRecording==false))
+		    {
+			mTimeChartView.zoomReset();
+			// mRenderer.setYAxisMax(yMax);
+			// mRenderer.setYAxisMin(yMin);
+			mRenderer.setYAxisMax(40.0);
+			mRenderer.setYAxisMin(-10.0);
+			mTimeChartView.repaint();
+		    }
+		// Bitmap bitmap = mChartView.toBitmap();
+		// try {
+		// 	File file = new File(Environment.getExternalStorageDirectory(),
+		// 			"test" + index++ + ".png");
+		// 	FileOutputStream output = new FileOutputStream(file);
+		// 	bitmap.compress(CompressFormat.PNG, 100, output);
+		
+		// } catch (Exception e) {
+		// 	e.printStackTrace();
+		// }
+	    }
+    	@Override protected void onCancelled() 
+    	    {
+    		finish();
+    		super.onCancelled();
+    	    }
+    }
     //============================================================================================================
 }
