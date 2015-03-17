@@ -504,7 +504,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 					//Socket mySoc = new Socket(getServerName(), getServerPort());
 					//SystemClock.sleep(500);
 					PrintWriter mySocWriter = new PrintWriter(mySoc.getOutputStream(), true);
-					BufferedReader mySocReader = new BufferedReader(new InputStreamReader(mySoc.getInputStream()));
+					BufferedReader mySocReader = new BufferedReader(new InputStreamReader(mySoc.getInputStream()),100);
 					naaradWriter(mySocWriter,"SensorDataSync");
 
 
