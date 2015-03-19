@@ -30,6 +30,7 @@ import android.widget.Toast;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.content.Context;
+import android.content.IntentFilter;
 
 //public class NaaradSettingFragment extends Fragment 
 public class NaaradSettingFragment extends NaaradAbstractFragment
@@ -93,7 +94,16 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 		    {
 			wifiTurnedOnByMe=true;
 			myApp.setWifiState(true);
+
 			toast("Turning wifi on...",Gravity.BOTTOM);
+
+			NaaradWifiBroadcastReceiver nWifiReceiver = new NaaradWifiBroadcastReceiver();
+
+			final IntentFilter filters = new IntentFilter();
+			filters.addAction("android.net.wifi.WIFI_STATE_CHANGED");
+			//	filters.addAction("android.net.wifi.STATE_CHANGE");
+			//super.registerReceiver(yourReceiver, filters);
+			//getActivity().registerReceiver(nWifiReceiver, filters);
 		    }
 		gWifiControl=1;
 	    }

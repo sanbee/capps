@@ -614,13 +614,22 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	    // 	    Log.i("xrange0",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
 	    // 	    if (dX > dT) thisSeries.remove(0);
 	    // 	}
-	    if (y != MathHelper.NULL_VALUE)
+	    if (n > 0) 
 		{
-		    if (y > yMax) yMax = y;
-		    if (y < yMin) yMin = y;
+		    if (y != thisSeries.getY(n-1))
+			{
+			    if (y != MathHelper.NULL_VALUE)
+				{
+				    if (y > yMax) yMax = y;
+				    if (y < yMin) yMin = y;
+				}
+			    //System.err.println("Val: "+y+" "+yMax+" "+yMin);
+			    thisSeries.add(x, y);
+			}
 		}
-	    //System.err.println("Val: "+y+" "+yMax+" "+yMin);
-	    thisSeries.add(x, y);
+		else
+		    thisSeries.add(x, y);
+		    
 	    
 	    // if (dX > dT)
 	    // 	{
