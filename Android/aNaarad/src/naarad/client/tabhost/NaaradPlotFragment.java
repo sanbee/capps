@@ -614,7 +614,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	    // 	    Log.i("xrange0",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
 	    // 	    if (dX > dT) thisSeries.remove(0);
 	    // 	}
-	    if (n > 0) 
+	    if ((n > 0))// && ((thisSeries.getX(n-1)-x) >= 360000))
 		{
 		    if (y != thisSeries.getY(n-1))
 			{
