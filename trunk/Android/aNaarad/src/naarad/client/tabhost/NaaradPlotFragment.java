@@ -105,8 +105,8 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
     private int apiLevel;
     private static View mView;
     
-    private Socket client;
-    private PrintWriter printwriter;
+    //    private Socket client;
+    //private PrintWriter printwriter;
     private EditText textField;
     private ToggleButton plotButton;
     private String messsage;
@@ -483,10 +483,12 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 			String message="";
 			//HashMap id2ndx=getNodeID2NdxMap();
 			//for (int i=0;i<nodeID2Ndx.size();i++)
-			Set<Integer> keys = nodeID2Ndx.keySet();
-			int[] array = new int[keys.size()];
-			int index = 0;
-			for(Integer element : keys) array[index++] = element.intValue();
+			// Set<Integer> keys = nodeID2Ndx.keySet();
+			// int[] array = new int[keys.size()];
+			// int index = 0;
+			// for(Integer element : keys) array[index++] = element.intValue();
+
+			int keys[] = getKeysAsArray(nodeID2Ndx);
 
 			// ArrayList<Integer> values = new ArrayList<Integer> (nodeID2Ndx.values());
 			// for(int i=0;i<values.size();i++)
@@ -500,7 +502,22 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 					//======================================================
 					
 					// Open the socket connection....
-					Socket mySoc = naaradSocket(getServerName(), getServerPort());
+					Socket mySoc;
+					int tries=0;
+					while ((mySoc = naaradSocket(getServerName(), getServerPort()))==null &&
+					       tries < 10)
+					    {
+						tries++;
+						String msg="Wifi not yet connected..."+Integer.toString(tries);
+						uiToast(msg,Gravity.BOTTOM);
+						System.err.println(msg);
+						SystemClock.sleep(100);
+					    }
+					if (mySoc == null)
+					    uiToast("Wifi not connected after 10 tries"+Integer.toString(tries),Gravity.BOTTOM);
+					else
+					    {
+					//throw(new IOException("Wifi not connected after 10 tries"));
 					//Socket mySoc = new Socket(getServerName(), getServerPort());
 					//SystemClock.sleep(500);
 					PrintWriter mySocWriter = new PrintWriter(mySoc.getOutputStream(), true);
@@ -511,10 +528,10 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 					// int tt[] = new int[2];
 					// tt[0]=1;tt[1]=3;
 					// ...get the sensor data...
-					for (int i=0;i<keys.size();i++)
+					for (int i=0;i<keys.length;i++)
 					    {
 						//String msg=mkMessage("getcpkt "+Integer.toString(tt[i]));
-						String msg=("getcpkt "+Integer.toString(array[i]));
+						String msg=("getcpkt "+Integer.toString(keys[i]));
 						
 						//System.err.println("Sending: "+msg);
 						
@@ -550,6 +567,7 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 					naaradWriter(mySocWriter, "done");
  
 					SystemClock.sleep(60000);
+					    }
 				    }
 				catch (JSONException e) 
 				    {
@@ -614,17 +632,22 @@ public class NaaradPlotFragment extends NaaradAbstractFragment
 	    // 	    Log.i("xrange0",Double.toString(xMax)+" "+Double.toString(xMin)+" "+Double.toString(dX)+" "+Integer.toString(n));
 	    // 	    if (dX > dT) thisSeries.remove(0);
 	    // 	}
-	    if ((n > 0))// && ((thisSeries.getX(n-1)-x) >= 360000))
+	    if ((n > 0))
 		{
-		    if (y != thisSeries.getY(n-1))
+		    if ((thisSeries.getX(n-1)-x) >= 300000)
+			thisSeries.add(x,y);
+		    else
 			{
-			    if (y != MathHelper.NULL_VALUE)
+			    if (y != thisSeries.getY(n-1))
 				{
-				    if (y > yMax) yMax = y;
-				    if (y < yMin) yMin = y;
+				    if (y != MathHelper.NULL_VALUE)
+					{
+					    if (y > yMax) yMax = y;
+					    if (y < yMin) yMin = y;
+					}
+				    //System.err.println("Val: "+y+" "+yMax+" "+yMin);
+				    thisSeries.add(x, y);
 				}
-			    //System.err.println("Val: "+y+" "+yMax+" "+yMin);
-			    thisSeries.add(x, y);
 			}
 		}
 		else

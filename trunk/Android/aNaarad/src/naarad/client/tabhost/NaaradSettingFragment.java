@@ -9,7 +9,6 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.net.Socket;
 import java.net.UnknownHostException;
 import android.widget.Button;
 import android.widget.ToggleButton;
@@ -37,7 +36,6 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 {
     private static View mView;
     // private SharedPreferences prefs; 
-    private Socket client;
     private PrintWriter printwriter;
     private EditText serverNameField, serverPortField;
     private Button setButton;
@@ -243,68 +241,4 @@ public class NaaradSettingFragment extends NaaradAbstractFragment
 	    });
 	return mView;
     }
-    // //
-    // //-----------------------------------------------------------------------------------------
-    // //
-    // private class SendMessage extends AsyncTask<Void, Void, Void> 
-    // {
-    // 	private String mkMessage(String message) 
-    // 	{
-    // 	    Integer n, totalLen;
-    // 	    n = message.length();
-    // 	    String msg,lenStr;
-	    
-    // 	    lenStr=Integer.toString(n);
-    // 	    totalLen =lenStr.length() + n + 1;
-    // 	    lenStr=Integer.toString(totalLen);
-    // 	    msg = lenStr + " " + message;
-    // 	    //Log.i("Message: ",msg);
-    // 	    return msg;
-    // 	}
-    // 	//
-    // 	//-----------------------------------------------------------------------------------------
-    // 	//
-    // 	@Override protected Void doInBackground(Void... params) 
-    // 	    {
-    // 	    try 
-    // 		{
-    // 		    if (messsage.length() == 0) return null;
-    // 		    //client = new Socket("10.0.2.2", 1234); // connect to the server on local machine
-    // 		    client = new Socket("raspberrypi", 1234); // connect to the Naarad server
-    // 		    printwriter = new PrintWriter(client.getOutputStream(), true);
-		    
-    // 		    printwriter.write(mkMessage("open"));
-    // 		    printwriter.flush();
-    // 		    SystemClock.sleep(500);
-		    
-    // 		    printwriter.write(mkMessage(messsage)); // write the message to output stream
-    // 		    // printwriter.write((messsage)); // write the message to output stream
-    // 		    printwriter.flush();
-    // 		    SystemClock.sleep(500);
-		    
-    // 		    // Handler handler = new Handler(); 
-    // 		    // handler.postDelayed(new Runnable() { 
-    // 		    // 	public void run() { 
-    // 		    // 	    //			    my_button.setBackgroundResource(R.drawable.defaultcard); 
-    // 		    // 	} 
-    // 		    //     }, 1000); 
-    // 		    printwriter.write(mkMessage("done"));
-    // 		    printwriter.flush();
-    // 		    //SystemClock.sleep(500);
-		    
-    // 		    printwriter.close();
-    // 		    client.close(); // closing the connection
-		    
-    // 		} 
-    // 	    catch (UnknownHostException e) 
-    // 		{
-    // 		    e.printStackTrace();
-    // 		} 
-    // 	    catch (IOException e) 
-    // 		{
-    // 		    e.printStackTrace();
-    // 		}
-    // 	    return null;
-    // 	    }
-    // }
 }

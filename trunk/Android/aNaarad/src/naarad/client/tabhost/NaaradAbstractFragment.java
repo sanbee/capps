@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import android.os.SystemClock;
+import java.util.Set;
 
 public abstract class NaaradAbstractFragment extends Fragment 
 {
@@ -40,6 +41,15 @@ public abstract class NaaradAbstractFragment extends Fragment
     public String getDefaultServer() 
     {
 	return getPreference("serverName","raspberrypi");
+    }
+
+    public int[] getKeysAsArray(HashMap myMap)
+    {
+	Set<Integer> keys = myMap.keySet();
+	int[] array = new int[keys.size()];
+	int index = 0;
+	for(Integer element : keys) array[index++] = element.intValue();
+	return array;
     }
 
     public HashMap getNodeID2NdxMap()
@@ -282,6 +292,7 @@ public abstract class NaaradAbstractFragment extends Fragment
     public Socket naaradSocket(String hostName, int port) throws IOException, UnknownHostException
     {
 	Socket clientSoc = new Socket(hostName, port);
+	
 	// int attempts = 0;
 	// if (!clientSoc.isConnected() && attempts < 10)
 	//     {
@@ -290,6 +301,9 @@ public abstract class NaaradAbstractFragment extends Fragment
 	//     }
 	// else
 	//     throw(new IOException("Naarad could not connection socket: \""+hostName+"\":"+port));
-	return clientSoc;
+	if (clientSoc.isConnected())
+	    return clientSoc;
+	else
+	    return null;
     }
 }

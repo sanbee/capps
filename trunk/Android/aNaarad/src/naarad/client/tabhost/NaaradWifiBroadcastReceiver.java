@@ -24,7 +24,7 @@ public class NaaradWifiBroadcastReceiver extends BroadcastReceiver
 		    }
 		else
 		    {
-			SystemClock.sleep(1000);
+			SystemClock.sleep(10);
 			tries++;
 		    }	
 	    }
