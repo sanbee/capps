@@ -12,6 +12,7 @@ SCIHOME      = /export/home/langur/sbhatnag/SCI
 SCISRC       = /export/home/langur/sbhatnag/Projects/GoogleCode/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
+
 CASADISTRO   = casa_ccore/
 SYNTHESISPKG = casa_ccore/
 COREPKG      = casa_ccore/
@@ -24,7 +25,7 @@ WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
 C++          = /usr/bin/g++
-DEFS64       = -DAIPS_64B
+DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -m64
 USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib

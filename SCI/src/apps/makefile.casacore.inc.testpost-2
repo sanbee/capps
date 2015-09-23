@@ -9,8 +9,8 @@ ARCH         = linux_64b
 #
 # The instance of CASA pacakge that you want to link to
 #
-CASAHOME     = /home/tara2/sanjay/casa_trunk_pristine/
-#CASAHOME     = /home/tara2/sanjay/casa_active_swig/
+CASAHOME     = /home/tara2/sanjay/casa_rhel6/
+#CASAHOME     = /home/spike2/nelias/
 #CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
 #
 # This is the home of the stand-alone interface library used for
@@ -52,6 +52,12 @@ SCIINCLDIR   = $(SCISRC)/src/include
 #COREPKG      = active/
 #DISPLAYPKG   =active/
 
+# Sanjay's
+#CASADISTRO   = casa_active_swig/active
+#SYNTHESISPKG = casa_active_swig/active
+#COREPKG      = casa_active_swig/active
+#DISPLAYPKG   = casa_active_swig/active
+
 #CASADISTRO   = casa_daily_cmake/
 #SYNTHESISPKG = casa_daily_cmake/
 #COREPKG      = casa_daily_cmake/
@@ -67,25 +73,16 @@ SCIINCLDIR   = $(SCISRC)/src/include
 #COREPKG      = casa_active_personal_ardg/
 #DISPLAYPKG   = casa_active_personal_ardg/
 
-# Sanjay's
-#CASADISTRO   = casa_active_swig/trunk/
-#SYNTHESISPKG = casa_active_swig/trunk/
-#COREPKG      = casa_active_swig/trunk/
-#DISPLAYPKG   = casa_active_swig/trunk/
-
-#CASADISTRO   = casa_active_swig/active/
-#CASADISTRO   = casa_active_personal/rhel6_trunk
-CASADISTRO   = trunk/
-SYNTHESISPKG = $(CASADISTRO)
-COREPKG      = $(CASADISTRO)
-DISPLAYPKG   = $(CASADISTRO)
+CASADISTRO   = /
+SYNTHESISPKG = /
+COREPKG      = /
+DISPLAYPKG   = /
 
 #
 # The CASACore package to link to
 #
 CASACORENAME = casacore
 CASACODENAME = casacode
-CASABASE = casa
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64

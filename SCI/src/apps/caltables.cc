@@ -21,7 +21,12 @@ using namespace casa;
 void UI(Bool restart, int argc, char **argv, 
 	string& CalNBuf, string& OutCTBuf,
 	bool& deepCopy, 
-	string& fieldStr, string& antennaStr, string& spwStr)
+	string& fieldStr, 
+	string& antennaStr, 
+	string& spwStr,
+	string& timeStr,
+	string& scanStr,
+	string& obsidStr)
 {
   if (!restart)
     {
@@ -37,9 +42,12 @@ void UI(Bool restart, int argc, char **argv,
       i=1;clgetSValp("ct", CalNBuf,i);  
       i=1;clgetSValp("outct", OutCTBuf,i);  
       i=1;clgetBValp("deepcopy",deepCopy,i);
+      clgetFullValp("time",timeStr);
       clgetFullValp("field",fieldStr);
       clgetFullValp("baseline",antennaStr);
       clgetFullValp("spw",spwStr);
+      clgetFullValp("scan",scanStr);
+      clgetFullValp("obsid",obsidStr);
 
       EndCL();
     }
@@ -70,6 +78,8 @@ void printInfo(MSSelection& msSelection)
   cout << "Ant1Id         = " << msSelection.getAntenna1List() << endl;
   cout << "Ant2Id         = " << msSelection.getAntenna2List() << endl;
   cout << "SpwId          = " << msSelection.getSpwList()      << endl;
+  cout << "ScanList       = " << msSelection.getScanList() << endl;
+  cout << "ObsIDList      = " << msSelection.getObservationList() << endl;
   cout << "ChanList       = " << msSelection.getChanList()      << endl;
 }
 //
@@ -81,15 +91,16 @@ int main(int argc, char **argv)
   //---------------------------------------------------
   //
   //  MSSelection msSelection;
-  string CalNBuf,OutCTBuf,fieldStr, antennaStr, spwStr;
+  string CalNBuf,OutCTBuf,fieldStr, antennaStr, spwStr, timeStr, scanStr, obsidStr;
   Bool deepCopy=False;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
   CalNBuf=OutCTBuf=fieldStr=antennaStr="";
-  fieldStr=antennaStr=spwStr="";
+  fieldStr=antennaStr=spwStr=obsidStr="";
   deepCopy=False;
-  UI(restartUI,argc, argv, CalNBuf, OutCTBuf, deepCopy, fieldStr, antennaStr, spwStr);
+  UI(restartUI,argc, argv, CalNBuf, OutCTBuf, deepCopy, fieldStr, antennaStr, 
+     spwStr,timeStr,scanStr,obsidStr);
   restartUI = False;
   //
   //---------------------------------------------------
@@ -98,6 +109,7 @@ int main(int argc, char **argv)
     {
       NewCalTable calTab(CalNBuf), selectedCalTable(calTab);
       CTInterface msLike(calTab);
+
       MSSelection mss;
       MSSelectionLogError mssLE;
       mss.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
@@ -105,6 +117,9 @@ int main(int argc, char **argv)
       mss.setFieldExpr(fieldStr);
       mss.setAntennaExpr(antennaStr);
       mss.setSpwExpr(spwStr);
+      mss.setTimeExpr(timeStr);
+      mss.setScanExpr(scanStr);
+      mss.setObservationExpr(obsidStr);
       //mss.setStateExpr(fieldStr);
       //      mss.reset(msLike, MSSelection::PARSE_LATE,"",antennaStr,fieldStr);
 

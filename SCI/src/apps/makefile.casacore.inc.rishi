@@ -6,17 +6,35 @@
 # only a hope. :-)
 #
 ARCH         = linux_64b
+#
+# The instance of CASA pacakge that you want to link to
+#
 CASAHOME     = /home/rishi/sanjay
+#
+# This is the home of the stand-alone interface library used for
+# embedded user interface (Parafeed --
+# http://code.google.com/p/parafeed)
+#
 CLHOME       = /home/rishi/sanjay/Projects/parafeed/linux_gnu
+#
+# The home of the Simple CASA Interface package (stand-alone programs
+# to drive CASA algorithms).
+#
 SCIHOME      = /home/rishi/sanjay/bin/
 SCISRC       = /home/rishi/sanjay/Projects/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
-CASADISTRO   = casa_cc_devel/
-SYNTHESISPKG = casa_cc_devel/
-COREPKG      = casa_cc_devel/
-DISPLAYPKG   = casa_cc_devel/
-
+#
+# The CASA distribution used to build the SCI applications (this
+# appends to CASAHOME).
+#
+CASADISTRO   = casa_daily/
+SYNTHESISPKG = casa_daily/
+COREPKG      = casa_daily/
+DISPLAYPKG   = casa_daily/
+#
+# The CASACore package to link to
+#
 CASACORENAME = casacore
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
@@ -24,12 +42,17 @@ WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
 C++          = /usr/bin/g++
-DEFS64       = -DAIPS_64B
+DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -m64
 USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib
 OPT          = -g $(OPT64)
 
+#---------------------------------------------------------- 
+#
+# Settings below this should not require twiking.  Well...but have a
+# look here if the final linking does not find libraries!
+#
 SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)/$(ARCH)
 COREROOT     = $(CASAHOME)/$(COREPKG)/$(ARCH)
 DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)

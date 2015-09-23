@@ -1,8 +1,8 @@
 #include <casa/aips.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
-#include <ms/MeasurementSets/MSSelectableTable.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionError.h>
+#include <ms/MSSel/MSSelectionTools.h>
+#include <ms/MSSel/MSSelectableTable.h>
 #include <tables/Tables/Table.h>
 #include <tables/Tables/PlainTable.h>
 #include <cl.h> // C++ized version
@@ -61,11 +61,14 @@ void UI(Bool restart, int argc, char **argv, string& MSNBuf, string& OutMSBuf, b
 void showTableCache()
 {
   const TableCache& cache = PlainTable::tableCache();
-  if(cache.ntable()!=0)
-    cerr << endl << "####WARNING!!!!: The Table Cache has the following " << cache.ntable() << " entries:"  << endl;
+  Vector<String> lockedTables = cache.getTableNames();
+
+  Int n=lockedTables.nelements();
+  if(n > 0)
+    cout << endl << "####WARNING!!!!: The Table Cache has the following " << n << " entries:"  << endl;
   
-  for (uInt i=0; i<cache.ntable(); ++i) 
-    cerr << "    " << i << ": \"" <<  cache(i)->tableName() << "\"" << endl;
+  for (Int i=0; i<n; ++i) 
+    cout << "    " << i << ": \"" <<  lockedTables(i) << "\"" << endl;
 }
 //
 //-------------------------------------------------------------------------
@@ -136,110 +139,60 @@ int main(int argc, char **argv)
   //
   //---------------------------------------------------
   //
-  try
-    {
-      //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
-      MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
-      //
-      // Setup the MSSelection thingi
-      //
-      MSInterface msInterface(ms);
-      MSSelection msSelection;
-      MSSelectionLogError mssLE;
-      msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR,&mssLE);
-
-      msSelection.reset(msInterface,MSSelection::PARSE_NOW,
-			timeStr,baselineStr,fieldStr,spwStr,
-			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-			stateObsModeStr,observationStr);
-      // MSSelection msSelection(ms,MSSelection::PARSE_NOW,
-      // 			      timeStr,baselineStr,fieldStr,spwStr,
-      // 			      uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-      // 			      stateObsModeStr,observationStr);
-
-      printInfo(msSelection);
-
-      if (!msSelection.getSelectedMS(selectedMS))
-	{
-	  cerr << "###Informational:  Nothing selected.  ";
-	  if (OutMSBuf != "")
-	    cout << "New MS not written." << endl;
-	  else
-	    cout << endl;
-	}
-      else
-	if (OutMSBuf != "")
-	  if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
-	  else          selectedMS.rename(OutMSBuf,Table::New);
-      cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
-    }
-  catch (clError& x) // Command-line interface library errors
-    {
-      x << x.what() << endl;
-      restartUI=True;
-    }
-  catch (MSSelectionError& x)  // Errors from the MSSelection module
-    {
-      cerr << "###MSSelectionError: " << x.getMesg() << endl;
-      restartUI=True;
-    }
-  catch (AipsError& x) // All other errors
-    {
-      cerr << "###AipsError: " << x.getMesg() << endl;
-      restartUI=True;
-    }
   //      MS ms(MSNBuf,Table::Update),selectedMS(ms);
+  
   //
-  // Make a new scope, outside which there should be no tables left open.
+  // Make a new scope, outside of which there should be no tables left open.
   //
   {
-    MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
-    //
-    // Setup the MSSelection thingi
-    //
-    
-    MSInterface msInterface(ms);
-    MSSelection msSelection;
-    MSSelectionLogError mssLEA,mssLES;
-    msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
-    //msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
     try
       {
-	// msSelection.reset(ms,MSSelection::PARSE_NOW,
-	// 			timeStr,baselineStr,fieldStr,spwStr,
-	// 			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-	// 			stateObsModeStr,observationStr);
-	msSelection.reset(msInterface,MSSelection::PARSE_NOW,
-			  timeStr,baselineStr,fieldStr,spwStr,
-			  uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
-			  stateObsModeStr,observationStr);
-	// TableExprNode ten=msSelection.toTableExprNode(&msInterface);
-	// cerr << "TEN rows = " << ten.nrow() << endl;
-	printInfo(msSelection);
+	MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking)),selectedMS(ms);
+	//
+	// Setup the MSSelection thingi
+	//
+    
+	MSInterface msInterface(ms);
+	MSSelection msSelection;
+	MSSelectionLogError mssLEA,mssLES;
+	msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
+	msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
+
+    	// msSelection.reset(ms,MSSelection::PARSE_NOW,
+    	// 			timeStr,baselineStr,fieldStr,spwStr,
+    	// 			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+    	// 			stateObsModeStr,observationStr);
+    	msSelection.reset(msInterface,MSSelection::PARSE_NOW,
+    			  timeStr,baselineStr,fieldStr,spwStr,
+    			  uvdistStr,taqlStr,polnStr,scanStr,arrayStr,
+    			  stateObsModeStr,observationStr);
+    	// TableExprNode ten=msSelection.toTableExprNode(&msInterface);
+    	// cerr << "TEN rows = " << ten.nrow() << endl;
+    	printInfo(msSelection);
 	
-	if (!msSelection.getSelectedMS(selectedMS))
-	  {
-	    cerr << "###Informational:  Nothing selected.  ";
-	    if (OutMSBuf != "")
-	      cout << "New MS not written." << endl;
-	    else
-	      cout << endl;
-	  }
-	else
-	  if (OutMSBuf != "")
-	    if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
-	    else          selectedMS.rename(OutMSBuf,Table::New);
-	cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
+    	if (!msSelection.getSelectedMS(selectedMS))
+    	  {
+    	    cerr << "###Informational:  Nothing selected.  ";
+    	    if (OutMSBuf != "")
+    	      cout << "New MS not written." << endl;
+    	    else
+    	      cout << endl;
+    	  }
+    	else
+    	  if (OutMSBuf != "")
+    	    if (deepCopy) selectedMS.deepCopy(OutMSBuf,Table::New);
+    	    else          selectedMS.rename(OutMSBuf,Table::New);
+    	cerr << "Number of selected rows: " << selectedMS.nrow() << endl;
       }
     catch (clError& x)
       {
-	x << x.what() << endl;
-	restartUI=True;
+    	x << x.what() << endl;
+    	restartUI=True;
       }
     catch (MSSelectionError& x)
       {
-	cerr << "###MSSelectionError: " << x.getMesg() << endl;
-	restartUI=True;
+    	cerr << "###MSSelectionError: " << x.getMesg() << endl;
+    	restartUI=True;
       }
     //
     // Catch any exception thrown by AIPS++ libs.  Do your cleanup here
@@ -250,8 +203,8 @@ int main(int argc, char **argv)
     //
     catch (AipsError& x)
       {
-	cerr << "###AipsError: " << x.getMesg() << endl;
-	restartUI=True;
+    	cerr << "###AipsError: " << x.getMesg() << endl;
+    	restartUI=True;
       }
   }
 

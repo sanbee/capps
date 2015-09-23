@@ -6,18 +6,19 @@
 # only a hope. :-)
 #
 ARCH         = linux_64b
-CASAHOME     = /export/home/langur/sbhatnag
-CLHOME       = /export/home/langur/sbhatnag/SCI/linux_gnu
-SCIHOME      = /export/home/langur/sbhatnag/SCI
-SCISRC       = /export/home/langur/sbhatnag/Projects/GoogleCode/capps/SCI
+CASAHOME     = /home/rishi/sanjay
+CLHOME       = /home/rishi/sanjay/Projects/parafeed/linux_gnu
+SCIHOME      = /home/rishi/sanjay/bin/
+SCISRC       = /home/rishi/sanjay/Projects/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
-CASADISTRO   = casa_ccore/
-SYNTHESISPKG = casa_ccore/
-COREPKG      = casa_ccore/
-DISPLAYPKG   = casa_ccore/
+CASADISTRO   = casa_cc_devel/
+SYNTHESISPKG = casa_cc_devel/
+COREPKG      = casa_cc_devel/
+DISPLAYPKG   = casa_cc_devel/
 
 CASACORENAME = casacore
+CASACODENAME = casacode
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
@@ -37,6 +38,6 @@ DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)
 CASAROOT     = $(CASAHOME)/$(CASADISTRO)
 #QT4HOME      = /usr/local/Trolltech/Qt-4.1.3
 #QT4HOME      = /usr/local/lib
-QT4HOME      = /usr/
+QT4HOME      = /usr/lib/qt4
 QT4LIBD      = $(QT4HOME)/lib
 SCIBIN       = $(SCIHOME)/linux_gnu/bin
