@@ -437,7 +437,9 @@ int main(int argc, char **argv)
 			 MDirection(Quantity(0.0,"deg"),
 				    Quantity(90.0,"deg")),
 			 False,1.0,False,True,1,"SF","",
-			 True,True,False,True,cfcache
+			 True,True,False,True,cfcache,
+			 False,True,True,
+			 paInc,rotpainc
 			 );
 
       if (operation != "predict")
