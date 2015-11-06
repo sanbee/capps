@@ -68,8 +68,8 @@ The basic premise that we will make more precise in the following
 sections is:
 \begin{description}
 \item The noise on the solution for antenna based parameters is
-  proportional to ${N^{-\frac{1}{2}}_{ant}}$ while the noise in the
-  image domain is proportional to $N^{-1}_{ant}$.
+  proportional to $\sqrt{N_{ant}}$ while the noise in the
+  image domain is proportional to $\frac{1}{N_{ant}}$.
   The relevent time bandwidth products for the former are $\sqrt{\nu_{sol} \tau_{sol}}$ and $\sqrt{\nu_{tot} \tau_{tot}}$, respectively.
   The subscript {\em sol} refer to the solution interval and {\em tot} to total span of the observations.
 \item Therefore, in the phase space of telescope parameters, there must \textcolor{red}{exist} a
@@ -389,7 +389,7 @@ where $\nu_{corr} \le \nu_{sol}$ and $\tau_{corr} \le \tau_{sol}$ must hold, tho
 Eq.~\ref{DISigma}\footnote{I suppose you meant this equation instead
   of ``Eq. 11''?  I can't see what's wrong in this equation.  On the
   other hand $N_a, N_\nu and N_\tau$ in Eq.~\ref{DISigmaDiv} would
-  leave a factor $\sqrt{\\nu_{corr}\tau_{corr}}$ unaccounted for.} is not correct the way it currently stands, it needs a minor fix, it should really be
+  leave a factor $\sqrt{\nu_{corr}\tau_{corr}}$ unaccounted for.} is not correct the way it currently stands, it needs a minor fix, it should really be
 \begin{equation}
 \label{DISigmaDiv}
 \sigma(g_i) = \frac {SEFD} {\sqrt{\nu_{corr} \tau_{corr}}} \frac {1} {S \bar{g}} \frac {1} {\sqrt{N_a N_{\nu} N_{\tau}}}
