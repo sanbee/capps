@@ -13,6 +13,7 @@ include makefile.casacore.inc.$(HOST)
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
            $(DEFS64)                                        \
+	   -DUseCasacoreNamespace=1                         \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
            -DAIPS_LINUX                                     \
@@ -131,7 +132,7 @@ endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     $(CASAROOT)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
 	     -Wl,-rpath -Wl,$(QT4LIBD)
 
 #	     -Xlinker -rpath -Xlinker                       \
