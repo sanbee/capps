@@ -9,9 +9,12 @@ ARCH         = linux_64b
 #
 # The instance of CASA pacakge that you want to link to
 #
-CASAHOME     = /home/tara2/sanjay/casa_trunk_pristine/
+#CASAHOME     = /home/tara2/sanjay/casa_trunk_pristine/
+#CASADISTRO   = trunk/
 #CASAHOME     = /home/tara2/sanjay/casa_active_swig/
-#CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
+#CASAHOME     = /home/tara2/sanjay/casa_rhel6/
+CASAHOME     = /home/tara2/sanjay/casa_trunk_pristine/trunk
+CASADISTRO   = 
 #
 # This is the home of the stand-alone interface library used for
 # embedded user interface (Parafeed --
@@ -75,7 +78,6 @@ SCIINCLDIR   = $(SCISRC)/src/include
 
 #CASADISTRO   = casa_active_swig/active/
 #CASADISTRO   = casa_active_personal/rhel6_trunk
-CASADISTRO   = trunk/
 SYNTHESISPKG = $(CASADISTRO)
 COREPKG      = $(CASADISTRO)
 DISPLAYPKG   = $(CASADISTRO)

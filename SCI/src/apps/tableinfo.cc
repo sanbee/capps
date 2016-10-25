@@ -18,15 +18,15 @@
 #include <clinteract.h>
 
 using namespace std;
-using namespace casa;
-
+//using namespace casacore;
+//using namespace casa;
 //
 //-------------------------------------------------------------------------
 //
 #define RestartUI(Label)  {if(clIsInteractive()) {goto Label;}}
 //#define RestartUI(Label)  {if(clIsInteractive()) {clRetry();goto Label;}}
 //
-void UI(Bool restart, int argc, char **argv, 
+void UI(casacore::Bool restart, int argc, char **argv, 
 	string& MSNBuf, string& OutBuf,
 	bool& verbose)
 {
@@ -63,30 +63,30 @@ int main(int argc, char **argv)
   //
   //  MSSelection msSelection;
   string MSNBuf,OutBuf;
-  Bool verbose=0, restartUI=False;;
+  casacore::Bool verbose=0, restartUI=false;;
 
  RENTER:// UI re-entry point.
   try
     {
       MSNBuf=OutBuf="";
       UI(restartUI,argc, argv, MSNBuf,OutBuf,verbose);
-      restartUI = False;
+      restartUI = false;
       //
       //---------------------------------------------------
       //
       //      Table table(MSNBuf,Table::Update);
-      String type;
+      casacore::String type;
       {
-	Table table(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
-	TableInfo& info = table.tableInfo();
+	casacore::Table table(MSNBuf,casacore::TableLock(casacore::TableLock::AutoNoReadLocking));
+	casacore::TableInfo& info = table.tableInfo();
 	type=info.type();
       }
       ofstream ofs(OutBuf.c_str());
       
       ostringstream os;
       //      StreamLogSink sink(LogMessage::NORMAL, ofs);
-      LogSink sink(LogMessage::NORMAL,&os);
-      LogIO logio(sink);
+      casacore::LogSink sink(casacore::LogMessage::NORMAL,&os);
+      casacore::LogIO logio(sink);
       //      ostream os(logio.output());
 
       //
@@ -95,9 +95,9 @@ int main(int argc, char **argv)
       if (type=="Measurement Set")
 	{
 	  //	  MS ms(MSNBuf,Table::Update);
-	  MS ms(MSNBuf,TableLock(TableLock::AutoNoReadLocking));
+	  casacore::MS ms(MSNBuf,casacore::TableLock(casacore::TableLock::AutoNoReadLocking));
 	  
-	  MSSummary mss(ms);
+	  casacore::MSSummary mss(ms);
 	  
 	  mss.list(logio, verbose!=0);
 	  ofs << (os.str().c_str()) << endl;
@@ -105,39 +105,39 @@ int main(int argc, char **argv)
 	}
       else if (type=="Image")
       	{
-      	  LatticeBase* lattPtr = ImageOpener::openImage (MSNBuf);
-      	  ImageInterface<Float> *fImage;
-      	  ImageInterface<Complex> *cImage;
+	  casacore::LatticeBase* lattPtr = casacore::ImageOpener::openImage (MSNBuf);
+	  casacore::ImageInterface<casacore::Float> *fImage;
+	  casacore::ImageInterface<casacore::Complex> *cImage;
 
-      	  fImage = dynamic_cast<ImageInterface<Float>*>(lattPtr);
-      	  cImage = dynamic_cast<ImageInterface<Complex>*>(lattPtr);
+      	  fImage = dynamic_cast<casacore::ImageInterface<casacore::Float>*>(lattPtr);
+      	  cImage = dynamic_cast<casacore::ImageInterface<casacore::Complex>*>(lattPtr);
 
       	  ostringstream oss;	      
-      	  Record miscInfoRec;
+	  casacore::Record miscInfoRec;
       	  if (fImage != 0)
       	    {
-      	      logio << "Image data type  : Float" << LogIO::NORMAL;
-	      ImageSummary<Float> ims(*fImage);
-      	      Vector<String> list = ims.list(logio);
+      	      logio << "Image data type  : Float" << casacore::LogIO::NORMAL;
+	      casacore::ImageSummary<float> ims(*fImage);
+      	      casacore::Vector<casacore::String> list = ims.list(logio);
 	      ofs << (os.str().c_str()) << endl;
 	      miscInfoRec=fImage->miscInfo();
       	    }
       	  else if (cImage != 0)
       	    {
-      	      logio << "Image data type  : Complex" << LogIO::NORMAL;
-      	      ImageSummary<Complex> ims(*cImage);
-      	      Vector<String> list = ims.list(logio);
+      	      logio << "Image data type  : Complex" << casacore::LogIO::NORMAL;
+      	      casacore::ImageSummary<casacore::Complex> ims(*cImage);
+      	      casacore::Vector<casacore::String> list = ims.list(logio);
       	      ofs << (os.str().c_str()) << endl;
       	      miscInfoRec=cImage->miscInfo();
       	    }
       	  else
-      	    logio << "Unrecognized image data type." << LogIO::EXCEPTION;
+      	    logio << "Unrecognized image data type." << casacore::LogIO::EXCEPTION;
 
       	  if (miscInfoRec.nfields() > 0)
       	    {
-      	      logio << endl << "Attached miscellaneous Information : " << endl << LogIO::NORMAL;
+      	      logio << endl << "Attached miscellaneous Information : " << endl << casacore::LogIO::NORMAL;
       	      miscInfoRec.print(oss,25," MiscInfo : ");
-      	      logio << oss.str() << LogIO::NORMAL;
+      	      logio << oss.str() << casacore::LogIO::NORMAL;
       	    }
        	}
 //       else 
@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   catch (clError& x)
     {
       x << x.what() << endl;
-      restartUI=True;
+      restartUI=true;
     }
   //
   // Catch any exception thrown by AIPS++ libs.  Do your cleanup here
@@ -156,10 +156,10 @@ int main(int argc, char **argv)
   // exceptions (AIPS++ or otherwise) are caught in the default
   // exception handler clDefaultErrorHandler (installed by the CLLIB).
   //
-  catch (AipsError& x)
+  catch (casacore::AipsError& x)
     {
       cerr << "###AipsError: " << x.getMesg() << endl;
-      restartUI=True;
+      restartUI=true;
       exit(0);
     }
   if (restartUI) RestartUI(RENTER);

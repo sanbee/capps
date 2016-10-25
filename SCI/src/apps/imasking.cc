@@ -3,7 +3,8 @@
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/LogMessage.h>
 #include <casa/BasicSL/String.h>
-#include <synthesis/MeasurementEquations/ImagerMultiMS.h>
+//#include <synthesis/MeasurementEquations/ImagerMultiMS.h>
+#include <synthesis/MeasurementEquations/Imager.h>
 #include <display/Display/StandAloneDisplayApp.h>
 #include <tables/Tables/Table.h>
 #include <iostream>

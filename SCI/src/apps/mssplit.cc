@@ -9,7 +9,7 @@
 #include <clinteract.h>
 
 using namespace std;
-using namespace casa;
+using namespace casacore;
 
 //
 //-------------------------------------------------------------------------
@@ -88,6 +88,21 @@ void printBaselineList(Matrix<Int> list,ostream& os)
 //
 //-------------------------------------------------------------------------
 //
+string spwPreprocessor(const string& spwExpr)
+{
+  string spwExprNew;
+  int n=spwExpr.size();
+  for (int i=0;i<n;i++)
+    {
+      if (spwExpr[i]==';') spwExprNew+=',';
+      else if (spwExpr[i]==',') spwExprNew+=';';
+      else spwExprNew+=spwExpr[i];
+    }
+  return spwExprNew;
+}
+//
+//-------------------------------------------------------------------------
+//
 void printInfo(MSSelection& msSelection)
 {
   cout << "Ant1         = " << msSelection.getAntenna1List() << endl;
@@ -136,6 +151,7 @@ int main(int argc, char **argv)
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,
      uvdistStr,taqlStr,polnStr,stateObsModeStr,observationStr);
   restartUI = False;
+  cerr << "SPW: " << spwStr << endl << spwPreprocessor(spwStr) << endl;
   //
   //---------------------------------------------------
   //
@@ -154,10 +170,11 @@ int main(int argc, char **argv)
     
 	MSInterface msInterface(ms);
 	MSSelection msSelection;
-	MSSelectionLogError mssLEA,mssLES;
-	msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
-	msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
-
+	{
+	  MSSelectionLogError mssLEA,mssLES;
+	  msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
+	  msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
+	}
     	// msSelection.reset(ms,MSSelection::PARSE_NOW,
     	// 			timeStr,baselineStr,fieldStr,spwStr,
     	// 			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,

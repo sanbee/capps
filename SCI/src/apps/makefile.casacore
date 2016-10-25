@@ -13,6 +13,7 @@ include makefile.casacore.inc.$(HOST)
 
 CPPFLAGS = $(OPT) -Wno-deprecated                           \
            $(DEFS64)                                        \
+	   -DUseCasacoreNamespace=1                         \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
            -DAIPS_LINUX                                     \
@@ -59,19 +60,19 @@ INCL = -I.                                   \
 #DISPLAYLIBS = -lefence $(DISPLAYROOT)/lib/libdisplay.a       \
 #	  $(DISPLAYROOT)/lib/libcasaqt.a            \
 #	  $(DISPLAYROOT)/lib/libgraphics.a \
-#	  $(WCSPKG)/libwcs.a              \
+#	  $(WCSPKG)/libwcs.so              \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
 #DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
 #	  $(DISPLAYROOT)/lib/libcasaqt.a      \
-#	  $(WCSPKG)/libwcs.a                  \
+#	  $(WCSPKG)/libwcs.so                  \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 
 DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  -lcasaqt \
-	  $(WCSPKG)/libwcs.a                  \
+	  $(WCSPKG)/libwcs.so \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
@@ -131,7 +132,7 @@ endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     $(CASAROOT)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
 	     -Wl,-rpath -Wl,$(QT4LIBD)
 
 #	     -Xlinker -rpath -Xlinker                       \
@@ -143,7 +144,7 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -lcfitsio -llapack -lblas              \
 	  -L/usr/local/lib -lcpgplot -lpgplot    \
 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
-	  $(WCSPKG)/libwcs.a                     \
+	  $(WCSPKG)/libwcs.so                     \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 # INCLUDE THE FOLLOWING FOR IMAGER!
