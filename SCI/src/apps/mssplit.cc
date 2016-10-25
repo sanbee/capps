@@ -122,13 +122,13 @@ int main(int argc, char **argv)
   //  MSSelection msSelection;
   string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,
     uvdistStr,taqlStr,scanStr,arrayStr, polnStr,stateObsModeStr,
-    observationStr;
+    observationStr,feedStr;
   Bool deepCopy=0;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
   MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=
-    uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateObsModeStr=observationStr="";
+    uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateObsModeStr=observationStr=feedStr="";
   deepCopy=0;
   fieldStr=spwStr="*";
   fieldStr=spwStr="";
