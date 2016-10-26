@@ -6,6 +6,7 @@
 
 namespace casa 
 {
+using namespace casacore;
   Bool checkCASAEnv(String pathVar="CASAPATH")
   {
     if (!getenv(pathVar.c_str()))

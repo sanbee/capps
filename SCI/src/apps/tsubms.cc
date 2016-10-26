@@ -1,7 +1,7 @@
 #include <casa/aips.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelectionTools.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionError.h>
+#include <ms/MSSel/MSSelectionTools.h>
 #include <msvis/MSVis/SubMS.h>
 #include <cl.h> // C++ized version
 #include <clinteract.h>

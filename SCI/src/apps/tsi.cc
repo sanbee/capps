@@ -1,12 +1,12 @@
-#include <stdlib.h>
 #include <casa/aips.h>
+#include <stdlib.h>
 #include <casa/System/Aipsrc.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <ms/MeasurementSets/MSSelectionError.h>
-#include <ms/MeasurementSets/MSSelection.h>
-#include <msvis/MSVis/VisSet.h>
-#include <msvis/MSVis/VisSetUtil.h>
+#include <ms/MSSel/MSSelection.h>
+#include <ms/MSSel/MSSelectionError.h>
+//#include <msvis/MSVis/VisSet.h>
+//#include <msvis/MSVis/VisSetUtil.h>
 #include <synthesis/ImagerObjects/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <cl.h>
 #include <clinteract.h>
@@ -14,6 +14,7 @@
 #include <casa/OS/Directory.h>
 
 using namespace std;
+using namespace casacore;
 using namespace casa;
 //
 //-------------------------------------------------------------------------
@@ -47,7 +48,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& models,Vector<String>& restoredImgs,Vector<String>& residuals, 
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
-	Int& interactive,Long& cache,	
+	Bool& interactive,Long& cache,	
 	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams)
 {
   if (!restart)
@@ -184,7 +185,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFValp("gain",gain,i);
 	i=1;clgetIValp("niter",niter,i);
 	i=1;clgetFValp("threshold",threshold,i);
-	i=1;clgetIValp("interactive",interactive,i);
+	i=1;clgetBValp("interactive",interactive,i);
 	//
 	// Hidder stuff for the brave
 	//
@@ -232,16 +233,16 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
       clRetry();
     }
 }
-bool mdFromString(casa::MDirection &theDir, const casa::String &in)
+bool mdFromString(casacore::MDirection &theDir, const casacore::String &in)
 {
    bool rstat(false);
    String tmpA, tmpB, tmpC;
    std::istringstream iss(in);
    iss >> tmpA >> tmpB >> tmpC;
-   casa::Quantity tmpQA;
-   casa::Quantity tmpQB;
-   casa::Quantity::read(tmpQA, tmpA);
-   casa::Quantity::read(tmpQB, tmpB);
+   casacore::Quantity tmpQA;
+   casacore::Quantity tmpQB;
+   casacore::Quantity::read(tmpQA, tmpA);
+   casacore::Quantity::read(tmpQB, tmpB);
    if(tmpC.length() > 0){
       MDirection::Types theRF;
       MDirection::getType(theRF, tmpC);
@@ -256,38 +257,38 @@ bool mdFromString(casa::MDirection &theDir, const casa::String &in)
 //
 //-------------------------------------------------------------------------
 //
-void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
-{
-  Block<int> sort(0);
-  sort.resize(5);
-  sort[0] = MS::FIELD_ID;
-  sort[1] = MS::FEED1;
-  sort[2] = MS::ARRAY_ID;
-  sort[3] = MS::DATA_DESC_ID;
-  sort[4] = MS::TIME;
-  Matrix<Int> noselection;
+// void copyMData2Data(MeasurementSet& theMS, Bool incremental=False)
+// {
+//   Block<int> sort(0);
+//   sort.resize(5);
+//   sort[0] = MS::FIELD_ID;
+//   sort[1] = MS::FEED1;
+//   sort[2] = MS::ARRAY_ID;
+//   sort[3] = MS::DATA_DESC_ID;
+//   sort[4] = MS::TIME;
+//   Matrix<Int> noselection;
 
-  VisSet vs_p(theMS, sort, noselection);
-  VisIter& vi = vs_p.iter();
-  VisBuffer vb(vi);
-  vi.origin();
-  vi.originChunks();
+//   VisSet vs_p(theMS, sort, noselection);
+//   VisIter& vi = vs_p.iter();
+//   VisBuffer vb(vi);
+//   vi.origin();
+//   vi.originChunks();
 
-  for (vi.originChunks();vi.moreChunks();vi.nextChunk())
-    for (vi.origin(); vi.more(); vi++) 
-      if (incremental) 
-	{
-	  vi.setVis( (vb.modelVisCube() + vb.visCube()),
-		     VisibilityIterator::Corrected);
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
-	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
-	} 
-      else 
-	{
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
-	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
-	}
-};
+//   for (vi.originChunks();vi.moreChunks();vi.nextChunk())
+//     for (vi.origin(); vi.more(); vi++) 
+//       if (incremental) 
+// 	{
+// 	  vi.setVis( (vb.modelVisCube() + vb.visCube()),
+// 		     VisibilityIterator::Corrected);
+// 	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Observed);
+// 	  vi.setVis(vb.correctedVisCube(),VisibilityIterator::Model);
+// 	} 
+//       else 
+// 	{
+// 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Observed);
+// 	  vi.setVis(vb.modelVisCube(),VisibilityIterator::Corrected);
+// 	}
+// };
 //
 //-------------------------------------------------------------------------
 //
@@ -314,7 +315,8 @@ int main(int argc, char **argv)
 
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
   Float rotpainc=5.0;
-  Int stopLargeNegatives=2, stopPointMode = -1, interactive=0;
+  Int stopLargeNegatives=2, stopPointMode = -1;
+  Bool interactive=false;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
  RENTER:// UI re-entry point.
@@ -391,7 +393,7 @@ int main(int argc, char **argv)
 			spwStr,
 			"","",MFrequency::LSRK,
 			fieldStr, antStr, timeStr,"",
-			"","",uvDistStr,taql);
+			"","",uvDistStr,taql,True);
 
       Bool doshift=False;
       MDirection mphaseCenter;
@@ -411,21 +413,41 @@ int main(int argc, char **argv)
       else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
-      casa::MRadialVelocity mvel;
-      casa::MFrequency mfreq;
-      casa::Quantity qstart;
+      casacore::MRadialVelocity mvel;
+      casacore::MFrequency mfreq;
+      casacore::Quantity qstart;
 
       Vector<Quantity> restFreqs(1);
       restFreqs[0]=Quantity(0,"km/s");
 	
+      SynthesisParamsGrid gridParams;
+      SynthesisParamsImage imageParams;
+      Record gridParamsRec = gridParams.toRecord(),
+	imageParamsRec = imageParams.toRecord();
+
+      gridParamsRec.define("cfcache",cfcache);
+      Vector<Int> imsize(2); imsize(0)=nx; imsize(1)=ny;
+      gridParamsRec.define("imsize",imsize);
+
+      Vector<String> cell(2);  
+      {
+	stringstream ss;
+	ss << cellx << "arcsec"; cell(0) = ss.str(); 
+	ss.str("");ss << celly << "arcsec"; cell(1) = ss.str(); 
+      }
+      gridParamsRec.define("cell",cell);
+      gridParamsRec.define("stokes",stokes);
+      gridParamsRec.define("stokes",stokes);
+      gridParamsRec.define("phasecenter",phasecenter);
+      
       imager.defineImage(models[0],nx,ny,
-			 casa::Quantity((Double)cellx,"arcsec"),
-			 casa::Quantity((Double)celly,"arcsec"),
+			 casacore::Quantity((Double)cellx,"arcsec"),
+			 casacore::Quantity((Double)celly,"arcsec"),
 			 stokes,
 			 mphaseCenter,
 			 imnchan,//imstart,imstep,
-			 casa::Quantity(1,"GHz"),    //mstart, // Def=0 km/s
-			 casa::Quantity(1,"GHz"),
+			 casacore::Quantity(1,"GHz"),    //mstart, // Def=0 km/s
+			 casacore::Quantity(1,"GHz"),
 			 restFreqs,
 			 facets,
 			 ftmac,
@@ -436,7 +458,12 @@ int main(int argc, char **argv)
 			 False,
 			 MDirection(Quantity(0.0,"deg"),
 				    Quantity(90.0,"deg")),
-			 False,1.0,False,True,1,"SF","",
+			 False,
+
+			 1.0,
+			 False,
+			 False, // useDoublePrec
+			 1,"SF","",
 			 True,True,False,True,cfcache,
 			 False,True,True,
 			 paInc,rotpainc
@@ -445,13 +472,13 @@ int main(int argc, char **argv)
       if (operation != "predict")
       	imager.weight(wtType,                        // Def="natural"
       		      rmode,                         // Def="none"
-      		      casa::Quantity(0.0,"Jy"),      //noise, // Def="0.0Jy"
+      		      casacore::Quantity(0.0,"Jy"),      //noise, // Def="0.0Jy"
       		      robust,    // Def=0
-      		      casa::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
+      		      casacore::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
       		      0);        
       imager.makePSF();
       Record majorCycleControls;
-      majorCycleControls.define("lastcycle", False);
+      majorCycleControls.define("lastcycle", True);
       imager.executeMajorCycle(majorCycleControls);
 	
       // Float cyclemaxpsffraction=0.8;
@@ -531,7 +558,7 @@ int main(int argc, char **argv)
       // 	  imager.clean(algo,
       // 		       Niter,
       // 		       gain,
-      // 		       casa::Quantity(threshold,"mJy"),
+      // 		       casacore::Quantity(threshold,"mJy"),
       // 		       False,                 //displayProgress
       // 		       models,                //Vector<String>
       // 		       fixed,                 //Vector<Bool>

@@ -326,7 +326,7 @@ int main(int argc, char **argv)
   pblimit=0.05;
   stokes="I"; ftmac="ft"; algo="cs"; operation="clean";
   wtType="uniform"; rmode="none"; mode="continuum";
-  casaMode="none";
+  casaMode="FREQ";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
   //
@@ -430,6 +430,11 @@ int main(int argc, char **argv)
       else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
+      casa::MRadialVelocity mvel;
+      casa::MFrequency mfreq;
+      casa::Quantity qstart;
+
+
       imager.defineImage(nx,ny,
 			 casa::Quantity((Double)cellx,"arcsec"),
 			 casa::Quantity((Double)celly,"arcsec"),
@@ -438,9 +443,9 @@ int main(int argc, char **argv)
 			 centerFieldId,
 			 casaMode,
 			 imnchan,imstart,imstep,
-			 casa::Quantity(0,"Km/s"),    //mstart, // Def=0 km/s
-			 casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
-			 casa::Quantity(0,"km/s"),
+			 casa::Quantity(1,"GHz"),    //mstart, // Def=0 km/s
+			 mvel,//casa::Quantity(1,"km/s"),    //mstep, // Def=1 km/s
+			 casa::Quantity(1,"GHz"),
 			 spwid,
 			 facets// ,
 			 // casa::Quantity(0,"Hz"),

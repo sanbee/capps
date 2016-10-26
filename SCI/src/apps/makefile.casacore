@@ -29,7 +29,7 @@ CPPFLAGS = $(OPT) -Wno-deprecated                           \
 	   -Wall -pipe -Wno-non-template-friend             \
 	   -Woverloaded-virtual -Wcast-align                \
 	   -Wno-comment -D_FILE_OFFSET_BITS=64              \
-	   -D_LARGEFILE_SOURCE  
+	   -D_LARGEFILE_SOURCE  -std=gnu++0x
 
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
