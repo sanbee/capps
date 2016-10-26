@@ -93,7 +93,7 @@ PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
-C++          = /usr/bin/g++
+C++          = /opt/rh/devtoolset-3/root/usr/bin/g++ -std=gnu++11
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -m64
 USRLIB       = /usr/lib64
