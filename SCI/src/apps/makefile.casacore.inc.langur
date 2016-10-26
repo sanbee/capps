@@ -33,6 +33,11 @@ USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib
 OPT          = -g $(OPT64)
 
+#---------------------------------------------------------- 
+#
+# Settings below this should not require twiking.  Well...but have a
+# look here if the final linking does not find libraries!
+#
 SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)/$(ARCH)
 COREROOT     = $(CASAHOME)/$(COREPKG)/$(ARCH)
 DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)
