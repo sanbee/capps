@@ -13,29 +13,36 @@ SCISRC       = /export/home/langur/sbhatnag/Projects/GoogleCode/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
 
-CASADISTRO   = casa_ccore/
-SYNTHESISPKG = casa_ccore/
-COREPKG      = casa_ccore/
-DISPLAYPKG   = casa_ccore/
+CASADISTRO     = casa_ccore/
+SYNTHESISPKG = $(CASADISTRO)
+COREPKG          = $(CASADISTRO)
+DISPLAYPKG      = $(CASADISTRO)
 
 CASACORENAME = casacore
+CASACODENAME = casacode
+
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
-C++          = /usr/bin/g++
+C++          = /opt/rh/devtoolset-3/root/usr/bin/g++ -std=gnu++11
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -m64
 USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib
 OPT          = -g $(OPT64)
 
+#---------------------------------------------------------- 
+#
+# Settings below this should not require twiking.  Well...but have a
+# look here if the final linking does not find libraries!
+#
 SYNTHROOT    = $(CASAHOME)/$(SYNTHESISPKG)/$(ARCH)
 COREROOT     = $(CASAHOME)/$(COREPKG)/$(ARCH)
 DISPLAYROOT  = $(CASAHOME)/$(DISPLAYPKG)/$(ARCH)
 
-CASAROOT     = $(CASAHOME)/$(CASADISTRO)
+CASAROOT     = $(CASAHOME)/$(CASADISTRO)/$(ARCH)
 #QT4HOME      = /usr/local/Trolltech/Qt-4.1.3
 #QT4HOME      = /usr/local/lib
 QT4HOME      = /usr/
