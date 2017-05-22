@@ -18,7 +18,7 @@
 #include <clinteract.h>
 
 using namespace std;
-//using namespace casacore;
+using namespace casacore;
 //using namespace casa;
 //
 //-------------------------------------------------------------------------
