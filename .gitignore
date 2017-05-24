@@ -1,0 +1,12 @@
+*.o
+*.def
+*.tgz
+*.cmd
+*.ms
+*.log
+*.aux
+*.cf
+tableinfo
+mssplit
+predictepj
+
