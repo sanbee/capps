@@ -12,6 +12,12 @@
 //#include <synthesis/MeasurementEquations/ImagerMultiMS.h>
 #include <synthesis/MeasurementComponents/nPBWProjectFT.h>
 #include <synthesis/MeasurementComponents/EPJones.h>
+#include <synthesis/CalTables/CalTable2.h>
+#include <synthesis/CalTables/CalSet.h>
+#include <synthesis/MeasurementEquations/VisEquation.h>
+#include <casa/System/ProgressMeter.h>
+#include <tables/Tables/TableProxy.h>
+
 //#include <synthesis/TransformMachines/Utils.h>
 #include <cl.h>
 #include <clinteract.h>
@@ -83,101 +89,12 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
       int i;
       {
  	SMap watchPoints; vector<string> exposedKeys;
-	// vector<int> imsize(2,0);
-	// vector<float> cell(2,0);
-	vector<string> tmods, trest, tresid,tmasks, tms, tpsfs;
+	vector<string> tmods;
 
 	i=1;clgetSValp("ms", MSName,i);  
-	//	toCASAVector(tms, MSName);
-
-	// i=2;clgetNIValp("imsize",imsize,i);
-	// if (i==1) ny=nx=imsize[0];
-	// else {nx = imsize[0]; ny=imsize[1];}
-
-	// i=2;clgetNFValp("cellsize",cell,i);
-	// if (i==1) celly=cellx=cell[0];
-	// else {cellx = cell[0]; celly=cell[1];}
-
 	i=0;clgetNSValp("model",tmods,i);
-	// i=0;clgetNSValp("restored",trest,i);
-	// i=0;clgetNSValp("residual",tresid,i);
-	// i=0;clgetNSValp("psf",tpsfs,i);
-	// i=0;clgetNSValp("mask",tmasks,i);
 	toCASASVector(tmods,models);
-	// toCASASVector(trest,restoredImgs);
-	// toCASASVector(tresid,residuals);
-	// toCASASVector(tpsfs,psfs);
-	// toCASASVector(tmasks,masks);
-
-	// i=1;clgetSValp("complist",complist,i);
 	
-	InitMap(watchPoints, exposedKeys);
-	// exposedKeys.push_back("facets");  exposedKeys.push_back("wplanes");
-	// watchPoints["wproject"]=exposedKeys;
-
-	ClearKeys(exposedKeys);
-	//exposedKeys.push_back("facets");   exposedKeys.push_back("wplanes");
-	exposedKeys.push_back("cfcache");  exposedKeys.push_back("painc");
-	//exposedKeys.push_back("dopbcorr"); exposedKeys.push_back("applyoffsets");  
-	//exposedKeys.push_back("pointingtable");
-	watchPoints["pbwproject"]=exposedKeys;	
-	//watchPoints["pbmosaic"]=exposedKeys;	
-
-	ClearKeys(exposedKeys);
-	//exposedKeys.push_back("facets");        exposedKeys.push_back("wplanes");
-	exposedKeys.push_back("cfcache");       exposedKeys.push_back("painc");
-	exposedKeys.push_back("rotpainc");      //exposedKeys.push_back("psterm");
-	//exposedKeys.push_back("aterm");         //exposedKeys.push_back("wbawp");
-	//exposedKeys.push_back("mterm");         exposedKeys.push_back("conjbeams");     
-	//exposedKeys.push_back("pointingtable");//exposedKeys.push_back("applyoffsets");	
-	//exposedKeys.push_back("dopbcorr");
-	watchPoints["awproject"]=exposedKeys;
-	//watchPoints["protoft"]=exposedKeys;
-
-	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
-	//i=1;clgetIValp("facets",facets,i);
-	//i=1;clgetIValp("wplanes",wplanes,i);  
-	//i=1;clgetBValp("psterm",psterm,i);  
-	//i=1;clgetBValp("aterm",aterm,i);  
-	//i=1;clgetBValp("mterm",mterm,i);  
-	//i=1;clgetBValp("wbawp",wbawp,i);  
-	//i=1;clgetBValp("conjbeams",conjbeams,i);  
-	i=1;clgetFValp("rotpainc",rotpainc,i);  
-	
-	//
-	// Key of "1" and "0" implies logical True and False for watchPoints.
-	//
-	// InitMap(watchPoints,exposedKeys);
-	// exposedKeys.push_back("pointingtable");
-	// watchPoints["1"]=exposedKeys;
-	// i=1;clgetBValp("applyoffsets",applyOffsets,i,watchPoints);
-	i=1;clgetSValp("pointingtable",pointingTable,i);  
-	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
-	i=1;clgetSValp("cfcache",cfcache,i);  
-	i=1;clgetFValp("painc",paInc,i);  
-
-	InitMap(watchPoints,exposedKeys);
-	// exposedKeys.push_back("scales");
-	// watchPoints["multiscale"]=exposedKeys;
-	// i=1;clgetSValp("algorithm",algo,i,watchPoints);
-
-	// vector<float> dscales(1,0.0);
-	// i=0;clgetNFValp("scales",dscales,i);
-	// toCASAVector(dscales,MSScales);
-	// MSScales = dscales;
-
-	// i=1;clgetSValp("stokes",stokes,i);
-
-	// InitMap(watchPoints,exposedKeys);
-	// exposedKeys.push_back("rmode");exposedKeys.push_back("robust");
- 	// watchPoints["briggs"]=exposedKeys;
-	// i=1;clgetSValp("weighting",wtType,i,watchPoints);
-
-	// i=1;clgetSValp("rmode",rmode,i);
-	// float frobust=0;
-	// i=1;clgetFValp("robust",frobust,i);
-	// robust=frobust;
-
 	i=1;clgetFullValp("field",fieldStr);  
 	i=1;clgetFullValp("spw",spwStr);  
 	i=1;clgetFullValp("time",timeStr);  
@@ -185,29 +102,25 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFullValp("uvrange",uvDistStr);  
 	i=1;clgetFullValp("scan",scanStr);  
 
-	// InitMap(watchPoints,exposedKeys);
-	// exposedKeys.push_back("imnchan");  
-	// exposedKeys.push_back("imstart");
-	// exposedKeys.push_back("imstep");   
-	// watchPoints["pseudo"]=exposedKeys;
+	InitMap(watchPoints, exposedKeys);
+	ClearKeys(exposedKeys);
+	exposedKeys.push_back("cfcache");  exposedKeys.push_back("painc");
+	watchPoints["pbwproject"]=exposedKeys;	
 
-	//i=1;clgetSValp("mode",mode,i, watchPoints);
-	// vector<int> dnc(1,1),dstrt(1,0),dstp(1,1);
-	// i=0;clgetNIValp("datanchan",dnc,i);
-	// i=0;clgetNIValp("datastart",dstrt,i);
-	// i=0;clgetNIValp("datastep",dstp,i);
-	// toCASAVector(dnc,datanchan);
-	// toCASAVector(dstrt,datastart);
-	// toCASAVector(dstp,datastep);
+	ClearKeys(exposedKeys);
+	exposedKeys.push_back("cfcache");       exposedKeys.push_back("painc");
+	exposedKeys.push_back("rotpainc");
+	watchPoints["awproject"]=exposedKeys;
 
-	// i=1;clgetIValp("imnchan",imnchan,i);
-	// i=1;clgetIValp("imstart",imstart,i);
-	// i=1;clgetIValp("imstep",imstep,i);
+	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
+	i=1;clgetFValp("rotpainc",rotpainc,i);  
+	
+	i=1;clgetSValp("pointingtable",pointingTable,i);  
+	i=1;clgetBValp("dopbcorr",dopbcorr,i);  
+	i=1;clgetSValp("cfcache",cfcache,i);  
+	i=1;clgetFValp("painc",paInc,i);  
 
 	InitMap(watchPoints,exposedKeys);
-	// exposedKeys.push_back("gain");  exposedKeys.push_back("niter");
-	// exposedKeys.push_back("threshold"); exposedKeys.push_back("interactive");
-	// watchPoints["clean"]=exposedKeys;
 
 	ClearKeys(exposedKeys);
 	exposedKeys.push_back("copydata");
@@ -219,63 +132,21 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchPoints["1"]=exposedKeys;
 	i=1;clgetBValp("copydata",copydata,i,watchPoints);
 	i=1;clgetBValp("copyboth",copyboth,i);
-	
-
-	// i=1;clgetFValp("gain",gain,i);
-	// i=1;clgetIValp("niter",niter,i);
-	// i=1;clgetFValp("threshold",threshold,i);
-	// i=1;clgetBValp("interactive",interactive,i);
-	//
-	// Hidder stuff for the brave
-	//
-	// i=1;dbgclgetFValp("cyclefactor",cycleFactor,i);  
-	// i=1;dbgclgetFValp("pblimit",pblimit,i);  
-	// i=1;dbgclgetFullValp("taql",taql);
-	// Float fcache=1024*1024*1024*2.0; 
-	// i=1;dbgclgetFValp("cache",fcache,i); cache=(Long)fcache;
-	// i=1;dbgclgetBValp("usescratch",useScratch,i);
-	// i=1;dbgclgetBValp("singleprecision",singlePrecision,i);
 	//
 	// Do some user support!;-) Set the possible options for various keywords.
 	//
 	VString options;
 
 	options.resize(0);
-	// options.push_back("clean");
-	// options.push_back("psf");
-	// options.push_back("dirty");
 	options.push_back("predict");
 	options.push_back("residual");
 	clSetOptions("operation",options);
 
-	// options.resize(0);
-	// options.push_back("continuum");
-	// options.push_back("spectral");
-	// options.push_back("pseudo");
-	// clSetOptions("mode",options);
-
-	// options.resize(0);
-	// options.push_back("uniform");options.push_back("natural");options.push_back("briggs");
-	// clSetOptions("weighting",options);
-
 	options.resize(0);
 	options.push_back("pbwproject");
 	options.push_back("awproject");
-	// options.push_back("ft");
-	// options.push_back("wproject");
-	// options.push_back("pbmosaic");
-	// options.push_back("protoft");
+
 	clSetOptions("ftmachine",options);
-
-	// options.resize(0);
-	// options.push_back("cs");options.push_back("clark");options.push_back("hogbom");
-	// options.push_back("mfclark");
-	// options.push_back("multiscale");
-	// clSetOptions("algorithm",options);
-
-	// options.resize(0);
-	// options.push_back("I");options.push_back("IV");options.push_back("IQUV");
-	// clSetOptions("stokes",options);
       }
       EndCL();
     }
@@ -376,7 +247,8 @@ void copyMData2Data(MeasurementSet& theMS, Bool both=False, Bool incremental=Fal
   //
   //-----------------------------------------------------------------------
   //  
-void setModel(MeasurementSet& theMS, casa::nPBWProjectFT *pbwp_p, const String& modelImageName)
+void setModel(casa::VisSet& vs, casa::nPBWProjectFT *pbwp_p, casacore::TempImage<casacore::Complex>& uvGrid,
+	      const String& modelImageName)
   {
     Block<int> sort(0);
     sort.resize(5);
@@ -386,21 +258,27 @@ void setModel(MeasurementSet& theMS, casa::nPBWProjectFT *pbwp_p, const String& 
     sort[3] = MS::DATA_DESC_ID;
     sort[4] = MS::TIME;
     Matrix<Int> noselection;
-    casa::VisSet vs_p(theMS, sort, noselection);
-    casa::ROVisIter& vi(vs_p.iter());
+    casa::ROVisIter& vi(vs.iter());
     casa::VisBuffer vb(vi);
     
-    casacore::TempImage<casacore::Complex> targetVisModel_;
     PagedImage<Float> modelImage(modelImageName);
-    makeComplexGrid(targetVisModel_,modelImage,vb);
+    makeComplexGrid(uvGrid,modelImage,vb);
     vi.originChunks();
     vi.origin();
-    pbwp_p->initializeToVis(targetVisModel_,vb);
+    pbwp_p->initializeToVis(uvGrid,vb);
 
     casacore::Vector<casacore::Int> polMap_p;
     polMap_p = pbwp_p->getPolMap();
     //    cout << "Pol Map = " << polMap_p << endl;
   }
+
+void fillPointingOffsets(casacore::String name, casacore::Cube<Float>& offsets)
+{
+  casacore::Record tlock; tlock.define("option","user");
+  casacore::TableProxy *pointing = new casacore::TableProxy(name,tlock,casacore::Table::Old);
+  casacore::ValueHolder vh=pointing->getColumn(casacore::String("GAIN"),0,-1,1);
+  offsets=vh.asArrayFloat();
+}
 //
 //-------------------------------------------------------------------------
 //
@@ -544,7 +422,7 @@ int main(int argc, char **argv)
 	{
 	  useScratchColumns=True;
 	  Int nFacets=1; Long cachesize=200000000; Int tilesize=16;
-	  Float paInc=1.0; // 1 deg.
+	  //Float paInc=1.0; // 1 deg.
 	  Bool doPBCorr=true, applyPointingOffsets=true;
 	  casa::nPBWProjectFT *pbwp_p;
 	  String cfcacheDir=cfcache;
@@ -571,40 +449,61 @@ int main(int argc, char **argv)
 	  sort[4] = MS::TIME;
 	  Matrix<Int> noselection;
 	  
-	  casa::VisSet elVS(selectedMS, sort, noselection);
-	  casa::ROVisIter& vi(elVS.iter());
-	  casa::VisBuffer vb(vi), dAZVB, dELVB;
+	  casa::VisSet vs(selectedMS, sort, noselection);
+	  casa::VisIter& vi(vs.iter());
+	  casa::VisBuffer vb(vi), dAZVB, dELVB,r;
 
  	  
-	  //casa::VisSet elVS(*rvi_p);
-	  casa::EPJones *epJ = new casa::EPJones(elVS);
-	  casacore::RecordDesc applyRecDesc;
-	  applyRecDesc.addField("table", TpString);
-	  applyRecDesc.addField("interp",TpString);
-	  casacore::Record applyRec(applyRecDesc);
-	  casacore::String epJTableName_p;
-	  applyRec.define("table",epJTableName_p);
-	  applyRec.define("interp", "nearest");
-	  epJ->setApply(applyRec);
+	  casa::EPJones *epJ = new casa::EPJones(vs,selectedMS);
+	  casacore::TempImage<casacore::Complex> uvGrid;
 
+	  setModel(vs, pbwp_p, uvGrid, models[0]);
+	  //epJ->setModel(models[0]);
 	  pbwp_p->setEPJones(epJ);
 	  
-	  for (vi.origin(); vi.more(); vi++) 
-	    {
-	      //	ve.collapse(vb);
-	      dAZVB = dELVB = vb;
-	      IPosition shp = vb.modelVisCube().shape();
-	      
-	      // Use the target VBs as temp. storage as well 
-	      // (reduce the max. mem. footprint)
-	      dAZVB.modelVisCube().resize(shp);
-	      dELVB.modelVisCube().resize(shp);
-	      vb.modelVisCube() = dAZVB.modelVisCube() = dELVB.modelVisCube() = Complex(0,0);
+	  // casacore::RecordDesc applyRecDesc;
+	  // applyRecDesc.addField("table", TpString);
+	  // applyRecDesc.addField("interp",TpString);
+	  // casacore::Record applyRec(applyRecDesc);
+	  // casacore::String epJTableName_p=pointingTable;
+	  // applyRec.define("table",epJTableName_p);
+	  // applyRec.define("interp", "nearest");
+	  // epJ->setApply(applyRec);
 
-	      //	pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
-	      Cube<Float> pointingOffsets=epJ->solveRPar();
-	      pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
-	    }
+	  // // casa::CalTable2 epjCalTab(epJTableName_p);
+	  // // cerr << "Slots in EPJ table: " << epjCalTab.numberTimeSlots(0.01D) << " Max. ant. index: "
+	  // //      << epjCalTab.maxAntenna() << endl;
+	  // casa::CalSet<Float> fCS(epJTableName_p,"",1,4,27);
+
+	  casacore::ProgressMeter pm(1.0, Double(selectedMS.nrow()),
+				     "Predicting EPJ",
+				     "", "", "", true,100);
+
+	  Double rowsDone=0;
+	  Cube<Float> pointingOffsets;
+
+	  fillPointingOffsets(casacore::String(pointingTable), pointingOffsets);
+	  cerr << "Offsets shape: " << pointingOffsets.shape() << endl;
+	  for (vi.originChunks(); vi.moreChunks(); vi.nextChunk()) 
+	    for (vi.origin(); vi.more(); vi++) 
+	      {
+	    	//	ve.collapse(vb);
+	    	dAZVB = dELVB = vb;
+	    	IPosition shp = vb.modelVisCube().shape();
+	    	// Use the target VBs as temp. storage as well 
+	    	// (reduce the max. mem. footprint)
+	    	dAZVB.modelVisCube().resize(shp);
+	    	dELVB.modelVisCube().resize(shp);
+	    	vb.modelVisCube() = dAZVB.modelVisCube() = dELVB.modelVisCube() = Complex(0,0);
+		
+		// Predict model (but also the derivatives)
+	    	pbwp_p->get(vb, dAZVB, dELVB, pointingOffsets);
+		// Write the model to the MS
+		vi.setVis(vb.modelVisCube(),casa::VisibilityIterator::Model);
+
+		rowsDone+=shp[2];
+		pm.update(rowsDone);
+	      }
 
 	  if (copydata)
 	    {
