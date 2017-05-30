@@ -9,11 +9,11 @@ ARCH         = linux_64b
 CASAHOME     = /export/home/langur/sbhatnag
 CLHOME       = /export/home/langur/sbhatnag/SCI/linux_gnu
 SCIHOME      = /export/home/langur/sbhatnag/SCI
-SCISRC       = /export/home/langur/sbhatnag/Projects/GoogleCode/capps/SCI
+SCISRC       = /export/home/langur/sbhatnag/Projects/Git/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
 
-CASADISTRO     = casa_ccore/
+CASADISTRO     = casa_ccore
 SYNTHESISPKG = $(CASADISTRO)
 COREPKG          = $(CASADISTRO)
 DISPLAYPKG      = $(CASADISTRO)
