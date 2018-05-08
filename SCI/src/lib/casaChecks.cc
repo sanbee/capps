@@ -4,9 +4,10 @@
 #include <casa/sstream.h>
 #include <strstream>
 
-namespace casa 
-{
+using namespace std;
 using namespace casacore;
+using namespace casa;
+{
   Bool checkCASAEnv(String pathVar="CASAPATH")
   {
     if (!getenv(pathVar.c_str()))

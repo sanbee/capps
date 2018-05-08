@@ -213,7 +213,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	clSetOptions("weighting",options);
 
 	options.resize(5);
-	options[0]="ft";options[1]="wproject";options[2]="pbwproject";
+	options[0]="gridft";options[1]="wproject";options[2]="pbwproject";
 	options[3]="pbmosaic"; options[4]="awprojectft";
 	clSetOptions("ftmachine",options);
 
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
   Bool psterm_b=True, aterm_b=True, mterm_b=True, wbawp_b=True, conjbeams_b=True;
   Float gain,threshold;
-  Vector<String> models, restoredImgs, residuals,masks;
+  Vector<String> models, restoredImgs, residuals,masks,startModels;
   String complist,operation;
   //MSSelection msSelection;
 
@@ -437,8 +437,11 @@ int main(int argc, char **argv)
       }
       gridParamsRec.define("cell",cell);
       gridParamsRec.define("stokes",stokes);
-      gridParamsRec.define("stokes",stokes);
       gridParamsRec.define("phasecenter",phasecenter);
+
+
+      startModels.resize(1);startModels[0]="";
+      if (operation == "predict") startModels[0]=models[0];
       
       imager.defineImage(models[0],nx,ny,
 			 casacore::Quantity((Double)cellx,"arcsec"),
@@ -463,20 +466,22 @@ int main(int argc, char **argv)
 			 1.0,
 			 False,
 			 False, // useDoublePrec
-			 1,"SF","",
+			 1, //wprojplanes
+			 "SF",
+			 startModels[0], //startmodel
 			 True,True,False,True,cfcache,
 			 False,True,True,
 			 paInc,rotpainc
 			 );
 
-      if (operation != "predict")
-      	imager.weight(wtType,                        // Def="natural"
-      		      rmode,                         // Def="none"
-      		      casacore::Quantity(0.0,"Jy"),      //noise, // Def="0.0Jy"
-      		      robust,    // Def=0
-      		      casacore::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
-      		      0);        
-      imager.makePSF();
+      imager.weight(wtType,                        // Def="natural"
+		    rmode,                         // Def="none"
+		    casacore::Quantity(0.0,"Jy"),  //noise, // Def="0.0Jy"
+		    robust,                        // Def=0
+		    casacore::Quantity(0.0,"arcsec"),//fieldOfView,// Def="0.0.arcsec"
+		    0);        
+      //      if (operation != "predict")
+      //imager.makePSF();
       Record majorCycleControls;
       majorCycleControls.define("lastcycle", True);
       imager.executeMajorCycle(majorCycleControls);

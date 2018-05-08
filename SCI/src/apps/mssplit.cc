@@ -10,7 +10,6 @@
 
 using namespace std;
 using namespace casacore;
-
 //
 //-------------------------------------------------------------------------
 //
@@ -88,22 +87,7 @@ void printBaselineList(Matrix<Int> list,ostream& os)
 //
 //-------------------------------------------------------------------------
 //
-string spwPreprocessor(const string& spwExpr)
-{
-  string spwExprNew;
-  int n=spwExpr.size();
-  for (int i=0;i<n;i++)
-    {
-      if (spwExpr[i]==';') spwExprNew+=',';
-      else if (spwExpr[i]==',') spwExprNew+=';';
-      else spwExprNew+=spwExpr[i];
-    }
-  return spwExprNew;
-}
-//
-//-------------------------------------------------------------------------
-//
-void printInfo(MSSelection& msSelection)
+void printInfo(casacore::MSSelection& msSelection)
 {
   cout << "Ant1         = " << msSelection.getAntenna1List() << endl;
   cout << "Ant2         = " << msSelection.getAntenna2List() << endl;
@@ -137,13 +121,13 @@ int main(int argc, char **argv)
   //  MSSelection msSelection;
   string MSNBuf,OutMSBuf,fieldStr,timeStr,spwStr,baselineStr,
     uvdistStr,taqlStr,scanStr,arrayStr, polnStr,stateObsModeStr,
-    observationStr,feedStr;
+    observationStr;
   Bool deepCopy=0;
   Bool restartUI=False;;
 
  RENTER:// UI re-entry point.
   MSNBuf=OutMSBuf=fieldStr=timeStr=spwStr=baselineStr=
-    uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateObsModeStr=observationStr=feedStr="";
+    uvdistStr=taqlStr=scanStr=arrayStr=polnStr=stateObsModeStr=observationStr="";
   deepCopy=0;
   fieldStr=spwStr="*";
   fieldStr=spwStr="";
@@ -151,7 +135,6 @@ int main(int argc, char **argv)
      fieldStr,timeStr,spwStr,baselineStr,scanStr,arrayStr,
      uvdistStr,taqlStr,polnStr,stateObsModeStr,observationStr);
   restartUI = False;
-  cerr << "SPW: " << spwStr << endl << spwPreprocessor(spwStr) << endl;
   //
   //---------------------------------------------------
   //
@@ -169,12 +152,11 @@ int main(int argc, char **argv)
 	//
     
 	MSInterface msInterface(ms);
-	MSSelection msSelection;
-	{
-	  MSSelectionLogError mssLEA,mssLES;
-	  msSelection.setErrorHandler(MSSelection::ANTENNA_EXPR, &mssLEA);
-	  msSelection.setErrorHandler(MSSelection::STATE_EXPR, &mssLES);
-	}
+	casacore::MSSelection msSelection;
+	casacore::MSSelectionLogError mssLEA,mssLES;
+	msSelection.setErrorHandler(casacore::MSSelection::ANTENNA_EXPR, &mssLEA);
+	msSelection.setErrorHandler(casacore::MSSelection::STATE_EXPR, &mssLES);
+
     	// msSelection.reset(ms,MSSelection::PARSE_NOW,
     	// 			timeStr,baselineStr,fieldStr,spwStr,
     	// 			uvdistStr,taqlStr,polnStr,scanStr,arrayStr,

@@ -1,5 +1,6 @@
 #include <casa/aips.h>
-#include <ms/MeasurementSets/MSSummary.h>
+//#include <ms/MeasurementSets/MSSummary.h>
+#include <ms/MSOper/MSSummary.h>
 #include <ms/MeasurementSets/MeasurementSet.h>
 #include <casa/Logging/LogIO.h>
 #include <casa/Logging/StreamLogSink.h>
@@ -16,7 +17,7 @@
 #include <clinteract.h>
 
 using namespace std;
-using namespace casa;
+using namespace casacore;
 
 //
 //-------------------------------------------------------------------------

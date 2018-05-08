@@ -11,9 +11,8 @@
 HOST := $(shell $(HOSTNAME))
 include makefile.casacore.inc.$(HOST)
 
-CPPFLAGS = $(OPT) -Wno-deprecated                           \
+CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated                           \
            $(DEFS64)                                        \
-	   -DUseCasacoreNamespace=1                         \
            -DHAVE_QT4                                       \
            -DAIPS_NEEDS_RETHROW                             \
            -DAIPS_LINUX                                     \
@@ -22,14 +21,14 @@ CPPFLAGS = $(OPT) -Wno-deprecated                           \
            -DAIPS_NO_LEA_MALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
+#	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
 	   -DSIGNBIT                                        \
 	   -DAIPS_NO_TEMPLATE_SRC                           \
-	   -pipe -Wno-non-template-friend             \
+	   -Wall -pipe -Wno-non-template-friend             \
 	   -Woverloaded-virtual -Wcast-align                \
 	   -Wno-comment -D_FILE_OFFSET_BITS=64              \
-	   -D_LARGEFILE_SOURCE     \
-           -DCASACORE_NEEDS_RETHROW -DCASA_USECASAPATH -DDBUS_CPP -DUseCasacoreNamespace
+	   -D_LARGEFILE_SOURCE  
 
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
@@ -44,7 +43,6 @@ PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
 INCL = -I.                                   \
        -I$(SCIINCLDIR)                       \
-       -isystem /opt/casa/02/include -isystem /opt/casa/02/include/dbus-1.0 -isystem /opt/casa/02/lib/dbus-1.0/include\
        -I$(CLHOME)/include                   \
        -I$(COREROOT)/include/$(CASABASE) \
        -I$(COREROOT)/include/$(CASACORENAME) \
@@ -56,25 +54,25 @@ INCL = -I.                                   \
        -I$(QT4HOME)/include/QtCore           \
        -I$(QT4HOME)/include/QtGui            \
        -I$(QT4HOME)/include/QtXml            \
-       -I$(QT4HOME)/include/qwt              
+       -I$(QT4HOME)/include/qwt
 
 #DISPLAYLIBS = -lefence $(DISPLAYROOT)/lib/libdisplay.a       \
 #	  $(DISPLAYROOT)/lib/libcasaqt.a            \
 #	  $(DISPLAYROOT)/lib/libgraphics.a \
-#	  $(WCSPKG)/libwcs.so              \
+#	  $(WCSPKG)/libwcs.a              \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
 #DISPLAYLIBS = $(DISPLAYROOT)/lib/libdisplay.a \
 #	  $(DISPLAYROOT)/lib/libcasaqt.a      \
-#	  $(WCSPKG)/libwcs.so                  \
+#	  $(WCSPKG)/libwcs.a                  \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 
 DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  -lcasaqt \
-	  $(WCSPKG)/libwcs.so                  \
-	  $(PGPLOTPKG)/libpgsbox.so /opt/casa/02/lib/libcasa-dbus-cpp.so
+	  $(WCSPKG)/libwcs.so \
+	  $(PGPLOTPKG)/libpgsbox.so              
 
 
 # SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
@@ -84,7 +82,7 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 # 	  -laatm
 # #	  $(SYNTHROOT)/lib/libgraphics.a         
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lmsvis -lsynthesis -lcasadbus -laatm
+		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
@@ -112,7 +110,7 @@ CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       \
             -lcomponents -lcasa_coordinates -lcasa_lattices \
             -lcasa_fits -lcasa_measures \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
-            -lcasa_casa -lflagging -lcasaqt -lfl
+            -lcasa_casa -lflagging -lcasaqt
 
 CASALIBS = $(CORELIBS) $(SYNTHESISLIBS) $(DISPLAYLIBS)
 
@@ -127,19 +125,19 @@ UILIBS = $(CLHOME)/lib/libshccl.a                 \
          $(CLHOME)/lib/libsh.a                    \
          $(CLHOME)/lib/libshccl.a                 \
 	 $(CLHOME)/lib/libcalc.a                  \
-	 -lreadline -lhistory -ltermcap -lm -lc -lfl
+	 -lreadline -lhistory -ltermcap -lm -lc
 #	 -lreadline -lhistory -ltermcap -lm -lfl -lc
 endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
-	     -Wl,-rpath -Wl,$(QT4LIBD) -Wl,-R/opt/casa/02/lib
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     -Wl,-rpath -Wl,$(QT4LIBD)
 
 #	     -Xlinker -rpath -Xlinker                       \
 #	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
 
-LIBOPTS = -L$(COREROOT)/$(ARCH)/lib -L$(CASAROOT)/$(ARCH)/lib    \
+LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
 	  -L$(QT4LIBD)                           \
 	  -lcfitsio -llapack -lblas              \
@@ -162,7 +160,7 @@ LIBOPTS = -L$(COREROOT)/$(ARCH)/lib -L$(CASAROOT)/$(ARCH)/lib    \
 #
 # The list of source file names 
 #
-SOURCE  = tsi.cc timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc 
+SOURCE  = timager.cc tEPJones.cc imasking.cc mssplit.cc tableinfo.cc 
 SOURCE  = $(wildcard *.cc)
 ifneq ($(strip $(SCILIBDIR)),)
 CAAPSLIBSRC = $(wildcard $(SCILIBDIR)/*.cc)
