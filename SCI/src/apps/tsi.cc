@@ -393,7 +393,7 @@ int main(int argc, char **argv)
 			spwStr,
 			"","",MFrequency::LSRK,
 			fieldStr, antStr, timeStr,"",
-			"","",uvDistStr,taql,True);
+			"","",uvDistStr,taql,False,True);
 
       Bool doshift=False;
       MDirection mphaseCenter;
