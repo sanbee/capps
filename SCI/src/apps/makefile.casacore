@@ -21,6 +21,8 @@ CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated             
            -DAIPS_NO_LEA_MALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
+	   -DDBUS_CPP -DCASA_USECASAPATH \
+	   -Wl,-R$(COREROOT)/lib/
 #	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
 	   -DSIGNBIT                                        \
@@ -43,6 +45,7 @@ PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
 INCL = -I.                                   \
        -I$(SCIINCLDIR)                       \
+        -isystem /opt/casa/02/include/dbus-1.0 -isystem /opt/casa/02/lib/dbus-1.0/include	\
        -I$(CLHOME)/include                   \
        -I$(COREROOT)/include/$(CASABASE) \
        -I$(COREROOT)/include/$(CASACORENAME) \
