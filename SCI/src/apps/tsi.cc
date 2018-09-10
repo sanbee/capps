@@ -97,13 +97,12 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchedKeys[0]="facets";  watchedKeys[1]="wplanes";
 	watchPoints["wproject"]=watchedKeys;
 
-	watchedKeys.resize(7);
-	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
-	watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
-	watchedKeys[4]="pointingtable"; watchedKeys[5]="applyoffsets";
-	watchedKeys[6]="dopbcorr";
-	watchPoints["pbwproject"]=watchedKeys;	
-	watchPoints["pbmosaic"]=watchedKeys;	
+	// watchedKeys.resize(7);
+	// watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
+	// watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
+	// watchedKeys[4]="pointingtable"; watchedKeys[5]="applyoffsets";
+	// watchedKeys[6]="dopbcorr";
+	// watchPoints["awproject"]=watchedKeys;	
 
 	watchedKeys.resize(13);
 	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
@@ -113,7 +112,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchedKeys[8]="mterm";         watchedKeys[9]="conjbeams";     
 	watchedKeys[10]="pointingtable";watchedKeys[11]="applyoffsets";	
 	watchedKeys[12]="dopbcorr";
-	watchPoints["awprojectft"]=watchedKeys;
+	watchPoints["awproject"]=watchedKeys;
 
 	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
 	i=1;clgetIValp("facets",facets,i);
@@ -212,13 +211,13 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	options[0]="uniform";options[1]="natural";options[2]="briggs";
 	clSetOptions("weighting",options);
 
-	options.resize(5);
-	options[0]="gridft";options[1]="wproject";options[2]="pbwproject";
-	options[3]="pbmosaic"; options[4]="awprojectft";
+	options.resize(3);
+	options[0]="gridft";options[1]="wproject";options[2]="awproject";
 	clSetOptions("ftmachine",options);
 
-	options.resize(4);
-	options[0]="cs";options[1]="clark";options[2]="hogbom";options[3]="mfclark";
+	options.resize(2);
+	//	options[0]="cs";options[1]="clark";options[2]="hogbom";options[3]="mfclark";
+	options[0]="mtmfs";options[1]="hogbom";
 	clSetOptions("algorithm",options);
 
 	options.resize(3);
@@ -325,7 +324,7 @@ int main(int argc, char **argv)
   // Factory defaults
   //
   pblimit=0.05;
-  stokes="I"; ftmac="ft"; algo="cs"; operation="clean";
+  stokes="I"; ftmac="gridft"; algo="hogbom"; operation="clean";
   wtType="uniform"; rmode="none"; mode="continuum";
   casaMode="FREQ";
   gain=0.1; paInc = 360.0;

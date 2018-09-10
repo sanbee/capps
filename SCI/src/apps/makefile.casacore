@@ -21,7 +21,7 @@ CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated             
            -DAIPS_NO_LEA_MALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
-	   -DDBUS_CPP -DCASA_USECASAPATH \
+	   -DDBUS_CPP -DCASA_USECASAPATH                    \
 	   -Wl,-R$(COREROOT)/lib/
 #	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
@@ -85,7 +85,8 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 # 	  -laatm
 # #	  $(SYNTHROOT)/lib/libgraphics.a         
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lsynthesis -lcasadbus -laatm
+		-lsynthesis -lcasadbus
+#		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
@@ -134,11 +135,8 @@ endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
 	     -Wl,-rpath -Wl,$(QT4LIBD)
-
-#	     -Xlinker -rpath -Xlinker                       \
-#	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
 
 LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
@@ -202,7 +200,6 @@ $(OBJECTS): %.o: %.cc
 $(APPS): % : %.o $(CAAPSLIB)
 	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
 	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
-#	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 #
 #-------------------------------------------------------------------------------------------------
 #

@@ -9,21 +9,22 @@ ARCH         = linux_64b
 #
 # The instance of CASA pacakge that you want to link to
 #
-CASAHOME     = /home/tara2/sanjay/casa_rhel6/
-#CASAHOME     = /home/spike2/nelias/
+CASAHOME     = /home/dhruva/disk2/sanjay/casa_rhel/BitBucket/ARD/ARD-3/casa/
+#CASAHOME     = /home/dhruva/disk2/sanjay/casa_trunk_pristine/
+#CASAHOME     = /home/dhruva/disk2/sanjay/casa_active_swig/
 #CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
 #
 # This is the home of the stand-alone interface library used for
 # embedded user interface (Parafeed --
 # http://code.google.com/p/parafeed)
 #
-CLHOME       = /home/tara/sanjay/Projects/parafeed/linux_gnu
+CLHOME       = /home/dhruva/disk1/sanjay/Projects/parafeed/linux_gnu
 #
 # The home of the Simple CASA Interface package (stand-alone programs
 # to drive CASA algorithms).
 #
-SCIHOME      = /home/tara/sanjay/bin/
-SCISRC       = /home/tara/sanjay/Projects/capps/SCI
+SCIHOME      = /home/dhruva/disk1/sanjay/bin/
+SCISRC       = /home/dhruva/disk1/sanjay/Projects/capps/SCI
 SCILIBDIR    = $(SCISRC)/src/lib
 SCIINCLDIR   = $(SCISRC)/src/include
 #
@@ -52,12 +53,6 @@ SCIINCLDIR   = $(SCISRC)/src/include
 #COREPKG      = active/
 #DISPLAYPKG   =active/
 
-# Sanjay's
-#CASADISTRO   = casa_active_swig/active
-#SYNTHESISPKG = casa_active_swig/active
-#COREPKG      = casa_active_swig/active
-#DISPLAYPKG   = casa_active_swig/active
-
 #CASADISTRO   = casa_daily_cmake/
 #SYNTHESISPKG = casa_daily_cmake/
 #COREPKG      = casa_daily_cmake/
@@ -73,24 +68,34 @@ SCIINCLDIR   = $(SCISRC)/src/include
 #COREPKG      = casa_active_personal_ardg/
 #DISPLAYPKG   = casa_active_personal_ardg/
 
-CASADISTRO   = /
-SYNTHESISPKG = /
-COREPKG      = /
-DISPLAYPKG   = /
+# Sanjay's
+#CASADISTRO   = casa_active_swig/trunk/
+#SYNTHESISPKG = casa_active_swig/trunk/
+#COREPKG      = casa_active_swig/trunk/
+#DISPLAYPKG   = casa_active_swig/trunk/
+
+#CASADISTRO   = casa_active_swig/active/
+#CASADISTRO   = casa_active_personal/rhel6_trunk
+CASADISTRO   = 
+SYNTHESISPKG = $(CASADISTRO)
+COREPKG      = $(CASADISTRO)
+DISPLAYPKG   = $(CASADISTRO)
 
 #
 # The CASACore package to link to
 #
 CASACORENAME = casacore
 CASACODENAME = casacode
+CASABASE = casa
 WCSPKG       = $(CASAROOT)/$(ARCH)/lib
 PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
-C++          = /usr/bin/g++
+COMPILER_PATH=/opt/rh/devtoolset-4/root/usr/bin
+C++          = $(COMPILER_PATH)/g++
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
-#OPT64        = -m64
+#OPT64        = -pg
 USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib
 OPT          = -g -O2 $(OPT64)

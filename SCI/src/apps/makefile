@@ -71,7 +71,7 @@ INCL = -I.                                   \
 
 DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  -lcasaqt \
-	  $(WCSPKG)/libwcs.a                  \
+	  $(WCSPKG)/libwcs.so                  \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
@@ -82,7 +82,8 @@ DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 # 	  -laatm
 # #	  $(SYNTHROOT)/lib/libgraphics.a         
 SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lsynthesis -lcasadbus -laatm
+		-lsynthesis -lcasadbus
+#		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
@@ -131,11 +132,9 @@ endif
 # -lg2c  
 
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
 	     -Wl,-rpath -Wl,$(QT4LIBD)
 
-#	     -Xlinker -rpath -Xlinker                       \
-#	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
 
 LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -L$(USRLIB)                            \
@@ -143,7 +142,7 @@ LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
 	  -lcfitsio -llapack -lblas              \
 	  -L/usr/local/lib -lcpgplot -lpgplot    \
 	  -L$(X11LIB) -lXt -lXmu -lX11 -lXext    \
-	  $(WCSPKG)/libwcs.a                     \
+	  $(WCSPKG)/libwcs.so                     \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 # INCLUDE THE FOLLOWING FOR IMAGER!

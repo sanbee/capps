@@ -305,7 +305,7 @@ int main(int argc, char **argv)
   MSSelection msSelection;
   Bool useScratchColumns=True, singlePrecision=True;
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1, cycleMaxPSFFraction=0.8;
-  Float rotpainc=5.0;
+  Float rotpainc=360.0;
   Int stopLargeNegatives=2, stopPointMode = -1;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
