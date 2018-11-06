@@ -68,11 +68,11 @@ INCL = -I.                                   \
 #	  $(WCSPKG)/libwcs.a                  \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 
-#DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
+#DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay
 DISPLAYLIBS = -L$(LIBROOT) -ldisplay \
 	  -lcasaqt \
 	  $(WCSPKG)/libwcs.so \
-	  $(PGPLOTPKG)/libpgsbox.so              
+	  -L$(PGPLOTPKG) -lcpgplot -lpgplot -lpgsbox
 
 
 #SYNTHESISLIBS = -L$(LIBROOT) -L$(SYNTHROOT)/lib 
