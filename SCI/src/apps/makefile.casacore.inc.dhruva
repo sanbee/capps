@@ -10,6 +10,8 @@ ARCH         = linux_64b
 # The instance of CASA pacakge that you want to link to
 #
 CASAHOME     = /home/dhruva/disk2/sanjay/casa_rhel/BitBucket/ARD/ARD-3/casa/
+LIBROOT      = /home/dhruva/disk1/sanjay/Projects/Git/capps/SCI/casa_libs
+LIBROOT      = /home/dhruva2/disk4/sanjay/casalibs/linux_64b/lib
 #CASAHOME     = /home/dhruva/disk2/sanjay/casa_trunk_pristine/
 #CASAHOME     = /home/dhruva/disk2/sanjay/casa_active_swig/
 #CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
@@ -87,13 +89,13 @@ DISPLAYPKG   = $(CASADISTRO)
 CASACORENAME = casacore
 CASACODENAME = casacode
 CASABASE = casa
-WCSPKG       = $(CASAROOT)/$(ARCH)/lib
-PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
+#WCSPKG       = $(CASAROOT)/$(ARCH)/lib
+#PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
 COMPILER_PATH=/opt/rh/devtoolset-4/root/usr/bin
-C++          = $(COMPILER_PATH)/g++
+C++          = $(COMPILER_PATH)/g++ -L$(LIBROOT)
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
 #OPT64        = -pg
 USRLIB       = /usr/lib64

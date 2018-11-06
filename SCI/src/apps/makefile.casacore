@@ -22,7 +22,7 @@ CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated             
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
 	   -DDBUS_CPP -DCASA_USECASAPATH                    \
-	   -Wl,-R$(COREROOT)/lib/
+#	   -Wl,-R$(COREROOT)/lib/
 #	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
 	   -DSIGNBIT                                        \
@@ -35,10 +35,6 @@ CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated             
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
 	  -DPYTHONVER=\"2.5\"                                               \
-	  -DPYTHONLIB=\"/export/home/langur/sbhatnag/casa_rnd/linux_gnu/lib:/export/home/langur/sbhatnag/casa_rnd/linux_gnu/libexec/python\"
-
-#PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/lib/python2.5/site-packages/numpy/core/include
-#PYINCL  = -I$(USRLIB)/casapy/include/python2.5 -I$(USRLIB)/casapy/include/boost_python -I$(USRLIB)/casapy/lib/python2.5/site-packages/numpy/core/include
 
 #PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -lpython2.5  -L$(USRLIB)/casapy/lib -lCCM_Python -lWX_Utils_error -lWX_Utils_code -lWX_Utils_types
 PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
@@ -72,45 +68,22 @@ INCL = -I.                                   \
 #	  $(WCSPKG)/libwcs.a                  \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 
-DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
+#DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
+DISPLAYLIBS = -L$(LIBROOT) -ldisplay \
 	  -lcasaqt \
 	  $(WCSPKG)/libwcs.so \
 	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-# SYNTHESISLIBS = $(SYNTHROOT)/lib/libsynthesis.a \
-# 	  $(SYNTHROOT)/lib/libcasadbus.a     \
-# 	  $(SYNTHROOT)/lib/libcalibration.a     \
-# 	  $(SYNTHROOT)/lib/libcasadbus.a \
-# 	  -laatm
-# #	  $(SYNTHROOT)/lib/libgraphics.a         
-SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
-		-lsynthesis -lcasadbus
+#SYNTHESISLIBS = -L$(LIBROOT) -L$(SYNTHROOT)/lib 
+SYNTHESISLIBS = -L$(LIBROOT) \
+		-lsynthesis -lcasadbus -lmsvis
 #		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
-# CORELIBS   = $(COREROOT)/lib/libcasa_msfits.so   \
-# 	  $(COREROOT)/lib/libmsvis.so            \
-# 	  $(COREROOT)/lib/libcasa_ms.so          \
-# 	  $(COREROOT)/lib/libcasa_images.so      \
-# 	  $(COREROOT)/lib/libcasa_components.so  \
-# 	  $(COREROOT)/lib/libcasa_coordinates.so \
-# 	  $(COREROOT)/lib/libcasa_lattices.so    \
-# 	  $(COREROOT)/lib/libcasa_fits.so        \
-# 	  $(COREROOT)/lib/libcasa_measures.so    \
-# 	  $(COREROOT)/lib/libcasa_measures_f.so  \
-# 	  $(COREROOT)/lib/libcasa_tables.so      \
-# 	  $(COREROOT)/lib/libcasa_scimath.so     \
-# 	  $(COREROOT)/lib/libcasa_scimath_f.so   \
-# 	  $(COREROOT)/lib/libcasa_casa.so 
-
-#CORELIBS = -lcasa_msfits -lmsvis -lcasa_ms -lcasa_images        \
-#            -lcomponents -lcasa_coordinates -lcasa_lattices \
-#            -lcasa_fits -lcasa_measures \
-#	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
-#            -lcasa_casa -lflagging -lcasaqt
-CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       \
+#CORELIBS = -Wl,-soname="libcasa_msfits.so" -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       
+CORELIBS =  -lcasa_msfits -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       \
             -lcomponents -lcasa_coordinates -lcasa_lattices \
             -lcasa_fits -lcasa_measures \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
@@ -134,12 +107,15 @@ UILIBS = $(CLHOME)/lib/libshccl.a                 \
 endif
 # -lg2c  
 
+#LINKEROPTS = -Xlinker -rpath -Xlinker                       \
+#	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+#	     -Wl,-rpath -Wl,$(QT4LIBD)
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
-	     -Wl,-rpath -Wl,$(QT4LIBD)
+	     $(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     -Wl,-rpath -Wl,$(QT4LIBD) -Wl,-rpath,$(LIBROOT)
 
-LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
-	  -L$(USRLIB)                            \
+#LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+LIBOPTS = -L$(USRLIB)                            \
 	  -L$(QT4LIBD)                           \
 	  -lcfitsio -llapack -lblas              \
 	  -L/usr/local/lib -lcpgplot -lpgplot    \
