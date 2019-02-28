@@ -41,7 +41,7 @@ void toCASASVector(std::vector<string>& stdv, Vector<String>& tmp)
 
 void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, string& spwStr, 
 	string& antStr, string& fieldStr, string& uvDistStr, float& paInc, string& cfcache, 
-	string& pointingTable, float& cellx, float& celly, string& stokes,string& mode, 
+	string& pointingTable, float& cellx, float& celly, string& phasecenter, string& stokes,string& mode, 
 	string& ftmac,string& wtType, string& rmode,double &robust,Int &niter, Int &wplanes, 
 	Int& nx, Int& ny, Vector<Int>& datanchan, Vector<Int>& datastart, Vector<Int>& datastep,
 	Int &imnchan, Int &imstart, Int &imstep,Int& facets,Float& gain, Float& threshold,
@@ -80,6 +80,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=2;clgetNFValp("cellsize",cell,i);
 	if (i==1) celly=cellx=cell[0];
 	else {cellx = cell[0]; celly=cell[1];}
+
+	i=1;clgetSValp("phasecenter",phasecenter,i);
 
 	i=0;clgetNSValp("model",tmods,i);
 	i=0;clgetNSValp("restored",trest,i);
@@ -308,6 +310,7 @@ int main(int argc, char **argv)
   Bool interactive=false;
   String scaleType = "NONE";
   Vector<String> fluxScale; fluxScale.resize(0);
+  String phasecenter;
  RENTER:// UI re-entry point.
   MSName=timeStr=antStr=uvDistStr=cfcache=complist=pointingTable="";
   //
@@ -319,11 +322,12 @@ int main(int argc, char **argv)
   casaMode="FREQ";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
+  phasecenter="";
   //
   // The user interface
   //
   UI(restartUI,argc, argv, MSName, timeStr, spwStr, antStr, fieldStr, uvDistStr, paInc, 
-     cfcache, pointingTable, cellx, celly, stokes,mode,ftmac,wtType,rmode,robust,
+     cfcache, pointingTable, cellx, celly, phasecenter, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,masks,complist,algo,taql,
      operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b);
@@ -350,10 +354,10 @@ int main(int argc, char **argv)
 
       Bool doshift=False;
       MDirection mphaseCenter;
-      String phasecenter("18h00m00.00 -23d00m00.000 J2000");
-      mdFromString(mphaseCenter, phasecenter);
+      //String phasecenter("18h00m00.00 -23d00m00.000 J2000");
+      // mdFromString(mphaseCenter, phasecenter);
       
-      //Int field0=getPhaseCenter(selectedMS,mphaseCenter,6);
+      //      Int field0=getPhaseCenter(selectedMS,mphaseCenter,0);
 
       // Int field0=getPhaseCenter(selectedMS,mphaseCenter);
       // cerr << "####Putting phase center on field no. " << field0 << endl;
@@ -436,7 +440,7 @@ int main(int argc, char **argv)
       //      if (operation != "predict")
       //imager.makePSF();
       Record majorCycleControls;
-      majorCycleControls.define("lastcycle", True);
+      majorCycleControls.define("lastcycle", False);
       imager.executeMajorCycle(majorCycleControls);
 
       return 0;
