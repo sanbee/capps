@@ -97,13 +97,6 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchedKeys[0]="facets";  watchedKeys[1]="wplanes";
 	watchPoints["wproject"]=watchedKeys;
 
-	// watchedKeys.resize(7);
-	// watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
-	// watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
-	// watchedKeys[4]="pointingtable"; watchedKeys[5]="applyoffsets";
-	// watchedKeys[6]="dopbcorr";
-	// watchPoints["awproject"]=watchedKeys;	
-
 	watchedKeys.resize(13);
 	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
 	watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
@@ -125,10 +118,6 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetBValp("conjbeams",conjbeams,i);  
 	i=1;clgetFValp("rotpainc",rotpainc,i);  
 	
-// 	CleaMap(watchPoints);
-// 	watchedKeys.resize(1);
-// 	watchedKeys[0]="pointingtable";
-// 	watchPoints["1"]=watchedKeys;
 	i=1;clgetFValp("painc",paInc,i);  
 	i=1;clgetIValp("applyoffsets",applyOffsets,i);
 	i=1;clgetIValp("dopbcorr",dopbcorr,i);  
@@ -351,42 +340,6 @@ int main(int argc, char **argv)
 
       SynthesisImager imager;
       String AMSName(MSName),diskCacheDir(cfcache);
-      // //
-      // // Make the MS 
-      // //
-      // //
-      // // Setup the MSSelection thingi
-      // //
-      // msSelection.setTimeExpr(timeStr);
-      // msSelection.setSpwExpr(spwStr);
-      // msSelection.setAntennaExpr(antStr);
-      // msSelection.setFieldExpr(fieldStr);
-      // msSelection.setUvDistExpr(uvDistStr);
-      // MS ms(AMSName,Table::Update),selectedMS(ms);
-      // Vector<int> spwid, fieldid, antNdx;
-      // TableExprNode exprNode=msSelection.toTableExprNode(&ms);
-      // if (!exprNode.isNull())
-      // 	{
-      // 	  selectedMS = MS(ms(exprNode));
-      // 	  spwid=msSelection.getSpwList();
-      // 	  fieldid=msSelection.getFieldList();
-      // 	}
-      // cout << "Field IDs = " << fieldid << endl;
-      // //
-      // // Imager requires the list of spectral window IDs and field IDs
-      // // present in the MS that is supplied to it.  This sort of
-      // // defeats the advantage of pre-selected MS.
-      // //
-      // if (spwid.nelements()   == 0) {spwid.resize(1);   spwid(0)=0;}
-      // if (fieldid.nelements() == 0) {fieldid.resize(1); fieldid(0)=0;}
-      // fieldid.resize();
-      // //      indgen(spwid);indgen(fieldid);
-      // //
-      // // Set up the imager
-      // //
-      // Bool compress=False;
-
-      //imager.open(selectedMS,compress);
       vector<double> pa(1);pa[0]=paInc;
 
       imager.selectData(MSName,
@@ -485,104 +438,6 @@ int main(int argc, char **argv)
       Record majorCycleControls;
       majorCycleControls.define("lastcycle", True);
       imager.executeMajorCycle(majorCycleControls);
-	
-      // Float cyclemaxpsffraction=0.8;
-      // imager.setmfcontrol(cycleFactor,
-      // 			  cycleSpeedup,
-      // 			  cyclemaxpsffraction,
-      // 			  stopLargeNegatives, 
-      // 			  stopPointMode,
-      // 			  scaleType,
-      // 			  minPB,
-      // 			  constPB,
-      // 			  fluxScale);
-      // MPosition mlocation;
-      // //mpFromString(mlocation, location);
-      // if (cache <= 0) cache=nx*ny*2;
-      // const String& freqinterpmethod="linear";
-      // const Int imageTileSizeInPix=0;
-      // const Bool singleprecisiononly=False;
-      // const Int numthreads=-1;
-      // imager.setoptions(ftmac,            //Def="ft"
-      // 			cache,            // Def=4194304
-      // 			16,               // tile Def=16
-      // 			"sf",             // gridfunction Def="sf"
-      // 			mlocation,        // Def=""
-      // 			padding,          // Def=1.0
-      // 			//			usemodelcol,
-      // 			wPlanes,
-      // 			pointingTable,    //epjTableName
-      // 			applyPointingOffsets,//Def=True
-      // 			applyPointingCorrections,//Def=true
-      // 			cfcache,          //Def=""
-      // 			rotpainc,        // Def=5.0
-      // 			paInc,            // Def=360.0
-      // 			pblimit,           // Def=0.05
-      // 			freqinterpmethod,
-      // 			imageTileSizeInPix,
-      // 			singleprecisiononly,
-      // 			numthreads,
-      // 			psterm_b, aterm_b, mterm_b, wbawp_b,conjbeams_b
-      // 			);
-      // Vector<Bool> fixed(1,False); // If True, this will make the rest of the code not go through deconv.
-      // if (operation=="clean")
-      // 	{
-      // 	  if (restoredImgs.nelements() == 0) restoredImgs.resize(1);
-      // 	  if (restoredImgs[0] == "") restoredImgs[0] = models[0] + ".clean";
-      // 	  if (residuals.nelements() == 0) residuals.resize(1);
-      // 	  if (residuals[0] == "") residuals[0] = models[0] + ".res";
-
-      // 	  if (interactive)
-      // 	    {
-      // 	      string cmd="imasking ";
-      // 	      string skyImage;
-      // 	      if ((residuals.nelements() > 0) && (residuals[0] != "")) skyImage=string(residuals[0]);
-      // 	      else
-      // 		{
-      // 		  throw(AipsError("No residual image name given.  "
-      // 				  "Need residual image for setting up interactive masks."));
-      // 		}
-      // 	      {
-      // 		File file(skyImage);
-      // 		if (!file.exists())
-      // 		  imager.makeimage("corrected",skyImage);
-      // 	      }
-		  
-      // 	      cmd = cmd + skyImage;
-      // 	      if ((masks.nelements() == 0) || (masks[0]==""))
-      // 		{
-      // 		  masks.resize(1);
-      // 		  masks[0]=skyImage+".mask";
-      // 		}
-      // 	      //		cmd = cmd + " " + skyImage + ".mask";
-      // 	      //	      else
-      // 	      cmd = cmd + " " + string(masks[0]);
-      // 	      system(cmd.c_str());
-      // 	    }
-
-      // 	  imager.clean(algo,
-      // 		       Niter,
-      // 		       gain,
-      // 		       casacore::Quantity(threshold,"mJy"),
-      // 		       False,                 //displayProgress
-      // 		       models,                //Vector<String>
-      // 		       fixed,                 //Vector<Bool>
-      // 		       complist,              //String
-      // 		       masks,                 //Vector<String>
-      // 		       restoredImgs,          //Vector<String>
-      // 		       residuals              //Vector<String>
-      // 		       );
-	// }
-      // else if (operation=="predict")
-      // 	{
-      // 	  imager.ft(models,complist,False);
-      // 	  cerr << "###Info: Copying MODEL_DATA to DATA and CORRECTED_DATA columns." << endl;
-      // 	  copyMData2Data(selectedMS);
-      // 	}
-      // else if (operation=="dirty")
-      // 	imager.makeimage("model",models[0]);
-      // else
-      // 	imager.makeimage(operation,models[0]);
 
       return 0;
     }
