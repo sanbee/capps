@@ -21,27 +21,25 @@ CPPFLAGS = $(OPT) -std=c++11 -DUseCasacoreNamespace -Wno-deprecated             
            -DAIPS_NO_LEA_MALLOC                             \
            -D_GLIBCPP_DEPRECATED                            \
 	   -DAIPS_AUTO_STL                                  \
-	   -DDBUS_CPP -DCASA_USECASAPATH                    \
-#	   -Wl,-R$(COREROOT)/lib/
-#	   -DAIPS_DEBUG                                     \
 	   -DAIPS_ARRAY_INDEX_CHECK                         \
 	   -DSIGNBIT                                        \
 	   -DAIPS_NO_TEMPLATE_SRC                           \
 	   -Wall -pipe -Wno-non-template-friend             \
 	   -Woverloaded-virtual -Wcast-align                \
 	   -Wno-comment -D_FILE_OFFSET_BITS=64              \
-	   -D_LARGEFILE_SOURCE  
+	   -D_LARGEFILE_SOURCE   \
+           -DDBUS_CPP=1  -Dlibcasadbus_EXPORTS
 
+#	   -DAIPS_DEBUG                                     
 
 PYFLAGS = -DPYTHONPATH=\"$(USRLIB)/casapy/bin/$(USRLIB)/casapy/bin/python\" \
 	  -DPYTHONVER=\"2.5\"                                               \
 
-#PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -lpython2.5  -L$(USRLIB)/casapy/lib -lCCM_Python -lWX_Utils_error -lWX_Utils_code -lWX_Utils_types
 PYLIBS  =  -L$(USRLIB)/casapy/lib/python2.5/config -L$(USRLIB)/casapy/lib
 
 INCL = -I.                                   \
+       -isystem /usr/include/dbus-1.0 -isystem /usr/lib64/dbus-1.0/include \
        -I$(SCIINCLDIR)                       \
-        -isystem /opt/casa/02/include/dbus-1.0 -isystem /opt/casa/02/lib/dbus-1.0/include	\
        -I$(CLHOME)/include                   \
        -I$(COREROOT)/include/$(CASABASE) \
        -I$(COREROOT)/include/$(CASACORENAME) \
@@ -53,13 +51,9 @@ INCL = -I.                                   \
        -I$(QT4HOME)/include/QtCore           \
        -I$(QT4HOME)/include/QtGui            \
        -I$(QT4HOME)/include/QtXml            \
-       -I$(QT4HOME)/include/qwt
+       -I$(QT4HOME)/include/qwt              \
+       -I$(CASA_COMPILER_PATH)/include 
 
-#DISPLAYLIBS = -lefence $(DISPLAYROOT)/lib/libdisplay.a       \
-#	  $(DISPLAYROOT)/lib/libcasaqt.a            \
-#	  $(DISPLAYROOT)/lib/libgraphics.a \
-#	  $(WCSPKG)/libwcs.a              \
-#	  $(PGPLOTPKG)/libpgsbox.so              
 #
 # Only PlotMS appears to depend on libgraphics.a - which appears to have a free/delete problem
 #
@@ -68,22 +62,20 @@ INCL = -I.                                   \
 #	  $(WCSPKG)/libwcs.a                  \
 #	  $(PGPLOTPKG)/libpgsbox.so              
 
-#DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay
-DISPLAYLIBS = -L$(LIBROOT) -ldisplay \
+DISPLAYLIBS = -L$(DISPLAYROOT)/lib -ldisplay \
 	  -lcasaqt \
 	  $(WCSPKG)/libwcs.so \
-	  -L$(PGPLOTPKG) -lcpgplot -lpgplot -lpgsbox
+	  $(PGPLOTPKG)/libpgsbox.so              
 
 
-#SYNTHESISLIBS = -L$(LIBROOT) -L$(SYNTHROOT)/lib 
-SYNTHESISLIBS = -L$(LIBROOT) \
-		-lsynthesis -lcasadbus -lmsvis
+SYNTHESISLIBS = -L$(SYNTHROOT)/lib \
+		-lsynthesis -lmsvis -lcasadbus $(CASA_COMPILER_PATH)/lib/libcasa-dbus-cpp.so.0.1
 #		-lsynthesis -lcasadbus -laatm
 #		-lsynthesis -lcasadbus -lcalibration -lcasadbus -laatm
 
 
-#CORELIBS = -Wl,-soname="libcasa_msfits.so" -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       
-CORELIBS =  -lcasa_msfits -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       \
+
+CORELIBS = -lcasa_msfits -lcasa_ms -lcasa_images -limageanalysis       \
             -lcomponents -lcasa_coordinates -lcasa_lattices \
             -lcasa_fits -lcasa_measures \
 	    -lcasa_tables -lcasa_scimath -lcasa_scimath_f        \
@@ -107,15 +99,18 @@ UILIBS = $(CLHOME)/lib/libshccl.a                 \
 endif
 # -lg2c  
 
-#LINKEROPTS = -Xlinker -rpath -Xlinker                       \
-#	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
-#	     -Wl,-rpath -Wl,$(QT4LIBD)
 LINKEROPTS = -Xlinker -rpath -Xlinker                       \
 	     $(USRLIB):$(X11LIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
-	     -Wl,-rpath -Wl,$(QT4LIBD) -Wl,-rpath,$(LIBROOT)
+	     -Wl,-rpath -Wl,$(QT4LIBD) -Wl,-rpath,$(LIBROOT) -Wl,-rpath,$(CASA_LIBROOT)
 
-#LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
-LIBOPTS = -L$(USRLIB)                            \
+	     # $(CASAROOT)/$(ARCH)/lib:$(USRLIB):$(USRLIB)/casapy/lib:/usr/local/lib: \
+	     # -Wl,-rpath -Wl,$(QT4LIBD)
+
+#	     -Xlinker -rpath -Xlinker                       \
+#	     $(CASAROOT)/$(ARCH)/lib:$(USRLIB)/casapy/lib:$(USRLIB):/usr/X11R6/LessTif/Motif2.1/lib:$(X11LIB):/usr/local/lib: \
+
+LIBOPTS = -L$(COREROOT)/lib -L$(CASAROOT)/lib    \
+	  -L$(USRLIB)                            \
 	  -L$(QT4LIBD)                           \
 	  -lcfitsio -llapack -lblas              \
 	  -L/usr/local/lib -lcpgplot -lpgplot    \
@@ -174,8 +169,9 @@ $(OBJECTS): %.o: %.cc
 	 $(C++) -c $(PYFLAGS) $(CPPFLAGS) $(INCL) $(PYINCL) $< -o $@
 
 $(APPS): % : %.o $(CAAPSLIB)
-	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
-	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB) -o $@
+	 $(C++) -o $@ $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(LIBOPTS) \
+	 $(CASALIBS) $(PYLIBS) $(UILIBS) $(CAAPSLIB)
+#	 $(C++) $< $(PYFLAGS) $(CPPFLAGS) $(LINKEROPTS) $(CASALIBS) $(LIBOPTS) $(PYLIBS) $(UILIBS) -o $@
 #
 #-------------------------------------------------------------------------------------------------
 #
@@ -183,6 +179,7 @@ $(APPS): % : %.o $(CAAPSLIB)
 
 depend:
 	makedepend $(INCL) $(SOURCE)
+
 
 clean: 
 	\rm -rf *.o

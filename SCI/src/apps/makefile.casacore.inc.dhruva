@@ -10,11 +10,8 @@ ARCH         = linux_64b
 # The instance of CASA pacakge that you want to link to
 #
 CASAHOME     = /home/dhruva/disk2/sanjay/casa_rhel/BitBucket/ARD/ARD-3/casa/
-LIBROOT      = /home/dhruva/disk1/sanjay/Projects/Git/capps/SCI/casa_libs
+CASA_LIBROOT = /opt/casa/02/lib
 LIBROOT      = /home/dhruva2/disk4/sanjay/casalibs/linux_64b/lib
-#CASAHOME     = /home/dhruva/disk2/sanjay/casa_trunk_pristine/
-#CASAHOME     = /home/dhruva/disk2/sanjay/casa_active_swig/
-#CASAHOME     = /home/vega/rurvashi/CASAtrees/CURRENT/
 #
 # This is the home of the stand-alone interface library used for
 # embedded user interface (Parafeed --
@@ -89,18 +86,19 @@ DISPLAYPKG   = $(CASADISTRO)
 CASACORENAME = casacore
 CASACODENAME = casacode
 CASABASE = casa
-#WCSPKG       = $(CASAROOT)/$(ARCH)/lib
-#PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
+WCSPKG       = $(CASAROOT)/$(ARCH)/lib
+PGPLOTPKG    = $(CASAROOT)/$(ARCH)/lib
 WCSPKG       = /usr/lib64
 PGPLOTPKG    = /usr/lib64
 
+CASA_COMPILER_PATH=/opt/casa/02
 COMPILER_PATH=/opt/rh/devtoolset-4/root/usr/bin
 C++          = $(COMPILER_PATH)/g++ -L$(LIBROOT)
 DEFS64       = -DAIPS_64B -DCASA_STANDALONE
-#OPT64        = -pg
+#OPT64        = -m64
 USRLIB       = /usr/lib64
 X11LIB       = /usr/X11R6/lib
-OPT          = -g -O2 $(OPT64)
+OPT          = -g -O2 $(OPT64) -L$(LIBROOT)
 
 #---------------------------------------------------------- 
 #

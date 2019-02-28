@@ -112,7 +112,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	watchedKeys[8]="mterm";         watchedKeys[9]="conjbeams";     
 	watchedKeys[10]="pointingtable";watchedKeys[11]="applyoffsets";	
 	watchedKeys[12]="dopbcorr";
-	watchPoints["awproject"]=watchedKeys;
+	watchPoints["awprojectft"]=watchedKeys;
+	watchPoints["awp"]=watchedKeys;
 
 	i=1;clgetSValp("ftmachine",ftmac,i,watchPoints);
 	i=1;clgetIValp("facets",facets,i);
@@ -211,8 +212,8 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	options[0]="uniform";options[1]="natural";options[2]="briggs";
 	clSetOptions("weighting",options);
 
-	options.resize(3);
-	options[0]="gridft";options[1]="wproject";options[2]="awproject";
+	options.resize(4);
+	options[0]="gridft";options[1]="wproject";options[2]="awprojectft"; options[3]="awp";
 	clSetOptions("ftmachine",options);
 
 	options.resize(2);
