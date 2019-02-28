@@ -442,7 +442,7 @@ int main(int argc, char **argv)
       Record majorCycleControls;
       majorCycleControls.define("lastcycle", False);
       imager.executeMajorCycle(majorCycleControls);
-
+      imager.makePSF();
       return 0;
     }
   catch (clError& x)
