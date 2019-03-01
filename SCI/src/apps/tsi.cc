@@ -5,7 +5,7 @@
 #include <ms/MSSel/MSSelectionError.h>
 //#include <msvis/MSVis/VisSet.h>
 //#include <msvis/MSVis/VisSetUtil.h>
-#include <synthesis/ImagerObjects/SynthesisImager.h>
+#include <synthesis/ImagerObjects/SynthesisImagerVi2.h>
 #include <synthesis/ImagerObjects/SynthesisUtilMethods.h>
 #include <synthesis/TransformMachines/Utils.h>
 #include <cl.h>
@@ -49,7 +49,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	Vector<String>& masks,string& complist,string&algo,string& taql,string& operation,
 	float& pblimit,float& cycleFactor,int& applyOffsets,int& dopbcorr,
 	Bool& interactive,Long& cache,	
-	float& rotpainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams)
+	float& computepainc, bool& psterm, bool& aterm, bool& mterm, bool& wbawp, bool& conjbeams)
 {
   if (!restart)
     {
@@ -97,12 +97,12 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	ClearMap(watchPoints);
 	watchedKeys.resize(2);
 	watchedKeys[0]="facets";  watchedKeys[1]="wplanes";
-	watchPoints["wproject"]=watchedKeys;
+	watchPoints["wprojectft"]=watchedKeys;
 
 	watchedKeys.resize(13);
 	watchedKeys[0]="facets";        watchedKeys[1]="wplanes";
 	watchedKeys[2]="cfcache";       watchedKeys[3]="painc";
-	watchedKeys[4]="rotpainc";      watchedKeys[5]="psterm";
+	watchedKeys[4]="computepainc";      watchedKeys[5]="psterm";
 	watchedKeys[6]="aterm";         watchedKeys[7]="wbawp";
 	watchedKeys[8]="mterm";         watchedKeys[9]="conjbeams";     
 	watchedKeys[10]="pointingtable";watchedKeys[11]="applyoffsets";	
@@ -118,7 +118,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetBValp("mterm",mterm,i);  
 	i=1;clgetBValp("wbawp",wbawp,i);  
 	i=1;clgetBValp("conjbeams",conjbeams,i);  
-	i=1;clgetFValp("rotpainc",rotpainc,i);  
+	i=1;clgetFValp("computepainc",computepainc,i);  
 	
 	i=1;clgetFValp("painc",paInc,i);  
 	i=1;clgetIValp("applyoffsets",applyOffsets,i);
@@ -178,7 +178,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	i=1;clgetFValp("threshold",threshold,i);
 	i=1;clgetBValp("interactive",interactive,i);
 	//
-	// Hidder stuff for the brave
+	// Hidden stuff for the brave
 	//
 	i=1;dbgclgetFValp("cyclefactor",cycleFactor,i);  
 	i=1;dbgclgetFValp("pblimit",pblimit,i);  
@@ -196,7 +196,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	clSetOptions("operation",options);
 
 	options.resize(3);
-	options[0]="continuum";options[1]="spectral";options[2]="pseudo";
+	options[0]="mfs";options[1]="spectral";options[2]="pseudo";
 	clSetOptions("mode",options);
 
 	options.resize(3);
@@ -204,7 +204,7 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 	clSetOptions("weighting",options);
 
 	options.resize(4);
-	options[0]="gridft";options[1]="wproject";options[2]="awprojectft"; options[3]="awp";
+	options[0]="gridft";options[1]="wprojectft";options[2]="awprojectft"; options[3]="awp";
 	clSetOptions("ftmachine",options);
 
 	options.resize(2);
@@ -226,7 +226,14 @@ void UI(Bool restart, int argc, char **argv, string& MSName, string& timeStr, st
 }
 bool mdFromString(casacore::MDirection &theDir, const casacore::String &in)
 {
-   bool rstat(false);
+  bool rstat(false);
+  if (in.length()==0)
+    {
+      theDir=MDirection();
+      rstat=false;
+    }
+  else
+    {
    String tmpA, tmpB, tmpC;
    std::istringstream iss(in);
    iss >> tmpA >> tmpB >> tmpC;
@@ -243,7 +250,8 @@ bool mdFromString(casacore::MDirection &theDir, const casacore::String &in)
       theDir = MDirection (tmpQA, tmpQB);
       rstat = true;
    }
-   return rstat;
+    }
+  return rstat;
 }
 //
 //-------------------------------------------------------------------------
@@ -294,7 +302,7 @@ int main(int argc, char **argv)
   Long cache=2*1024*1024*1024L;
   Double robust=0.0;
   Int Niter=0, wPlanes=1, nx,ny, facets=1, imnchan=1, imstart=0, imstep=1, 
-    applyOffsets=0,dopbcorr=1, psterm=1, aterm=1, mterm=1, wbawp=1, conjbeams=1;
+    applyOffsets=0,dopbcorr=1;
   Vector<int> datanchan(1,1),datastart(1,0),datastep(1,1);
   Bool restartUI=False;;
   Bool applyPointingOffsets=False, applyPointingCorrections=True, usemodelcol=True;
@@ -303,9 +311,9 @@ int main(int argc, char **argv)
   Vector<String> models, restoredImgs, residuals,masks,startModels;
   String complist,operation;
   //MSSelection msSelection;
-
+  
   Float cycleFactor=1.0, cycleSpeedup=-1, constPB=0.4, minPB=0.1;
-  Float rotpainc=5.0;
+  Float computepainc=360.0;
   Int stopLargeNegatives=2, stopPointMode = -1;
   Bool interactive=false;
   String scaleType = "NONE";
@@ -318,7 +326,7 @@ int main(int argc, char **argv)
   //
   pblimit=0.05;
   stokes="I"; ftmac="gridft"; algo="hogbom"; operation="clean";
-  wtType="uniform"; rmode="none"; mode="continuum";
+  wtType="uniform"; rmode="none"; mode="mfs";
   casaMode="FREQ";
   gain=0.1; paInc = 360.0;
   spwStr=""; fieldStr=""; threshold=0;
@@ -330,8 +338,8 @@ int main(int argc, char **argv)
      cfcache, pointingTable, cellx, celly, phasecenter, stokes,mode,ftmac,wtType,rmode,robust,
      Niter, wPlanes,nx,ny, datanchan,datastart,datastep,imnchan,imstart,imstep,
      facets,gain,threshold,models,restoredImgs,residuals,masks,complist,algo,taql,
-     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,rotpainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b);
-
+     operation,pblimit,cycleFactor,applyOffsets,dopbcorr,interactive,cache,computepainc, psterm_b, aterm_b, mterm_b, wbawp_b, conjbeams_b);
+  
   if (applyOffsets==1) applyPointingOffsets=True;else applyPointingOffsets=False;
   if (dopbcorr==1) applyPointingCorrections=True;else applyPointingCorrections=False;
   restartUI = False;
@@ -341,96 +349,80 @@ int main(int argc, char **argv)
       if (!(getenv("AIPSPATH") || getenv("CASAPATH")))
 	throw(AipsError("Neither AIPSPATH nor CASAPATH environment variable found.  "
 			"Perhaps you forgot to source casainit.sh/csh?"));
-
-      SynthesisImager imager;
+      
+      SynthesisImagerVi2 imager;
       String AMSName(MSName),diskCacheDir(cfcache);
       vector<double> pa(1);pa[0]=paInc;
-
-      imager.selectData(MSName,
-			spwStr,
-			"","",MFrequency::LSRK,
-			fieldStr, antStr, timeStr,"",
-			"","",uvDistStr,taql,False,True);
-
+      
+      SynthesisParamsSelect selectParams;
+      selectParams.msname=MSName;
+      selectParams.spw=spwStr;
+      selectParams.field=fieldStr;
+      selectParams.antenna=antStr;
+      selectParams.timestr=timeStr;
+      selectParams.uvdist=uvDistStr;
+      selectParams.taql=taql;
+      
+      imager.selectData(selectParams);
+      
       Bool doshift=False;
       MDirection mphaseCenter;
       //String phasecenter("18h00m00.00 -23d00m00.000 J2000");
-      // mdFromString(mphaseCenter, phasecenter);
+      mdFromString(mphaseCenter, phasecenter);
       
       //      Int field0=getPhaseCenter(selectedMS,mphaseCenter,0);
-
+      
       // Int field0=getPhaseCenter(selectedMS,mphaseCenter);
       // cerr << "####Putting phase center on field no. " << field0 << endl;
       //      mdFromString(mphaseCenter, phasecenter);
       doshift=True;
-
-      if (mode=="continuum") {imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
+      
+      if (mode=="mfs") {imnchan=1;imstart=datastart[0];imstep=datanchan[0];}
       else if (mode=="pseudo") {}
       else if (mode=="spectral") {imnchan=datanchan[0];imstart=datastart[0];imstep=datastep[0];}
-      else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"continuum\", \"pseudo\", or \"spectral\""));
+      else throw(AipsError("Incorrect setting for keyword \"mode\".  Possible values are \"mfs\", \"pseudo\", or \"spectral\""));
       Int centerFieldId=-1;
       String casaStokes(stokes), casaModeStr(casaMode);
       casacore::MRadialVelocity mvel;
       casacore::MFrequency mfreq;
       casacore::Quantity qstart;
-
+      
       Vector<Quantity> restFreqs(1);
       restFreqs[0]=Quantity(0,"km/s");
-	
-      SynthesisParamsGrid gridParams;
-      SynthesisParamsImage imageParams;
-      Record gridParamsRec = gridParams.toRecord(),
-	imageParamsRec = imageParams.toRecord();
-
-      gridParamsRec.define("cfcache",cfcache);
-      Vector<Int> imsize(2); imsize(0)=nx; imsize(1)=ny;
-      gridParamsRec.define("imsize",imsize);
-
-      Vector<String> cell(2);  
-      {
-	stringstream ss;
-	ss << cellx << "arcsec"; cell(0) = ss.str(); 
-	ss.str("");ss << celly << "arcsec"; cell(1) = ss.str(); 
-      }
-      gridParamsRec.define("cell",cell);
-      gridParamsRec.define("stokes",stokes);
-      gridParamsRec.define("phasecenter",phasecenter);
-
-
       startModels.resize(1);startModels[0]="";
       if (operation == "predict") startModels[0]=models[0];
       
-      imager.defineImage(models[0],nx,ny,
-			 casacore::Quantity((Double)cellx,"arcsec"),
-			 casacore::Quantity((Double)celly,"arcsec"),
-			 stokes,
-			 mphaseCenter,
-			 imnchan,//imstart,imstep,
-			 casacore::Quantity(1,"GHz"),    //mstart, // Def=0 km/s
-			 casacore::Quantity(1,"GHz"),
-			 restFreqs,
-			 facets,
-			 ftmac,
-			 1,Quantity(0,"Hz"),
-			 Projection::SIN,
-			 Quantity(0,"m"),
-			 MFrequency::LSRK,
-			 False,
-			 MDirection(Quantity(0.0,"deg"),
-				    Quantity(90.0,"deg")),
-			 False,
-
-			 1.0,
-			 False,
-			 False, // useDoublePrec
-			 1, //wprojplanes
-			 "SF",
-			 startModels[0], //startmodel
-			 True,True,False,True,cfcache,
-			 False,True,True,
-			 paInc,rotpainc
-			 );
-
+      SynthesisParamsImage imageParams;
+      imageParams.imageName=models[0];
+      imageParams.startModel=startModels[0];
+      imageParams.imsize[0]=nx; imageParams.imsize[1]=ny;
+      imageParams.cellsize[0]=Quantity((double)cellx,"arcsec"); 
+      imageParams.cellsize[1]=Quantity((double)celly,"arcsec"); 
+      imageParams.stokes=casaStokes;
+      imageParams.phaseCenter=mphaseCenter;
+      imageParams.mode=mode;
+      imageParams.chanStart=imstart;
+      imageParams.chanStep=imstep;
+      imageParams.deconvolver=algo;
+      
+      SynthesisParamsGrid gridParams;
+      gridParams.ftmachine=ftmac;
+      gridParams.wprojplanes=wPlanes;
+      gridParams.aTermOn=aterm_b;
+      gridParams.psTermOn=psterm_b;
+      gridParams.mTermOn=mterm_b;
+      gridParams.wbAWP=wbawp_b;
+      gridParams.doPointing=true;
+      gridParams.conjBeams=conjbeams_b;
+      gridParams.rotatePAStep=paInc;
+      gridParams.computePAStep=computepainc;
+      gridParams.cfCache=cfcache;
+      gridParams.facets=facets;
+      gridParams.useDoublePrec=true; 
+      
+      imager.defineImage(imageParams, gridParams);
+      
+      
       imager.weight(wtType,                        // Def="natural"
 		    rmode,                         // Def="none"
 		    casacore::Quantity(0.0,"Jy"),  //noise, // Def="0.0Jy"
